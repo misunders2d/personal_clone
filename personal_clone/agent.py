@@ -1,4 +1,7 @@
 from google.adk import Agent
+from google.adk.tools import google_search
+from google.adk.tools.agent_tool import AgentTool
+
 from .search import (
     write_to_rag,
     read_from_rag,
@@ -6,6 +9,17 @@ from .search import (
     delete_from_rag,
     find_experiences,
 )
+
+
+search_agent_tool = AgentTool(
+    agent=Agent(
+        name="web_search_agent",
+        description="A web search agent that can search the web and load web pages.",
+        instruction="""You are a web search agent. You can search the web using the `google_search` tool, which allows you to find relevant information online. You can also load web pages using the `load_web_page` tool, which retrieves the content of a specific URL.""",
+        tools=[google_search],
+        model='gemini-2.5-flash'
+    ),
+    skip_summarization=True)
 
 master_agent = Agent(
     name="personal_clone",
@@ -31,6 +45,7 @@ master_agent = Agent(
         update_in_rag,
         delete_from_rag,
         find_experiences,
+        search_agent_tool
     ],
 )
 

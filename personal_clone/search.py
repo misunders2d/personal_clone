@@ -1,4 +1,4 @@
-import os
+import os, re
 import uuid
 from datetime import datetime, timezone
 from google.cloud import storage
@@ -221,7 +221,7 @@ def read_from_rag(query: str) -> list[dict]:
             project=PROJECT_ID,
             location=LOCATION,
             data_store=DATASTORE_ID,
-            serving_config="default_config",
+            serving_config="default_serving_config",
         )
 
         request = discoveryengine_v1.SearchRequest(
@@ -234,7 +234,16 @@ def read_from_rag(query: str) -> list[dict]:
         
         results = []
         for i, result in enumerate(response.results):
-            file_path = result.document.derived_struct_data['link'].replace(f"gs://{BUCKET_NAME}/", "") if 'link' in result.document.derived_struct_data else "N/A"
+            full_content=''
+            blob_name=''
+            gcs_uri = result.document.derived_struct_data.get('link')
+            if gcs_uri:
+                match = re.match(r"gs://([^/]+)/(.+)", gcs_uri)
+                if match:
+                    bucket_name, blob_name = match.groups()
+                    bucket = storage_client.bucket(bucket_name)
+                    blob = bucket.blob(blob_name)
+                    full_content = blob.download_as_text()
             if 'extractive_answers' in result.document.derived_struct_data:
                 extractive_answers = result.document.derived_struct_data['extractive_answers']
                 if extractive_answers and len(extractive_answers) > 0:
@@ -245,8 +254,9 @@ def read_from_rag(query: str) -> list[dict]:
                 content = result.document.content if result.document.content else "No content found."
             
             results.append({
-                "file_path": file_path,
-                "content": content
+                "file_path": blob_name,
+                "content": content,
+                "full_content": full_content
             })
 
         if not results:
