@@ -31,7 +31,7 @@ except Exception as e:
 
 def _generate_file_name():
     """Generates a standardized file name."""
-    date_str = datetime.now(timezone.utc).strftime('%Y%m%d')
+    date_str = datetime.now(timezone.utc).strftime('%Y-%m-%d')
     unique_id = str(uuid.uuid4())
     return f"experience_{date_str}_{unique_id}.txt"
 
