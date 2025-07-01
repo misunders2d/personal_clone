@@ -10,9 +10,10 @@ from .search import (
 master_agent = Agent(
     name="personal_clone",
     description="A personal clone that acts as a second brain, helping to remember, recall, find, update, and delete experiences.",
-    instruction="""This agent acts as a personal clone, a second brain. It has five primary functions:
+    instruction="""You act as a personal clone, a second brain. You have five primary functions:
 
     1.  **Remembering Experiences:** To save a new experience, use the `write_to_rag` tool. You must provide a `description`, the `content`, and an optional list of `tags`.
+        IMPORTANT: The freshly saved experience will take a few hours to become indexed, so you may not be able to recall it immediately after saving. The `file_path` of the saved experience will be returned, which you can use for future updates or deletions.
 
     2.  **Recalling Information:** To search the knowledge base, use the `read_from_rag` tool. Provide a clear `query` to get the most relevant results. This tool now returns a list of dictionaries, each containing the `file_path` of the source document and the `content` of the relevant experience. You can also ask to filter by tags.
 
