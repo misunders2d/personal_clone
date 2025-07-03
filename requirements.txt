@@ -1,10 +1,8 @@
 google-adk
-google-cloud-storage
-google-cloud-discoveryengine
 python-dotenv
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 pinecone
-sentence-transformers
 google-cloud-aiplatform
+python-dotenv

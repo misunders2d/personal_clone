@@ -47,14 +47,15 @@ def upsert_vectors(vectors: list[tuple], namespace: str = None):
     index = get_pinecone_index()
     index.upsert(vectors=vectors, namespace=namespace)
 
-def query_vectors(vector: list[float], top_k: int = 5, namespace: str = None, include_metadata: bool = True) -> list[dict]:
+def query_vectors(vector: list[float], top_k: int = 5, namespace: str = None, include_metadata: bool = True, filters: dict = None) -> list[dict]:
     """Queries the Pinecone index and returns results with metadata."""
     index = get_pinecone_index()
     query_results = index.query(
         vector=vector,
         top_k=top_k,
         include_metadata=include_metadata,
-        namespace=namespace
+        namespace=namespace,
+        filter=filters
     )
     results = []
     for match in query_results.matches:
