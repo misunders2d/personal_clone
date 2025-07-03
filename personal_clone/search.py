@@ -307,7 +307,7 @@ def read_from_rag(query: str, top_k: int = 5, access_type: Optional[str] = None,
         if access_type:
             pinecone_filter["access_type"] = access_type
 
-        query_results = query_vectors(query_embedding, top_k=top_k, include_metadata=True, filter=pinecone_filter)
+        query_results = query_vectors(query_embedding, top_k=top_k, include_metadata=True, filters=pinecone_filter)
         
         results = []
         for match in query_results:

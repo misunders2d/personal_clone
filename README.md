@@ -1,6 +1,6 @@
 # personal_clone
 
-`personal_clone` is an agentic system designed to act as a "second brain," remembering and accumulating your experiences, memories, and interaction details. It leverages Google Cloud Storage (GCS) for durable storage and Vertex AI Search (Discovery Engine) for powerful retrieval-augmented generation (RAG) capabilities.
+`personal_clone` is an agentic system designed to act as a "second brain," remembering and accumulating your experiences, memories, and interaction details. It leverages Google Drive for durable storage and Pinecone for powerful retrieval-augmented generation (RAG) capabilities.
 
 ## Core Functionality
 
@@ -8,42 +8,100 @@ The agent provides five primary functions to manage your knowledge base:
 
 1.  **Remembering Experiences (`write_to_rag`)**:
     *   **Purpose**: To save a new experience into your knowledge base.
-    *   **Usage**: Provide a `description`, the `content` of the experience, and an optional list of `tags`.
-    *   **Output**: Returns the `file_path` of the newly created experience in GCS.
+    *   **Usage**: Provide a `description`, the `content` of the experience, an optional list of `tags`, an optional `access_type` (either "private" or "public"), and an optional `folder_id`.
+    *   **Output**: Returns the `file_id` of the newly created experience in Google Drive.
 
 2.  **Recalling Information (`read_from_rag`)**:
-    *   **Purpose**: To search your knowledge base for relevant information based on content. This function performs a semantic search using Vertex AI Search.
-    *   **Usage**: Provide a clear `query`. You can also ask to filter by tags (though direct tag filtering is handled by the underlying Vertex AI Search configuration).
-    *   **Output**: Returns a list of dictionaries. Each dictionary contains the `file_path` (relative path within the GCS bucket) of the source document and the `content` of the relevant experience. This `file_path` is crucial for subsequent update or delete operations.
+    *   **Purpose**: To search your knowledge base for relevant information based on content. This function performs a semantic search using Pinecone.
+    *   **Usage**: Provide a clear `query`. You can also filter by `access_type` and `folder_id`.
+    *   **Output**: Returns a list of dictionaries. Each dictionary contains the `file_id`, `file_name`, `content`, `description`, `tags`, and `access_type` of the relevant experience. This `file_id` is crucial for subsequent update or delete operations.
 
 3.  **Finding Experiences (`find_experiences`)**:
     *   **Purpose**: To locate experiences based on patterns in their filenames. This is useful when you know part of the filename or a specific naming convention.
-    *   **Usage**: Provide a `pattern` (e.g., `experience_202507*.txt`) to match against file names in GCS.
-    *   **Output**: Returns a list of dictionaries. Each dictionary provides detailed information about the matching experience, including its `file_path`, `description`, `tags`, and a `content_snippet` for easy identification.
+    *   **Usage**: Provide a `pattern` (e.g., `experience_202507*.txt`) to match against file names in Google Drive. You can also specify a `folder_id`.
+    *   **Output**: Returns a list of dictionaries. Each dictionary provides detailed information about the matching experience, including its `file_id`, `file_name`, `description`, `tags`, `access_type`, and a `content_snippet` for easy identification.
 
 4.  **Updating Information (`update_in_rag`)**:
     *   **Purpose**: To modify an existing experience.
-    *   **Usage**: Requires the exact `file_path` of the experience (obtained from `read_from_rag` or `find_experiences`), the `new_content` to overwrite the old, and an optional list of `new_tags`.
+    *   **Usage**: Requires the exact `file_id` of the experience (obtained from `read_from_rag` or `find_experiences`), the `new_content` to overwrite the old, an optional list of `new_tags`, an optional `new_access_type`, and an optional `folder_id`.
     *   **Output**: A confirmation message upon successful update.
 
 5.  **Forgetting Information (`delete_from_rag`)**:
     *   **Purpose**: To permanently remove an experience from your knowledge base.
-    *   **Usage**: Requires the exact `file_path` of the experience (obtained from `read_from_rag` or `find_experiences`).
+    *   **Usage**: Requires the exact `file_id` of the experience (obtained from `read_from_rag` or `find_experiences`) and an optional `folder_id`.
     *   **Output**: A confirmation message upon successful deletion.
 
 ## Technology Stack
 
 *   **Agent Framework**: Google ADK (Agent Development Kit)
-*   **Storage**: Google Cloud Storage (GCS) for storing raw experience files.
-*   **Search & Retrieval**: Vertex AI Search (Discovery Engine) for indexing and semantic search capabilities.
+*   **Storage**: Google Drive for storing raw experience files.
+*   **Search & Retrieval**: Pinecone for indexing and semantic search capabilities.
 
-### Indexing Latency
+## Important Notes on File IDs and File Names
 
-It's important to note that new data added to the Vertex AI Search datastore may take a few hours to be fully indexed and searchable. This is due to the asynchronous nature of the indexing process within Vertex AI Search.
+The `file_id` is a critical identifier for `update_in_rag` and `delete_from_rag`.
+*   `write_to_rag` generates and returns this `file_id`.
+*   `read_from_rag` now returns the `file_id` and `file_name` for each relevant search result, allowing you to directly use the `file_id` for management operations.
+*   `find_experiences` also returns the `file_id` and `file_name` for experiences matching filename patterns.
 
-## Important Notes on File Paths
+## Google Drive Authentication
 
-The `file_path` is a critical identifier for `update_in_rag` and `delete_from_rag`.
-*   `write_to_rag` generates and returns this `file_path`.
-*   `read_from_rag` now returns the relative `file_path` (e.g., `user_preferences/porsche_color.txt`) for each relevant search result, allowing you to directly use it for management operations.
-*   `find_experiences` also returns this relative `file_path` for experiences matching filename patterns.
+This agent uses OAuth 2.0 for Google Drive authentication. The first time you run an operation that interacts with Google Drive, a browser window will open, prompting you to authenticate with your Google account. This will create a `token.pickle` file, which stores your credentials for future use. Ensure you have `GOOGLE_DRIVE_CLIENT_ID` and `GOOGLE_DRIVE_CLIENT_SECRET` set in your `.env` file, obtained from an OAuth 2.0 Client ID (Desktop app type) in your Google Cloud project.
+
+## Setup
+
+To get `personal_clone` up and running, follow these steps:
+
+### Prerequisites
+
+*   Python 3.8+
+*   `pip` (Python package installer)
+
+### Google Cloud Project Setup
+
+1.  **Create a Google Cloud Project**: If you don't have one, create a new project in the [Google Cloud Console](https://console.cloud.google.com/).
+2.  **Enable Google Drive API**:
+    *   In your Google Cloud Project, navigate to "APIs & Services" > "Library".
+    *   Search for "Google Drive API" and enable it.
+3.  **Create OAuth 2.0 Client ID**:
+    *   In your Google Cloud Project, navigate to "APIs & Services" > "Credentials".
+    *   Click "Create Credentials" > "OAuth client ID".
+    *   Select "Desktop app" as the application type.
+    *   Give it a name (e.g., `personal_clone_desktop`).
+    *   Click "Create". You will be provided with your `client_id` and `client_secret`.
+4.  **Set Environment Variables**:
+    *   Create a `.env` file in the root directory of this project (if it doesn't exist, you can copy `.env.example`).
+    *   Add the following lines to your `.env` file, replacing the placeholders with your actual credentials:
+        ```
+        GOOGLE_DRIVE_CLIENT_ID="YOUR_CLIENT_ID"
+        GOOGLE_DRIVE_CLIENT_SECRET="YOUR_CLIENT_SECRET"
+        TOKEN_PATH="token.pickle" # Path to store your Google Drive token
+        ```
+
+### Pinecone Setup
+
+1.  **Create a Pinecone Account**: If you don't have one, sign up at [Pinecone](https://www.pinecone.io/).
+2.  **Get API Key and Environment**:
+    *   Once logged in, navigate to your API Keys section.
+    *   Copy your `API Key` and `Environment` (e.g., `us-west-2-gcp`).
+3.  **Set Environment Variables**:
+    *   Add the following lines to your `.env` file:
+        ```
+        PINECONE_API_KEY="YOUR_PINECONE_API_KEY"
+        PINECONE_ENVIRONMENT="YOUR_PINECONE_ENVIRONMENT"
+        PINECONE_INDEX_NAME="personal-clone-index" # Or your preferred index name
+        ```
+
+### Installation
+
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/your-repo/personal_clone.git
+    cd personal_clone
+    ```
+2.  **Install dependencies**:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+Now you are ready to use `personal_clone`!
