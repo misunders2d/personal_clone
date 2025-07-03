@@ -1,32 +1,28 @@
 import os, re
 import uuid
 from datetime import datetime, timezone
-from google.cloud import storage
-from google.cloud import discoveryengine_v1
-from google.oauth2 import service_account
 from dotenv import load_dotenv
+from typing import Optional
+
+from .gdrive_utils import (
+    upload_file_to_drive,
+    download_file_from_drive,
+    update_file_in_drive,
+    delete_file_from_drive,
+    list_files_in_folder,
+    get_or_create_folder
+)
+from .pinecone_utils import (
+    generate_embedding,
+    upsert_vectors,
+    query_vectors,
+    delete_vectors
+)
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '../.env'))
 
 # --- Configuration ---
-PROJECT_ID = os.getenv('GOOGLE_CLOUD_PROJECT', '')
-LOCATION = os.getenv('GOOGLE_CLOUD_LOCATION', '')
-DATASTORE_ID = os.getenv('DATASTORE_ID', '')
-BUCKET_NAME = os.getenv('BUCKET_NAME', '')
-CREDENTIALS_PATH = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', '')
 
-try:
-    credentials = service_account.Credentials.from_service_account_file(CREDENTIALS_PATH)
-    storage_client = storage.Client(credentials=credentials)
-    search_client = discoveryengine_v1.SearchServiceClient(credentials=credentials)
-except FileNotFoundError:
-    print(f"Error: Credentials file not found at '{CREDENTIALS_PATH}'.")
-    print("Please ensure the GOOGLE_APPLICATION_CREDENTIALS environment variable is set correctly.")
-    # Exit or handle gracefully
-    exit()
-except Exception as e:
-    print(f"An unexpected error occurred during client initialization: {e}")
-    exit()
 # -------------------
 
 def _generate_file_name():
@@ -35,20 +31,25 @@ def _generate_file_name():
     unique_id = str(uuid.uuid4())
     return f"experience_{date_str}_{unique_id}.txt"
 
-def _create_content_with_metadata(description: str, content: str, tags: list[str]) -> str:
+def _create_content_with_metadata(description: str, content: str, tags: list[str], access_type: Optional[str] = None) -> str:
     """Adds metadata to the content."""
     now_iso = datetime.now(timezone.utc).isoformat()
     tags_str = ", ".join(tags) if tags else ""
+    
+    # Handle default access_type inside the function
+    effective_access_type = access_type if access_type is not None else "private"
+
     metadata = f"""---
 created: {now_iso}
 modified: {now_iso}
 description: {description}
 tags: [{tags_str}]
+access_type: {effective_access_type}
 ---
 """
     return metadata + content
 
-def write_to_rag(description: str, content: str, tags: list[str] = []) -> str:
+def write_to_rag(description: str, content: str, tags: list[str] = [], access_type: Optional[str] = None, folder_id: Optional[str] = None) -> str:
     """
     Creates a new experience with a standardized file name and metadata.
 
@@ -56,57 +57,97 @@ def write_to_rag(description: str, content: str, tags: list[str] = []) -> str:
         description: A brief description of the experience.
         content: The main text of the experience.
         tags: An optional list of tags to categorize the experience.
+        access_type: 'private' or 'public' to control access. If None, defaults to 'private'.
+        folder_id: The ID of the Google Drive folder. If None, it defaults to 'experiences' folder in My Drive.
 
     Returns:
-        The file path of the newly created experience.
+        The file ID of the newly created experience in Google Drive.
     """
-    file_path = _generate_file_name()
-    full_content = _create_content_with_metadata(description, content, tags)
-    
-    print(f"Attempting to upload '{file_path}' to bucket '{BUCKET_NAME}'...")
-    try:
-        bucket = storage_client.bucket(BUCKET_NAME)
-        blob = bucket.blob(file_path)
-        blob.upload_from_string(full_content)
-        print(f"Successfully uploaded '{file_path}' to '{BUCKET_NAME}'.")
-        return file_path
-    except Exception as e:
-        return f"An unexpected error occurred during upload: {e}"
+    if folder_id is None:
+        folder_id = get_or_create_folder("experiences", 'root')
 
-def update_in_rag(file_path: str, new_content: str, new_tags: list[str] = []) -> str:
+    # Handle default access_type inside the function
+    effective_access_type = access_type if access_type is not None else "private"
+
+    file_name = _generate_file_name()
+    full_content = _create_content_with_metadata(description, content, tags, effective_access_type)
+    
+    print(f"Attempting to upload '{file_name}' to Google Drive...")
+    try:
+        file_id = upload_file_to_drive(file_name, full_content, folder_id)
+        print(f"Successfully uploaded '{file_name}' to Google Drive with ID: {file_id}.")
+
+        # Generate embedding and upsert to Pinecone
+        embedding = generate_embedding(content)
+        metadata = {
+            "file_name": file_name,
+            "description": description,
+            "tags": tags,
+            "access_type": effective_access_type
+        }
+        upsert_vectors(vectors=[(file_id, embedding, metadata)])
+        print(f"Successfully upserted embedding for '{file_name}' to Pinecone.")
+
+        return file_id
+    except Exception as e:
+        return f"An unexpected error occurred during write: {e}"
+
+def update_in_rag(file_id: str, new_content: str, new_tags: list[str] = [], new_access_type: Optional[str] = None, folder_id: Optional[str] = None) -> str:
     """
     Updates an existing experience, preserving original creation date and updating the modified date and tags.
 
     Args:
-        file_path: The file path of the experience to update.
+        file_id: The file ID of the experience to update in Google Drive.
         new_content: The new content to overwrite the old content.
         new_tags: An optional new list of tags to overwrite the old ones.
+        new_access_type: An optional new access type ('private' or 'public') to overwrite the old one. If None, keeps the old access type.
+        folder_id: The ID of the Google Drive folder. If None, it defaults to 'experiences' folder in My Drive.
 
     Returns:
         A confirmation message.
     """
-    print(f"Attempting to update '{file_path}' in bucket '{BUCKET_NAME}'...")
-    try:
-        bucket = storage_client.bucket(BUCKET_NAME)
-        blob = bucket.blob(file_path)
+    if folder_id is None:
+        folder_id = get_or_create_folder("experiences", 'root')
 
-        # Get original metadata
-        original_content = blob.download_as_string().decode('utf-8')
-        metadata_part = original_content.split('---')[1]
-        created_date = metadata_part.split('created: ')[1].split('\n')[0]
-        description = metadata_part.split('description: ')[1].split('\n')[0]
+    print(f"Attempting to update '{file_id}' in Google Drive...")
+    try:
+        original_full_content = download_file_from_drive(file_id)
+        parts = original_full_content.split('---', 2)
         
-        # Use new tags if provided, otherwise keep the old ones
-        if new_tags: # Check if new_tags is not empty
+        if len(parts) < 2:
+            raise ValueError("Invalid content format: metadata not found.")
+
+        metadata_part = parts[1]
+        original_content_body = parts[2] if len(parts) > 2 else ""
+
+        # Extract original metadata
+        created_date = next((line.split(':', 1)[1].strip() for line in metadata_part.splitlines() if line.strip().startswith('created:')), "")
+        description = next((line.split(':', 1)[1].strip() for line in metadata_part.splitlines() if line.strip().startswith('description:')), "")
+        
+        # Determine tags
+        if new_tags:
             tags_str = ", ".join(new_tags)
         else:
-            # Extract existing tags from metadata_part
             tags_line = next((line for line in metadata_part.splitlines() if line.strip().startswith('tags:')), None)
             if tags_line:
-                # Extract content within brackets, then split by comma and strip spaces
-                tags_str = tags_line.split('[')[1].split(']')[0].strip()
+                match = re.search(r'\[(.*?)\]', tags_line)
+                if match:
+                    tags_content = match.group(1).strip()
+                    tags_str = tags_content
+                else:
+                    tags_str = ""
             else:
                 tags_str = ""
+
+        # Determine access_type
+        if new_access_type is not None:
+            access_type = new_access_type
+        else:
+            access_type_line = next((line for line in metadata_part.splitlines() if line.strip().startswith('access_type:')), None)
+            if access_type_line:
+                access_type = access_type_line.split(':', 1)[1].strip()
+            else:
+                access_type = "private" # Default if not found
 
         now_iso = datetime.now(timezone.utc).isoformat()
         metadata = f"""---
@@ -114,155 +155,193 @@ created: {created_date}
 modified: {now_iso}
 description: {description}
 tags: [{tags_str}]
+access_type: {access_type}
 ---
 """
         full_content = metadata + new_content
         
-        blob.upload_from_string(full_content)
-        print(f"Successfully updated '{file_path}' in '{BUCKET_NAME}'.")
-        return f"Successfully updated {file_path}."
+        update_file_in_drive(file_id, full_content)
+        print(f"Successfully updated '{file_id}' in Google Drive.")
+
+        # Update embedding in Pinecone
+        embedding = generate_embedding(new_content)
+        metadata = {
+            "file_name": file_id, # Using file_id as file_name for Pinecone metadata consistency
+            "description": description,
+            "tags": [tag.strip() for tag in tags_str.split(',') if tag.strip()],
+            "access_type": access_type
+        }
+        upsert_vectors(vectors=[(file_id, embedding, metadata)])
+        print(f"Successfully updated embedding for '{file_id}' in Pinecone.")
+
+        return f"Successfully updated {file_id}."
     except Exception as e:
         return f"An unexpected error occurred during update: {e}"
 
-def delete_from_rag(file_path: str) -> str:
+def delete_from_rag(file_id: str, folder_id: Optional[str] = None) -> str:
     """
-    Deletes an experience from the GCS bucket.
+    Deletes an experience from Google Drive and its corresponding vector from Pinecone.
 
     Args:
-        file_path: The file path of the experience to delete.
+        file_id: The file ID of the experience to delete.
+        folder_id: The ID of the Google Drive folder. If None, it defaults to 'experiences' folder in My Drive.
 
     Returns:
         A confirmation message.
     """
-    print(f"Attempting to delete '{file_path}' from bucket '{BUCKET_NAME}'...")
+    if folder_id is None:
+        folder_id = get_or_create_folder("experiences", 'root')
+
+    print(f"Attempting to delete '{file_id}' from Google Drive...")
     try:
-        bucket = storage_client.bucket(BUCKET_NAME)
-        blob = bucket.blob(file_path)
-        blob.delete()
-        print(f"Successfully deleted '{file_path}' from '{BUCKET_NAME}'.")
-        return f"Successfully deleted {file_path}."
+        delete_file_from_drive(file_id)
+        print(f"Successfully deleted '{file_id}' from Google Drive.")
+
+        # Delete vector from Pinecone
+        delete_vectors(ids=[file_id])
+        print(f"Successfully deleted vector for '{file_id}' from Pinecone.")
+
+        return f"Successfully deleted {file_id}."
     except Exception as e:
         return f"An unexpected error occurred during deletion: {e}"
 
-def find_experiences(pattern: str) -> list[dict]:
+def find_experiences(pattern: str, folder_id: Optional[str] = None) -> list[dict]:
     """
-    Finds experiences in the GCS bucket matching a pattern and returns detailed information.
+    Finds experiences in the Google Drive folder matching a pattern and returns detailed information.
 
     Args:
-        pattern: A glob-style pattern to match against file names (e.g., "experience_202507*").
+        pattern: A regex pattern to match against file names (e.g., "experience_202507.*txt").
+        folder_id: The ID of the Google Drive folder. If None, it defaults to 'experiences' folder in My Drive.
 
     Returns:
-        A list of dictionaries, each containing 'file_path', 'description', 'tags', and 'content_snippet'.
+        A list of dictionaries, each containing 'file_id', 'file_name', 'description', 'tags', 'access_type', and 'content_snippet'.
     """
-    print(f"Searching for files matching '{pattern}' in bucket '{BUCKET_NAME}'...")
+    if folder_id is None:
+        folder_id = get_or_create_folder("experiences", 'root')
+
+    print(f"Searching for files matching '{pattern}' in Google Drive...")
     try:
-        bucket = storage_client.bucket(BUCKET_NAME)
-        blobs = storage_client.list_blobs(BUCKET_NAME, match_glob=pattern)
+        items = list_files_in_folder(folder_id)
         
         results = []
-        for blob in blobs:
-            try:
-                content = blob.download_as_string().decode('utf-8')
-                parts = content.split('---', 2) # Split into metadata, content, and potential remaining parts
-                
-                description = "N/A"
-                tags = []
-                content_snippet = ""
+        for item in items:
+            file_id = item['id']
+            file_name = item['name']
 
-                if len(parts) > 1:
-                    metadata_part = parts[1]
-                    # Extract description
-                    desc_match = [line for line in metadata_part.splitlines() if line.strip().startswith('description:')]
-                    if desc_match:
-                        description = desc_match[0].split(':', 1)[1].strip()
+            if re.match(pattern, file_name):
+                try:
+                    content = download_file_from_drive(file_id)
+                    parts = content.split('---', 2)
+                    
+                    description = "N/A"
+                    tags = []
+                    access_type = "private"
+                    content_snippet = ""
 
-                    # Extract tags
-                    tags_match = [line for line in metadata_part.splitlines() if line.strip().startswith('tags:')]
-                    if tags_match:
-                        tags_str = tags_match[0].split('[', 1)[1].split(']', 1)[0].strip()
-                        tags = [tag.strip() for tag in tags_str.split(',') if tag.strip()]
-                
-                if len(parts) > 2:
-                    content_body = parts[2].strip()
-                    content_snippet = content_body[:200] + "..." if len(content_body) > 200 else content_body
+                    if len(parts) > 1:
+                        metadata_part = parts[1]
+                        # Extract description
+                        desc_match = [line for line in metadata_part.splitlines() if line.strip().startswith('description:')]
+                        if desc_match:
+                            description = desc_match[0].split(':', 1)[1].strip()
 
-                results.append({
-                    "file_path": blob.name,
-                    "description": description,
-                    "tags": tags,
-                    "content_snippet": content_snippet
-                })
-            except Exception as e:
-                print(f"Error processing blob {blob.name}: {e}")
-                # Optionally, add a partial result or skip
-                results.append({
-                    "file_path": blob.name,
-                    "description": "Error reading content",
-                    "tags": [],
-                    "content_snippet": f"Error: {e}"
-                })
+                        # Extract tags
+                        tags_match = [line for line in metadata_part.splitlines() if line.strip().startswith('tags:')]
+                        if tags_match:
+                            tags_str = tags_match[0].split('[', 1)[1].split(']', 1)[0].strip()
+                            tags = [tag.strip() for tag in tags_str.split(',') if tag.strip()]
+                        
+                        # Extract access_type
+                        access_type_match = [line for line in metadata_part.splitlines() if line.strip().startswith('access_type:')]
+                        if access_type_match:
+                            access_type = access_type_match[0].split(':', 1)[1].strip()
+
+                    if len(parts) > 2:
+                        content_body = parts[2].strip()
+                        content_snippet = content_body[:200] + "..." if len(content_body) > 200 else content_body
+
+                    results.append({
+                        "file_id": file_id,
+                        "file_name": file_name,
+                        "description": description,
+                        "tags": tags,
+                        "access_type": access_type,
+                        "content_snippet": content_snippet
+                    })
+                except Exception as e:
+                    print(f"Error processing file {file_name} (ID: {file_id}): {e}")
+                    results.append({
+                        "file_id": file_id,
+                        "file_name": file_name,
+                        "description": "Error reading content",
+                        "tags": [],
+                        "access_type": "N/A",
+                        "content_snippet": f"Error: {e}"
+                    })
         return results
     except Exception as e:
         return [{"error": f"An unexpected error occurred during search: {e}"}]
 
-def read_from_rag(query: str) -> list[dict]:
+def read_from_rag(query: str, top_k: int = 5, access_type: Optional[str] = None, folder_id: Optional[str] = None) -> list[dict]:
     """
-    Performs a search query against the Vertex AI Search datastore and returns detailed results.
+    Performs a search query against the Pinecone index and returns detailed results from Google Drive.
 
     Args:
         query: The search query (e.g., "What was the key point about project X?").
+        top_k: The number of top results to retrieve from Pinecone.
+        access_type: Filter by 'private' or 'public' experiences.
+        folder_id: The ID of the Google Drive folder. If None, it defaults to 'experiences' folder in My Drive.
 
     Returns:
-        A list of dictionaries, each containing 'file_path' and 'content'.
+        A list of dictionaries, each containing 'file_id', 'file_name', 'content', 'description', 'tags', and 'access_type'.
     """
-    print(f"Querying datastore '{DATASTORE_ID}' with: '{query}'...")
+    if folder_id is None:
+        folder_id = get_or_create_folder("experiences", 'root')
+
+    print(f"Querying Pinecone with: '{query}'...")
     try:
-        serving_config = search_client.serving_config_path(
-            project=PROJECT_ID,
-            location=LOCATION,
-            data_store=DATASTORE_ID,
-            serving_config="default_serving_config",
-        )
+        query_embedding = generate_embedding(query)
+        
+        # Build filter for Pinecone query
+        pinecone_filter = {}
+        if access_type:
+            pinecone_filter["access_type"] = access_type
 
-        request = discoveryengine_v1.SearchRequest(
-            serving_config=serving_config,
-            query=query,
-            page_size=5,
-        )
-
-        response = search_client.search(request)
+        query_results = query_vectors(query_embedding, top_k=top_k, include_metadata=True, filter=pinecone_filter)
         
         results = []
-        for i, result in enumerate(response.results):
-            full_content=''
-            blob_name=''
-            gcs_uri = result.document.derived_struct_data.get('link')
-            if gcs_uri:
-                match = re.match(r"gs://([^/]+)/(.+)", gcs_uri)
-                if match:
-                    bucket_name, blob_name = match.groups()
-                    bucket = storage_client.bucket(bucket_name)
-                    blob = bucket.blob(blob_name)
-                    full_content = blob.download_as_text()
-            if 'extractive_answers' in result.document.derived_struct_data:
-                extractive_answers = result.document.derived_struct_data['extractive_answers']
-                if extractive_answers and len(extractive_answers) > 0:
-                    content = extractive_answers[0]['content']
-                else:
-                    content = "No extractive answers found."
-            else:
-                content = result.document.content if result.document.content else "No content found."
+        for match in query_results:
+            file_id = match['id']
+            metadata = match['metadata']
             
-            results.append({
-                "file_path": blob_name,
-                "content": content,
-                "full_content": full_content
-            })
+            try:
+                full_content = download_file_from_drive(file_id)
+                parts = full_content.split('---', 2)
+                content_body = parts[2].strip() if len(parts) > 2 else ""
+
+                results.append({
+                    "file_id": file_id,
+                    "file_name": metadata.get('file_name', 'N/A'),
+                    "content": content_body,
+                    "description": metadata.get('description', 'N/A'),
+                    "tags": metadata.get('tags', []),
+                    "access_type": metadata.get('access_type', 'private')
+                })
+            except Exception as e:
+                print(f"Error downloading content for file ID {file_id}: {e}")
+                results.append({
+                    "file_id": file_id,
+                    "file_name": metadata.get('file_name', 'N/A'),
+                    "content": f"Error: Could not retrieve content. {e}",
+                    "description": metadata.get('description', 'N/A'),
+                    "tags": metadata.get('tags', []),
+                    "access_type": metadata.get('access_type', 'private')
+                })
 
         if not results:
-            return [{"file_path": "N/A", "content": "No relevant results found in the datastore."}]
+            return [{"file_id": "N/A", "content": "No relevant results found in Pinecone."}]
 
         return results
 
     except Exception as e:
-        return [{"file_path": "N/A", "content": f"Error: Could not query the datastore. Details: {e}"}]
+        return [{"file_id": "N/A", "content": f"Error: Could not query Pinecone. Details: {e}"}]
