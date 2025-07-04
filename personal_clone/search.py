@@ -118,7 +118,6 @@ def update_in_rag(file_id: str, new_content: str, new_tags: list[str] = [], new_
             raise ValueError("Invalid content format: metadata not found.")
 
         metadata_part = parts[1]
-        original_content_body = parts[2] if len(parts) > 2 else ""
 
         # Extract original metadata
         created_date = next((line.split(':', 1)[1].strip() for line in metadata_part.splitlines() if line.strip().startswith('created:')), "")
