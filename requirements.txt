@@ -6,3 +6,4 @@ google-auth-oauthlib
 pinecone
 google-cloud-aiplatform
 python-dotenv
+requests

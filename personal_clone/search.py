@@ -31,25 +31,26 @@ def _generate_file_name():
     unique_id = str(uuid.uuid4())
     return f"experience_{date_str}_{unique_id}.txt"
 
-def _create_content_with_metadata(description: str, content: str, tags: list[str], access_type: Optional[str] = None) -> str:
+def _create_content_with_metadata(description: str, content: str, tags: list[str], access_type: Optional[str] = None, clickup_task_id: Optional[str] = None) -> str:
     """Adds metadata to the content."""
     now_iso = datetime.now(timezone.utc).isoformat()
     tags_str = ", ".join(tags) if tags else ""
     
     # Handle default access_type inside the function
     effective_access_type = access_type if access_type is not None else "private"
+    clickup_task_id_str = f"\nclickup_task_id: {clickup_task_id}" if clickup_task_id else ""
 
     metadata = f"""---
 created: {now_iso}
 modified: {now_iso}
 description: {description}
 tags: [{tags_str}]
-access_type: {effective_access_type}
+access_type: {effective_access_type}{clickup_task_id_str}
 ---
 """
     return metadata + content
 
-def write_to_rag(description: str, content: str, tags: list[str] = [], access_type: Optional[str] = None, folder_id: Optional[str] = None) -> str:
+def write_to_rag(description: str, content: str, tags: list[str] = [], access_type: Optional[str] = None, folder_id: Optional[str] = None, clickup_task_id: Optional[str] = None) -> str:
     """
     Creates a new experience with a standardized file name and metadata.
 
@@ -83,7 +84,8 @@ def write_to_rag(description: str, content: str, tags: list[str] = [], access_ty
             "file_name": file_name,
             "description": description,
             "tags": tags,
-            "access_type": effective_access_type
+            "access_type": effective_access_type,
+            "clickup_task_id": clickup_task_id
         }
         upsert_vectors(vectors=[(file_id, embedding, metadata)])
         print(f"Successfully upserted embedding for '{file_name}' to Pinecone.")
@@ -92,7 +94,7 @@ def write_to_rag(description: str, content: str, tags: list[str] = [], access_ty
     except Exception as e:
         return f"An unexpected error occurred during write: {e}"
 
-def update_in_rag(file_id: str, new_content: str, new_tags: list[str] = [], new_access_type: Optional[str] = None, folder_id: Optional[str] = None) -> str:
+def update_in_rag(file_id: str, new_content: str, new_tags: list[str] = [], new_access_type: Optional[str] = None, folder_id: Optional[str] = None, clickup_task_id: Optional[str] = None) -> str:
     """
     Updates an existing experience, preserving original creation date and updating the modified date and tags.
 
@@ -148,13 +150,17 @@ def update_in_rag(file_id: str, new_content: str, new_tags: list[str] = [], new_
             else:
                 access_type = "private" # Default if not found
 
+        # Extract clickup_task_id
+        clickup_task_id = next((line.split(':', 1)[1].strip() for line in metadata_part.splitlines() if line.strip().startswith('clickup_task_id:')), None)
+
         now_iso = datetime.now(timezone.utc).isoformat()
+        clickup_task_id_str = f"\nclickup_task_id: {clickup_task_id}" if clickup_task_id else ""
         metadata = f"""---
 created: {created_date}
 modified: {now_iso}
 description: {description}
 tags: [{tags_str}]
-access_type: {access_type}
+access_type: {access_type}{clickup_task_id_str}
 ---
 """
         full_content = metadata + new_content
