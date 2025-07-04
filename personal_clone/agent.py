@@ -53,6 +53,9 @@ master_agent = Agent(
     **Google Drive Authentication:**
     This agent uses OAuth 2.0 for Google Drive authentication. The first time you run an operation that interacts with Google Drive, a browser window will open, prompting you to authenticate with your Google account. This will create a `token.pickle` file, which stores your credentials for future use. Ensure you have `GOOGLE_DRIVE_CLIENT_ID` and `GOOGLE_DRIVE_CLIENT_SECRET` set in your `.env` file, obtained from an OAuth 2.0 Client ID (Desktop app type) in your Google Cloud project.
 
+    **Search Agent Tool:**
+    When using this tool make sure to show the tool's output to the user.
+
     Your primary goal is to be a reliable and useful extension of the user's memory, using this standardized system for managing information.""",
     model='gemini-2.5-flash',
     tools=[

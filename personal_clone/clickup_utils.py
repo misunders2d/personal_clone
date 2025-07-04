@@ -52,9 +52,10 @@ class ClickUpAPI:
             return {"error": teams_response["error"]}
 
         for team in teams_response.get("teams", []):
-            for member in team.get("members", []):
-                if member.get("user", {}).get("email") == email:
-                    return {"user_id": member["user"]["id"]}
+            if isinstance(team, dict):
+                for member in team.get("members", []):
+                    if member.get("user", {}).get("email") == email:
+                        return {"user_id": member["user"]["id"]}
         return {"error": f"User with email {email} not found in any authorized team."}
 
     def _format_timestamp(self, timestamp: Optional[str]) -> Optional[str]:
@@ -116,12 +117,12 @@ class ClickUpAPI:
             if "error" in user_id_response:
                 return {"error": user_id_response["error"]}
             user_id = user_id_response["user_id"]
-            payload["assignees"] = [user_id]
+            payload["assignees"] = [user_id] #type: ignore
 
         if due_date:
-            payload["due_date"] = due_date
+            payload["due_date"] = due_date #type: ignore
         if start_date:
-            payload["start_date"] = start_date
+            payload["start_date"] = start_date #type: ignore
 
         try:
             response = requests.post(url, headers=self.headers, json=payload)
@@ -144,41 +145,3 @@ class ClickUpAPI:
             return {"task": response.json()}
         except requests.exceptions.RequestException as e:
             return {"error": f"Error closing task: {e}"}
-
-# Example Usage (for testing purposes, not part of the module itself)
-if __name__ == "__main__":
-    # Set dummy environment variables for testing
-    os.environ["CLICKUP_API_TOKEN"] = "pk_YOUR_CLICKUP_API_TOKEN"
-    os.environ["CLICKUP_SPACE_ID"] = "YOUR_SPACE_ID"
-    os.environ["CLICKUP_LIST_ID"] = "YOUR_LIST_ID"
-    os.environ["CLICKUP_USER_EMAIL"] = "test@example.com"
-
-    clickup_api = ClickUpAPI()
-
-    # To test, you'll need a valid API token and user email.
-    # You can then use get_authorized_teams(), get_spaces(team_id), and get_lists(folder_id)
-    # to find the IDs you need for create_task, get_tasks, and close_task.
-
-    # Example: Get authorized teams
-    # teams = clickup_api.get_authorized_teams()
-    # print("Authorized Teams:", teams)
-
-    # Example: Get spaces in a team (replace YOUR_TEAM_ID)
-    spaces = clickup_api.get_spaces("YOUR_TEAM_ID")
-    print("Spaces:", spaces)
-
-    # Example: Get lists in a folder/space (replace YOUR_FOLDER_OR_SPACE_ID)
-    # lists = clickup_api.get_lists("YOUR_FOLDER_OR_SPACE_ID")
-    # print("Lists:", lists)
-
-    # Example: Create a task (replace YOUR_LIST_ID and YOUR_USER_EMAIL if not set in .env)
-    # new_task = clickup_api.create_task("Test Task from Agent", "This is a test description.", list_id="YOUR_LIST_ID", email="test@example.com")
-    # print("Created Task:", new_task)
-
-    # Example: Get tasks (replace YOUR_LIST_ID and YOUR_USER_EMAIL if not set in .env)
-    # tasks = clickup_api.get_tasks(list_id="YOUR_LIST_ID", email="test@example.com")
-    # print("All Tasks:", tasks)
-
-    # Example: Close a task (replace YOUR_TASK_ID)
-    # closed_task = clickup_api.close_task("YOUR_TASK_ID")
-    # print("Closed Task:", closed_task)
