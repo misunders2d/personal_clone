@@ -31,6 +31,12 @@ The agent provides five primary functions to manage your knowledge base:
     *   **Usage**: Requires the exact `file_id` of the experience (obtained from `read_from_rag` or `find_experiences`) and an optional `folder_id`.
     *   **Output**: A confirmation message upon successful deletion.
 
+6.  **ClickUp Integration**:
+    *   **Purpose**: To manage tasks within ClickUp directly from the agent.
+    *   **`get_tasks()`**: Retrieves tasks from your configured ClickUp list. Tasks will include their due dates.
+    *   **`create_task(title, description=None, due_date=None, start_date=None)`**: Creates a new task in your configured ClickUp list. `description`, `due_date` (Unix timestamp in milliseconds), and `start_date` (Unix timestamp in milliseconds) are optional.
+    *   **`close_task(task_id)`**: Marks a ClickUp task as complete.
+
 ## Technology Stack
 
 *   **Agent Framework**: Google ADK (Agent Development Kit)
@@ -90,6 +96,23 @@ To get `personal_clone` up and running, follow these steps:
         PINECONE_API_KEY="YOUR_PINECONE_API_KEY"
         PINECONE_ENVIRONMENT="YOUR_PINECONE_ENVIRONMENT"
         PINECONE_INDEX_NAME="personal-clone-index" # Or your preferred index name
+        ```
+
+### ClickUp Setup
+
+1.  **Get API Token, Space ID, List ID, and User Email**:
+    *   **API Token**: Log in to ClickUp, click your profile avatar (bottom-left), go to "Apps" or "Integrations", and find "API Tokens" to generate and copy your token (starts with `pk_`).
+    *   **Space ID**: Navigate to the desired Space in ClickUp. The Space ID is part of the URL (e.g., `.../v/s/YOUR_SPACE_ID/...`).
+    *   **List ID**: Navigate to the desired List in ClickUp. The List ID is part of the URL (e.g., `.../list/YOUR_LIST_ID`).
+    *   **User Email**: The email address associated with your ClickUp account that you want to assign tasks to.
+
+2.  **Set Environment Variables**:
+    *   Add the following lines to your `.env` file:
+        ```
+        CLICKUP_API_TOKEN="YOUR_CLICKUP_API_TOKEN"
+        CLICKUP_SPACE_ID="YOUR_CLICKUP_SPACE_ID"
+        CLICKUP_LIST_ID="YOUR_CLICKUP_LIST_ID"
+        CLICKUP_USER_EMAIL="YOUR_CLICKUP_USER_EMAIL"
         ```
 
 ### Installation

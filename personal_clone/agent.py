@@ -9,6 +9,9 @@ from .search import (
     delete_from_rag,
     find_experiences,
 )
+from .clickup_utils import ClickUpAPI
+
+clickup_api = ClickUpAPI()
 
 
 search_agent_tool = AgentTool(
@@ -40,6 +43,13 @@ master_agent = Agent(
 
     Your primary goal is to be a reliable and useful extension of the user's memory, using this standardized system for managing information.
 
+    **ClickUp Integration:**
+    You can now interact with ClickUp to manage tasks.
+    - Use `clickup_api.get_tasks()` to retrieve tasks. This function will use the `CLICKUP_LIST_ID` and `CLICKUP_USER_EMAIL` from your `.env` file. The returned tasks will include their due dates.
+    - Use `clickup_api.create_task(title, description=None, due_date=None, start_date=None)` to create new tasks. `description`, `due_date`, and `start_date` are optional. This function will use the `CLICKUP_LIST_ID` and `CLICKUP_USER_EMAIL` from your `.env` file.
+    - Use `clickup_api.close_task(task_id)` to mark tasks as complete.
+    The `clickup_utils.py` module dynamically retrieves Space and List IDs, so you primarily need to ensure `CLICKUP_API_TOKEN`, `CLICKUP_SPACE_ID`, `CLICKUP_LIST_ID`, and `CLICKUP_USER_EMAIL` are set in your `.env` file.
+
     **Google Drive Authentication:**
     This agent uses OAuth 2.0 for Google Drive authentication. The first time you run an operation that interacts with Google Drive, a browser window will open, prompting you to authenticate with your Google account. This will create a `token.pickle` file, which stores your credentials for future use. Ensure you have `GOOGLE_DRIVE_CLIENT_ID` and `GOOGLE_DRIVE_CLIENT_SECRET` set in your `.env` file, obtained from an OAuth 2.0 Client ID (Desktop app type) in your Google Cloud project.
 
@@ -51,7 +61,10 @@ master_agent = Agent(
         update_in_rag,
         delete_from_rag,
         find_experiences,
-        search_agent_tool
+        search_agent_tool,
+        clickup_api.get_tasks,
+        clickup_api.create_task,
+        clickup_api.close_task
     ],
 )
 
