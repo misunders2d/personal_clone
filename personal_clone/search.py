@@ -84,9 +84,10 @@ def write_to_rag(description: str, content: str, tags: list[str] = [], access_ty
             "file_name": file_name,
             "description": description,
             "tags": tags,
-            "access_type": effective_access_type,
-            "clickup_task_id": clickup_task_id
+            "access_type": effective_access_type
         }
+        if clickup_task_id:
+            metadata["clickup_task_id"] = clickup_task_id
         upsert_vectors(vectors=[(file_id, embedding, metadata)])
         print(f"Successfully upserted embedding for '{file_name}' to Pinecone.")
 
