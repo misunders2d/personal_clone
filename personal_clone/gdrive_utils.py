@@ -28,7 +28,7 @@ def get_drive_service():
         with open(TOKEN_PATH, 'rb') as token:
             creds = pickle.load(token)
     # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
+    if not creds or not creds.valid or creds.expired:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
