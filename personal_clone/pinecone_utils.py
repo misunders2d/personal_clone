@@ -1,16 +1,16 @@
 import os
-from pinecone import Pinecone, ServerlessSpec
+from pinecone import Pinecone, ServerlessSpec, QueryResponse
 
 from dotenv import load_dotenv
 from vertexai.language_models import TextEmbeddingModel
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '../.env'))
 
-PINECONE_API_KEY = os.getenv('PINECONE_API_KEY')
-PINECONE_ENVIRONMENT = os.getenv('PINECONE_ENVIRONMENT')
-PINECONE_INDEX_NAME = os.getenv('PINECONE_INDEX_NAME')
-GOOGLE_CLOUD_PROJECT = os.getenv('GOOGLE_CLOUD_PROJECT')
-GOOGLE_CLOUD_LOCATION = os.getenv('GOOGLE_CLOUD_LOCATION')
+PINECONE_API_KEY = os.getenv('PINECONE_API_KEY',"")
+PINECONE_ENVIRONMENT = os.getenv('PINECONE_ENVIRONMENT',"")
+PINECONE_INDEX_NAME = os.getenv('PINECONE_INDEX_NAME',"")
+GOOGLE_CLOUD_PROJECT = os.getenv('GOOGLE_CLOUD_PROJECT',"")
+GOOGLE_CLOUD_LOCATION = os.getenv('GOOGLE_CLOUD_LOCATION',"")
 
 # Initialize Pinecone
 pc = Pinecone(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
@@ -42,12 +42,12 @@ def generate_embedding(text: str) -> list[float]:
     embeddings = model.get_embeddings([text])
     return embeddings[0].values
 
-def upsert_vectors(vectors: list[tuple], namespace: str = None):
+def upsert_vectors(vectors: list[tuple], namespace: str | None = None):
     """Upserts vectors to the Pinecone index."""
     index = get_pinecone_index()
     index.upsert(vectors=vectors, namespace=namespace)
 
-def query_vectors(vector: list[float], top_k: int = 5, namespace: str = None, include_metadata: bool = True, filters: dict = None) -> list[dict]:
+def query_vectors(vector: list[float], top_k: int = 5, namespace: str | None = None, include_metadata: bool = True, filters: dict | None = None) -> list[dict]:
     """Queries the Pinecone index and returns results with metadata."""
     index = get_pinecone_index()
     query_results = index.query(
@@ -58,6 +58,8 @@ def query_vectors(vector: list[float], top_k: int = 5, namespace: str = None, in
         filter=filters
     )
     results = []
+    if not isinstance(query_results, QueryResponse):
+        raise ValueError("Query response is not of type QueryResponse")
     for match in query_results.matches:
         results.append({
             "id": match.id,
@@ -66,7 +68,7 @@ def query_vectors(vector: list[float], top_k: int = 5, namespace: str = None, in
         })
     return results
 
-def delete_vectors(ids: list[str], namespace: str = None):
+def delete_vectors(ids: list[str], namespace: str | None = None):
     """Deletes vectors from the Pinecone index by ID."""
     index = get_pinecone_index()
     index.delete(ids=ids, namespace=namespace)
