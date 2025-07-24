@@ -2,6 +2,7 @@ import os
 import pickle
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+from google.auth.exceptions import RefreshError
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 from io import BytesIO
@@ -21,23 +22,23 @@ def get_drive_service():
     Prints the names and IDs of the first 10 files the user has access to.
     """
     creds = None
-    # The file token.pickle stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
     if os.path.exists(TOKEN_PATH):
         with open(TOKEN_PATH, 'rb') as token:
             creds = pickle.load(token)
-    # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid or creds.expired:
+    
+    if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            # Create a dummy client_secrets.json for InstalledAppFlow
-            # In a real application, this would be a file downloaded from Google Cloud Console
+            try:
+                creds.refresh(Request())
+            except RefreshError:
+                os.remove(TOKEN_PATH)
+                creds = None # Force re-authentication
+        
+        if not creds:
             client_config = {
-                "web": {
+                "installed": {
                     "client_id": GOOGLE_DRIVE_CLIENT_ID,
-                    "project_id": "your-project-id", # Placeholder, not strictly used by flow
+                    "project_id": "your-project-id", # Placeholder
                     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                     "token_uri": "https://oauth2.googleapis.com/token",
                     "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
@@ -47,12 +48,11 @@ def get_drive_service():
             }
             flow = InstalledAppFlow.from_client_config(client_config, SCOPES)
             creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
-        with open(TOKEN_PATH, 'wb') as token:
-            pickle.dump(creds, token)
+            
+            with open(TOKEN_PATH, 'wb') as token:
+                pickle.dump(creds, token)
 
-    service = build('drive', 'v3', credentials=creds)
-    return service
+    return build('drive', 'v3', credentials=creds)
 
 def get_or_create_folder(folder_name: str, parent_folder_id: str = 'root') -> str:
     """Gets the ID of an existing folder or creates a new one if it doesn't exist.
