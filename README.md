@@ -37,6 +37,14 @@ The agent provides five primary functions to manage your knowledge base:
     *   **`create_task(title, description=None, due_date=None, start_date=None)`**: Creates a new task in your configured ClickUp list. `description`, `due_date` (Unix timestamp in milliseconds), and `start_date` (Unix timestamp in milliseconds) are optional.
     *   **`close_task(task_id)`**: Marks a ClickUp task as complete.
 
+## Autonomous Operation
+
+The agent is designed to be more than just a passive tool. It has the autonomy to make decisions and take initiative:
+
+*   **Implicit Recall**: If a conversation implies that the agent should have prior knowledge of a topic, it will automatically search its memory and inform you of its findings.
+*   **Proactive Memory**: If the agent identifies information that could be valuable to remember, it will ask for your permission to save it to your knowledge base.
+*   **Explicit Commands**: The agent will always prioritize your direct commands to remember, recall, update, or delete information.
+
 ## Technology Stack
 
 *   **Agent Framework**: Google ADK (Agent Development Kit)
