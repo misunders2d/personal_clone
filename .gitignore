@@ -214,3 +214,5 @@ integrations/
 
 improvements.md
 llms-full.txt
+
+*.bak

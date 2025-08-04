@@ -2,6 +2,8 @@ from google.adk import Agent
 from google.adk.tools import google_search
 from google.adk.tools.agent_tool import AgentTool
 
+from datetime import datetime
+
 from .search import (
     write_to_rag,
     read_from_rag,
@@ -11,8 +13,17 @@ from .search import (
 )
 from .clickup_utils import ClickUpAPI
 
+# Define the model name as a constant
+# MODEL_NAME = 'gemini-2.0-flash-live-001'
+SEARCH_MODEL_NAME='gemini-2.5-flash'
+# MODEL_NAME='gemini-live-2.5-flash-preview-native-audio'
+MODEL_NAME='gemini-2.5-flash-lite'
+
 clickup_api = ClickUpAPI()
 
+def get_current_date():
+    """Returns the current date and time in YYYY-MM-DD HH:MM:SS format."""
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 search_agent_tool = AgentTool(
     agent=Agent(
@@ -20,7 +31,7 @@ search_agent_tool = AgentTool(
         description="A web search agent that can search the web and load web pages.",
         instruction="""You are a web search agent. You can search the web using the `google_search` tool, which allows you to find relevant information online. You can also load web pages using the `load_web_page` tool, which retrieves the content of a specific URL.""",
         tools=[google_search],
-        model='gemini-2.5-flash'
+        model=SEARCH_MODEL_NAME
     ),
     skip_summarization=True)
 
@@ -33,6 +44,8 @@ master_agent = Agent(
     - **Implicit Recall:** If the conversation suggests you should already know something, inform the user you are searching your memory and use the `read_from_rag` tool to find the information.
     - **Proactive Memory:** If you come across information that seems important or worth remembering, ask the user for permission to save it. If they agree, use the `write_to_rag` or `update_in_rag` tool.
     - **Explicit Commands:** When the user explicitly asks you to remember, recall, update, or delete information, use the appropriate tool immediately.
+    - **Languages:** A user may communicate in any language, but you must always use English to store the information using `write_to_rag` tool and query the information using `read_from_rag` and `update_in_rag` tools.
+        Communicate with the user in the language of their choice.
 
     **Primary Functions:**
 
@@ -52,8 +65,9 @@ master_agent = Agent(
     - Always show the output of the `search_agent_tool` to the user.
     - Google Drive authentication is handled automatically via OAuth 2.0.
     """,
-    model='gemini-2.5-flash',
+    model=MODEL_NAME,
     tools=[
+        get_current_date,
         write_to_rag,
         read_from_rag,
         update_in_rag,
