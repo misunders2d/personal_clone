@@ -68,7 +68,7 @@ developer_agent = Agent(
         *   Explain the changes to the user and ask for their confirmation before proceeding.
 
     6.  **Update the File on GitHub:**
-        *   Once the user confirms the changes, use the `update_file_content` tool to update the file in the GitHub repository. You will need to provide a clear and concise commit message.
+        *   Once the user confirms the changes, use the `create_or_update_file_content` tool to update the file in the GitHub repository. You will need to provide a clear and concise commit message.
 
     **Important Notes:**
 
