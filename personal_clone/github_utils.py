@@ -10,11 +10,19 @@ def get_default_repo_config():
     repo_branch = os.getenv("GITHUB_DEFAULT_REPO_BRANCH")
     return repo_url, repo_branch
 
+def _get_repo_owner_and_name(repo_url: str):
+    """Extracts the repository owner and name from the repository URL."""
+    owner, name = repo_url.split('github.com/')[-1].split('/')
+    if name.endswith('.git'):
+        name = name[:-4]
+    return owner, name
+
 def get_file_content(repo_url: str, branch: str, file_path: str) -> str:
     """Gets the content of a file from a GitHub repository."""
     load_dotenv()
     GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-    api_url = f"https://api.github.com/repos/{repo_url.split('github.com/')[-1]}/contents/{file_path}?ref={branch}"
+    owner, name = _get_repo_owner_and_name(repo_url)
+    api_url = f"https://api.github.com/repos/{owner}/{name}/contents/{file_path}?ref={branch}"
     headers = {
         "Authorization": f"token {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json",
@@ -30,8 +38,8 @@ def update_file_content(repo_url: str, branch: str, file_path: str, new_content:
     """Updates the content of a file in a GitHub repository."""
     load_dotenv()
     GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-    repo_owner, repo_name = repo_url.split('github.com/')[-1].split('/')
-    api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}"
+    owner, name = _get_repo_owner_and_name(repo_url)
+    api_url = f"https://api.github.com/repos/{owner}/{name}"
     headers = {
         "Authorization": f"token {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json",
