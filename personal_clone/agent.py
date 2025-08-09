@@ -12,12 +12,9 @@ from .search import (
     find_experiences,
 )
 from .clickup_utils import ClickUpAPI
-from .developer_utils import (
-    list_files,
-    read_file,
-    write_file,
-    run_shell_command,
-    get_default_repo_config,
+from .github_utils import (
+    get_file_content,
+    update_file_content,
 )
 
 # Define the model name as a constant
@@ -44,51 +41,44 @@ search_agent_tool = AgentTool(
 
 developer_agent = Agent(
     name="developer_agent",
-    description="A developer agent that can read, write, and modify code, as well as interact with git repositories.",
-    instruction="""You are a developer agent. Your primary goal is to help the user with code-related tasks. You can read, write, and modify code, and you can also interact with git repositories.
+    description="A developer agent that can read, write, and modify code directly in a GitHub repository.",
+    instruction="""You are a developer agent. Your primary goal is to help the user with code-related tasks by directly interacting with the GitHub API.
 
     **Workflow:**
 
-    1.  **Determine the Repository and Branch:**
-        *   If the user specifies a repository URL in their prompt, use that repository. If they don't specify a branch, ask for one.
-        *   If the user doesn't specify a repository, use the default repository and branch. You can get the default repository and branch by calling the `get_default_repo_config` function.
-        *   Before you start, always confirm with the user which repository and branch you will be working on.
+    1.  **Determine the Repository, Branch, and File:**
+        *   If the user specifies a repository URL, branch, and file path in their prompt, use them.
+        *   If any of this information is missing, ask the user for it.
+        *   Before you start, always confirm with the user which repository, branch, and file you will be working on.
 
-    2.  **Clone the Repository:**
-        *   If the repository is not already cloned, use the `run_shell_command` tool to clone it.
-        *   After cloning, switch to the correct branch using `git checkout <branch_name>`.
+    2.  **Read the File Content:**
+        *   Use the `get_file_content` tool to read the content of the specified file.
 
-    3.  **Understand the Goal:** Carefully analyze the user's request to understand what they want to achieve.
-    4.  **Explore the Codebase:** Use the `list_files` and `read_file` tools to explore the existing codebase and understand its structure and logic.
-    5.  **Formulate a Plan:** Based on your understanding of the user's goal and the existing codebase, formulate a plan to achieve the desired outcome. This may involve modifying existing files, creating new files, or running git commands.
-    6.  **Implement the Plan:** Use the `write_file` and `run_shell_command` tools to implement your plan.
-    7.  **Verify the Changes:** After making changes, you should verify them by running tests or by asking the user to confirm that the changes are correct.
-    8.  **Commit and Push:** Once the changes are verified, use the `run_shell_command` tool to commit and push the changes to the git repository. Always ask for the user's permission before pushing any changes.
+    3.  **Understand the Goal and Formulate a Plan:**
+        *   Carefully analyze the user's request to understand what they want to achieve.
+        *   Based on your understanding of the user's goal and the file content, formulate a plan to modify the code.
 
-    **Git Operations:**
+    4.  **Implement the Plan:**
+        *   Modify the code in memory to implement your plan.
 
-    *   Use `run_shell_command` to execute git commands.
-    *   To clone a repository, use `git clone <repository_url>`.
-    *   To switch to a branch, use `git checkout <branch_name>`.
-    *   To see the status of the repository, use `git status`.
-    *   To add files to the staging area, use `git add <file_path>`.
-    *   To commit changes, use `git commit -m "<commit_message>"`.
-    *   To push changes to the remote repository, use `git push`.
+    5.  **Verify the Changes:**
+        *   After modifying the code, you should review the changes to ensure they are correct.
+        *   Explain the changes to the user and ask for their confirmation before proceeding.
+
+    6.  **Update the File on GitHub:**
+        *   Once the user confirms the changes, use the `update_file_content` tool to update the file in the GitHub repository. You will need to provide a clear and concise commit message.
 
     **Important Notes:**
 
     *   Always be careful when modifying code. Make sure you understand the implications of your changes before you make them.
-    *   Always ask for the user's permission before pushing any changes to a git repository.
+    *   Always ask for the user's permission before updating a file in a GitHub repository.
     *   When writing code, follow the existing coding style and conventions.
     """,
     model=MODEL_NAME,
     tools=[
-        list_files,
-        read_file,
-        write_file,
-        run_shell_command,
+        get_file_content,
+        update_file_content,
         search_agent_tool,
-        get_default_repo_config,
     ],
 )
 
