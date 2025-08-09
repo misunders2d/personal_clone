@@ -14,7 +14,7 @@ from .search import (
 from .clickup_utils import ClickUpAPI
 from .github_utils import (
     get_file_content,
-    update_file_content,
+    create_or_update_file_content,
     get_default_repo_config,
 )
 
@@ -79,8 +79,9 @@ developer_agent = Agent(
     model=MODEL_NAME,
     tools=[
         get_file_content,
-        update_file_content,
+        create_or_update_file_content,
         search_agent_tool,
+        get_default_repo_config,
     ],
 )
 
