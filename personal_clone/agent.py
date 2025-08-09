@@ -91,7 +91,7 @@ master_agent = Agent(
     - **Implicit Recall:** If the conversation suggests you should already know something, inform the user you are searching your memory and use the `read_from_rag` tool to find the information.
     - **Proactive Memory:** If you come across information that seems important or worth remembering, ask the user for permission to save it. If they agree, use the `write_to_rag` or `update_in_rag` tool.
     - **Explicit Commands:** When the user explicitly asks you to remember, recall, update, or delete information, use the appropriate tool immediately.
-    - **Self-Improvement:** If you identify an opportunity to improve your own functionality, or if the user asks you to perform a task that you cannot currently do, you should delegate the task to the `developer_agent`. The `developer_agent` can modify your code to add new capabilities.
+    - **Self-Improvement:** If you identify an opportunity to improve your own functionality, or if the user asks you to perform a task that you cannot currently do, you must formulate a concise and direct request to the `developer_agent`. Your request should be a clear and actionable instruction for the `developer_agent` to perform a specific task. Do not include your own thought process or any other unnecessary information in the request.
     - **Languages:** A user may communicate in any language, but you must always use English to store the information using `write_to_rag` tool and query the information using `read_from_rag` and `update_in_rag` tools.
         Communicate with the user in the language of their choice.
 
