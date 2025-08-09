@@ -75,7 +75,7 @@ developer_agent = Agent(
     *   Always be careful when modifying code. Make sure you understand the implications of your changes before you make them.
     *   Always ask for the user's permission before updating a file in a GitHub repository.
     *   When writing code, follow the existing coding style and conventions.
-    """,,
+    """,
     model=MODEL_NAME,
     tools=[
         get_file_content,
