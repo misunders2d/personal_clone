@@ -54,7 +54,8 @@ def run_shell_command(command: str) -> str:
 
 def get_default_repo_config():
     """Gets the default repository URL and branch from environment variables."""
-    load_dotenv()
+    dotenv_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+    load_dotenv(dotenv_path=dotenv_path)
     repo_url = os.getenv("GITHUB_DEFAULT_REPO_URL")
     repo_branch = os.getenv("GITHUB_DEFAULT_REPO_BRANCH")
     return repo_url, repo_branch

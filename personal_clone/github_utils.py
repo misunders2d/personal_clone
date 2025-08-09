@@ -3,12 +3,17 @@ import requests
 import base64
 from dotenv import load_dotenv
 
-load_dotenv()
-
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+def get_default_repo_config():
+    """Gets the default repository URL and branch from environment variables."""
+    load_dotenv()
+    repo_url = os.getenv("GITHUB_DEFAULT_REPO_URL")
+    repo_branch = os.getenv("GITHUB_DEFAULT_REPO_BRANCH")
+    return repo_url, repo_branch
 
 def get_file_content(repo_url: str, branch: str, file_path: str) -> str:
     """Gets the content of a file from a GitHub repository."""
+    load_dotenv()
+    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
     api_url = f"https://api.github.com/repos/{repo_url.split('github.com/')[-1]}/contents/{file_path}?ref={branch}"
     headers = {
         "Authorization": f"token {GITHUB_TOKEN}",
@@ -23,6 +28,8 @@ def get_file_content(repo_url: str, branch: str, file_path: str) -> str:
 
 def update_file_content(repo_url: str, branch: str, file_path: str, new_content: str, commit_message: str) -> str:
     """Updates the content of a file in a GitHub repository."""
+    load_dotenv()
+    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
     repo_owner, repo_name = repo_url.split('github.com/')[-1].split('/')
     api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}"
     headers = {
