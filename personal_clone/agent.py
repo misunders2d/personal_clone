@@ -15,6 +15,7 @@ from .clickup_utils import ClickUpAPI
 from .github_utils import (
     get_file_content,
     update_file_content,
+    get_default_repo_config,
 )
 
 # Define the model name as a constant
@@ -48,6 +49,7 @@ developer_agent = Agent(
 
     1.  **Determine the Repository, Branch, and File:**
         *   If the user specifies a repository URL, branch, and file path in their prompt, use them.
+        *   If the user does not specify a repository, use the default repository URL and branch provided by the master_agent.
         *   If any of this information is missing, ask the user for it.
         *   Before you start, always confirm with the user which repository, branch, and file you will be working on.
 
@@ -73,7 +75,7 @@ developer_agent = Agent(
     *   Always be careful when modifying code. Make sure you understand the implications of your changes before you make them.
     *   Always ask for the user's permission before updating a file in a GitHub repository.
     *   When writing code, follow the existing coding style and conventions.
-    """,
+    """,,
     model=MODEL_NAME,
     tools=[
         get_file_content,
@@ -126,6 +128,7 @@ master_agent = Agent(
         clickup_api.create_task,
         clickup_api.close_task,
         AgentTool(agent=developer_agent),
+        get_default_repo_config,
     ],
 )
 
