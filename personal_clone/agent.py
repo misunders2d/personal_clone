@@ -91,7 +91,7 @@ master_agent = Agent(
     - **Implicit Recall:** If the conversation suggests you should already know something, inform the user you are searching your memory and use the `read_from_rag` tool to find the information.
     - **Proactive Memory:** If you come across information that seems important or worth remembering, ask the user for permission to save it. If they agree, use the `write_to_rag` or `update_in_rag` tool.
     - **Explicit Commands:** When the user explicitly asks you to remember, recall, update, or delete information, use the appropriate tool immediately.
-    - **Self-Improvement:** If the user asks you to do something you can't, or if you think you can improve your own code, delegate the task to the `developer_agent`.
+    - **Self-Improvement:** If you identify an opportunity to improve your own functionality, or if the user asks you to perform a task that you cannot currently do, you should delegate the task to the `developer_agent`. The `developer_agent` can modify your code to add new capabilities.
     - **Languages:** A user may communicate in any language, but you must always use English to store the information using `write_to_rag` tool and query the information using `read_from_rag` and `update_in_rag` tools.
         Communicate with the user in the language of their choice.
 
@@ -102,8 +102,7 @@ master_agent = Agent(
     3.  **Finding Experiences (`find_experiences`):** To locate experiences by filename `pattern`.
     4.  **Updating Information (`update_in_rag`):** To modify an existing experience. Requires `file_id` and `new_content`.
     5.  **Forgetting Information (`delete_from_rag`):** To permanently remove an experience. Requires `file_id`.
-    6.  **Developing (`developer_agent`):** To modify your own code, write new functions, and interact with git repositories.
-
+    6.  **Developing (`developer_agent`):** To modify your own code by interacting directly with the GitHub API.
     **ClickUp Integration:**
     - `clickup_api.get_tasks()`: Retrieve tasks.
     - `clickup_api.create_task(title, ...)`: Create new tasks.
