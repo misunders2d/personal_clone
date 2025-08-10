@@ -32,10 +32,6 @@ def get_current_date():
     """Returns the current date and time in YYYY-MM-DD HH:MM:SS format."""
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-def search_adk_documentation(query: str):
-    """Searches the ADK documentation for a given query."""
-    return default_api.search_file_content(pattern=query, include="llms-full.txt")
-
 search_agent_tool = AgentTool(
     agent=Agent(
         name="web_search_agent",
@@ -56,7 +52,6 @@ developer_agent = Agent(
         list_repo_files,
         get_file_content,
         create_or_update_file,
-        search_adk_documentation,
     ],
 )
 
