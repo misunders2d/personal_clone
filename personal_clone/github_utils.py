@@ -46,7 +46,7 @@ def get_file_content(file_path: str):
         print(f"An unexpected error occurred while getting file content for '{file_path}': {e}")
         return None
 
-def update_file_in_repo(file_path: str, new_content: str, commit_message: str):
+def _update_file_in_repo(file_path: str, new_content: str, commit_message: str):
     """
     Updates a file in the GitHub repository.
 
@@ -84,7 +84,7 @@ def update_file_in_repo(file_path: str, new_content: str, commit_message: str):
         print(f"An unexpected error occurred while updating file '{file_path}': {e}")
         return False
 
-def create_file_in_repo(file_path: str, content: str, commit_message: str):
+def _create_file_in_repo(file_path: str, content: str, commit_message: str):
     """
     Creates a new file in the GitHub repository.
 
@@ -116,6 +116,37 @@ def create_file_in_repo(file_path: str, content: str, commit_message: str):
         # Catch any other unexpected errors
         print(f"An unexpected error occurred while creating file '{file_path}': {e}")
         return False
+
+def create_or_update_file(file_path: str, content: str, commit_message: str):
+    """
+    Creates a new file or updates an existing file in the GitHub repository.
+
+    Args:
+        file_path (str): The path to the file in the repository.
+        content (str): The content of the file.
+        commit_message (str): The commit message for the changes.
+
+    Returns:
+        bool: True if the file was created or updated successfully, False otherwise.
+    """
+    if repo is None:
+        print("Error: GitHub repository not initialized. Cannot create or update file.")
+        return False
+    
+    try:
+        # Check if the file exists
+        contents = repo.get_contents(file_path, ref=BRANCH_NAME)
+        # If it exists, update it
+        return _update_file_in_repo(file_path, content, commit_message)
+    except GithubException as e:
+        if e.status == 404:
+            # If it does not exist, create it
+            return _create_file_in_repo(file_path, content, commit_message)
+        else:
+            # Catch other GitHub API errors
+            print(f"GitHub API error checking file '{file_path}': {e.status}")
+            print(f"GitHub API error data: {e.data}")
+            return False
 
 def list_repo_files():
     """

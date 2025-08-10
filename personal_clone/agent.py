@@ -15,9 +15,8 @@ from .search import (
 from .clickup_utils import ClickUpAPI
 from .github_utils import (
     get_file_content,
-    update_file_in_repo,
-    create_file_in_repo,
     list_repo_files,
+    create_or_update_file,
 )
 
 # Define the model name as a constant
@@ -55,9 +54,7 @@ developer_agent = Agent(
 
     3.  **Plan and Implement:** Based on the user's goal and the file content, formulate a clear plan for the code changes. Modify the code in memory. Ensure your changes align with the existing code style.
 
-    4.  **Commit Changes:**
-        *   To **create** a new file, use the `create_file_in_repo` tool. You must provide the `file_path`, the `content`, and a `commit_message`.
-        *   To **update** an existing file, use the `update_file_in_repo` tool. You must provide the `file_path`, the `new_content`, and a `commit_message`.
+    4.  **Commit Changes:** To create a new file or update an existing one, use the `create_or_update_file` tool. You must provide the `file_path`, the `content`, and a `commit_message`.
 
     5.  **Confirm Completion:** After committing, inform the user that the changes have been committed directly to the 'development' branch.
 
@@ -71,8 +68,7 @@ developer_agent = Agent(
         search_agent_tool,
         list_repo_files,
         get_file_content,
-        update_file_in_repo,
-        create_file_in_repo,
+        create_or_update_file,
     ],
 )
 
