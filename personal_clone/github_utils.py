@@ -46,14 +46,15 @@ def get_file_content(file_path: str):
         print(f"An unexpected error occurred while getting file content for '{file_path}': {e}")
         return None
 
-def _update_file_in_repo(file_path: str, new_content: str, commit_message: str):
+def _update_file_in_repo(file_path: str, new_content: str, commit_message: str, original_content: str):
     """
-    Updates a file in the GitHub repository.
+    Updates a file in the GitHub repository with a safety check.
 
     Args:
         file_path (str): The path to the file in the repository.
         new_content (str): The new content for the file.
         commit_message (str): The commit message for the changes.
+        original_content (str): The original content of the file, used for a safety check.
 
     Returns:
         bool: True if the file was updated successfully, False otherwise.
@@ -65,6 +66,11 @@ def _update_file_in_repo(file_path: str, new_content: str, commit_message: str):
         # Get the existing file to get its SHA
         contents = repo.get_contents(file_path, ref=BRANCH_NAME)
         
+        # Safety check: Ensure original content is part of the new content
+        if original_content not in new_content:
+            print(f"Safety check failed for '{file_path}': Original content not found in new content. Aborting to prevent data loss.")
+            return False
+
         # Update the file
         update_data = repo.update_file(
             contents.path,
@@ -117,14 +123,16 @@ def _create_file_in_repo(file_path: str, content: str, commit_message: str):
         print(f"An unexpected error occurred while creating file '{file_path}': {e}")
         return False
 
-def create_or_update_file(file_path: str, content: str, commit_message: str):
+def create_or_update_file(file_path: str, content: str, commit_message: str, original_content: str = None):
     """
     Creates a new file or updates an existing file in the GitHub repository.
+    For updates, original_content must be provided for a safety check.
 
     Args:
         file_path (str): The path to the file in the repository.
         content (str): The content of the file.
         commit_message (str): The commit message for the changes.
+        original_content (str, optional): The original content of the file. Required for updates.
 
     Returns:
         bool: True if the file was created or updated successfully, False otherwise.
@@ -137,7 +145,10 @@ def create_or_update_file(file_path: str, content: str, commit_message: str):
         # Check if the file exists
         contents = repo.get_contents(file_path, ref=BRANCH_NAME)
         # If it exists, update it
-        return _update_file_in_repo(file_path, content, commit_message)
+        if original_content is None:
+            print(f"Error: original_content must be provided to update existing file '{file_path}'.")
+            return False
+        return _update_file_in_repo(file_path, content, commit_message, original_content)
     except GithubException as e:
         if e.status == 404:
             # If it does not exist, create it
