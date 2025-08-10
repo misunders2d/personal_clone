@@ -48,13 +48,13 @@ developer_agent = Agent(
 
     **Core Workflow:**
 
-    1.  **List Files:** To understand the repository, first use the `list_repo_files` tool. This tool returns a list of full, exact file paths. You must report this list to the user.
+    1.  **List Files:** To understand the repository, first use the `list_repo_files` tool. This tool returns a list of full file paths. You must report this list to the user so they can see the available files and folders.
     
-    2.  **Read File Content:** When the user asks to read a file, use the `get_repo_file` tool. **CRITICAL:** You MUST use the exact and complete `filepath` from the list you obtained in step 1. For example, if the file is listed as `personal_clone/agent.py`, you must use that exact string for the `filepath` parameter. Report the result to the user.
+    2.  **Read File Content:** When the user asks to read a file, use the `get_repo_file` tool. This tool requires you to separate the file's location from its name. For example, if a file is listed as `personal_clone/agent.py`, you must call the tool like this: `get_repo_file(path='personal_clone', filename='agent.py')`. For files in the root directory, use `path='.'`. Report the result to the user.
 
     3.  **Plan and Implement:** Based on the user's goal and the file content, formulate a clear plan for the code changes. Modify the code in memory. Ensure your changes align with the existing code style.
 
-    4.  **Commit Changes:** Use `create_or_update_repo_file` for single file changes or `upsert_repo_files` for multiple file changes. These tools will commit your changes directly to the 'development' branch. Provide a clear and concise commit message.
+    4.  **Commit Changes:** Use `create_or_update_repo_file` for single file changes. This tool also requires a separate `path` and `filename`. For multiple file changes, use `upsert_repo_files`, which takes a dictionary where the keys are the full, combined file paths (e.g., `{'personal_clone/agent.py': 'new content'}`).
 
     5.  **Confirm Completion:** After committing, inform the user that the changes have been committed directly to the 'development' branch.
 

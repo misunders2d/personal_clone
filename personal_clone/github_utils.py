@@ -226,30 +226,34 @@ def list_repo_files(prefix: str = '') -> dict:
     files = repo_manager.list_files(REPO_BRANCH, prefix)
     return {"files": files}
 
-def get_repo_file(filepath: str) -> dict:
+def get_repo_file(path: str, filename: str) -> dict:
     """
     Reads a file from the default repository branch and returns its content.
 
     Args:
-        filepath (str): The full path to the file in the repository.
+        path (str): The path to the folder containing the file. Use '.' for the root directory.
+        filename (str): The name of the file.
 
     Returns:
         dict: A dictionary with file metadata and content.
     """
+    filepath = f"{path}/{filename}" if path != '.' else filename
     return repo_manager.get_file(filepath, REPO_BRANCH)
 
-def create_or_update_repo_file(filepath: str, content: str, commit_message: str = "Update file") -> dict:
+def create_or_update_repo_file(path: str, filename: str, content: str, commit_message: str = "Update file") -> dict:
     """
     Creates a new file or updates an existing one in the default repository branch.
 
     Args:
-        filepath (str): The full path to the file in the repository.
+        path (str): The path to the folder containing the file. Use '.' for the root directory.
+        filename (str): The name of the file.
         content (str): The content to write to the file.
         commit_message (str, optional): The commit message. Defaults to "Update file".
 
     Returns:
         dict: The API response from GitHub.
     """
+    filepath = f"{path}/{filename}" if path != '.' else filename
     return repo_manager.create_or_update_file(filepath, content, REPO_BRANCH, commit_message)
 
 def upsert_repo_files(files: Dict[str, str], commit_message: str = "Batch update files") -> dict:
