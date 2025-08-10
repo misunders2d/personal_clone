@@ -111,7 +111,7 @@ class GitHubRepoManager:
         return {"path": r["path"], "sha": r["sha"], "content_bytes": raw, "encoding": encoding}
 
     # ---------- single-file fallback (contents API) ----------
-    def create_or_update_file(self, filepath: str, content: Union[str, bytes], branch: str,
+    def create_or_update_file(self, filepath: str, content: str, branch: str,
                               commit_message: str = "Update file") -> dict:
         """
         Convenience wrapper for single-file create/update using the Contents API.
@@ -124,15 +124,7 @@ class GitHubRepoManager:
             existing = r.json()
             existing_sha = existing.get("sha")
 
-        if isinstance(content, bytes):
-            # contents API expects base64 string when sending encoding=base64
-            payload_content = base64.b64encode(content).decode("ascii")
-            encoding = "base64"
-        else:
-            payload_content = content
-            encoding = "utf-8"
-
-        body = {"message": commit_message, "content": payload_content, "branch": branch}
+        body = {"message": commit_message, "content": content, "branch": branch}
         if existing_sha:
             body["sha"] = existing_sha
 
@@ -140,25 +132,19 @@ class GitHubRepoManager:
 
     # ---------- multi-file commit (recommended for agent edits) ----------
     def upsert_files(self,
-                     files: Union[Dict[str, Union[str, bytes]], List[Dict[str, Union[str, bytes]]]],
+                     files: Dict[str, str],
                      branch: str,
                      commit_message: str = "Batch update files",
                      create_branch_if_missing: bool = False) -> dict:
         """
         Create or update multiple files in a single commit.
 
-        `files` can be either:
-          - mapping: { "path/to/file.py": "file contents", ... }
-          - list of dicts: [ {"path": "...", "content": "..."} , ... ]
+        `files` is a mapping: { "path/to/file.py": "file contents", ... }
 
         If create_branch_if_missing=True and branch doesn't exist, it will be created
         from the repo default branch.
         """
-        # normalize input
-        if isinstance(files, dict):
-            file_items = [{"path": p, "content": c} for p, c in files.items()]
-        else:
-            file_items = files
+        file_items = [{"path": p, "content": c} for p, c in files.items()]
 
         # ensure branch exists (or create it)
         ref_resp = self._get(f"/repos/{self.owner}/{self.repo}/git/ref/heads/{branch}")
@@ -219,98 +205,59 @@ class GitHubRepoManager:
 
 repo_manager = GitHubRepoManager()
 
-def list_repo_files(branch: str, prefix: str | None = None) -> dict:
+def list_repo_files(prefix: str = '') -> dict:
     """
-    Lists all file paths in a given branch of the repository.
+    Lists all file paths in the default repository branch.
 
     Args:
-        branch (str): The name of the branch to list files from.
-        prefix (str, optional): A path prefix to filter the results. Defaults to None.
+        prefix (str, optional): A path prefix to filter the results. Defaults to an empty string.
 
     Returns:
         dict: A dictionary containing a list of file paths.
     """
-    files = repo_manager.list_files(branch, prefix)
+    files = repo_manager.list_files(REPO_BRANCH, prefix)
     return {"files": files}
 
-def get_repo_file(filepath: str, branch: str) -> dict:
+def get_repo_file(filepath: str) -> dict:
     """
-    Reads a file from the repository and returns its content.
+    Reads a file from the default repository branch and returns its content.
 
     Args:
         filepath (str): The full path to the file in the repository.
-        branch (str): The name of the branch where the file is located.
 
     Returns:
         dict: A dictionary with file metadata and content.
     """
-    return repo_manager.get_file(filepath, branch)
+    return repo_manager.get_file(filepath, REPO_BRANCH)
 
-def create_or_update_repo_file(filepath: str, content: Union[str, bytes], branch: str, commit_message: str = "Update file") -> dict:
+def create_or_update_repo_file(filepath: str, content: str, commit_message: str = "Update file") -> dict:
     """
-    Creates a new file or updates an existing one in the repository.
+    Creates a new file or updates an existing one in the default repository branch.
 
     Args:
         filepath (str): The full path to the file in the repository.
-        content (Union[str, bytes]): The content to write to the file.
-        branch (str): The name of the branch to commit the change to.
+        content (str): The content to write to the file.
         commit_message (str, optional): The commit message. Defaults to "Update file".
 
     Returns:
         dict: The API response from GitHub.
     """
-    return repo_manager.create_or_update_file(filepath, content, branch, commit_message)
+    return repo_manager.create_or_update_file(filepath, content, REPO_BRANCH, commit_message)
 
-def upsert_repo_files(files: Union[Dict[str, Union[str, bytes]], List[Dict[str, Union[str, bytes]]]], branch: str, commit_message: str = "Batch update files", create_branch_if_missing: bool = False) -> dict:
+def upsert_repo_files(files: Dict[str, str], commit_message: str = "Batch update files") -> dict:
     """
-    Creates or updates multiple files in the repository in a single commit.
+    Creates or updates multiple files in the default repository branch in a single commit.
 
     Args:
-        files (Union[Dict[str, Union[str, bytes]], List[Dict[str, Union[str, bytes]]]]): 
-            A dictionary mapping file paths to content, or a list of dictionaries 
-            with 'path' and 'content' keys.
-        branch (str): The name of the branch to commit the changes to.
+        files (Dict[str, str]): A dictionary mapping file paths to their string content.
         commit_message (str, optional): The commit message for the batch update. Defaults to "Batch update files".
-        create_branch_if_missing (bool, optional): If True, creates the branch if it doesn't exist. Defaults to False.
 
     Returns:
         dict: The API response from GitHub for the commit.
     """
-    return repo_manager.upsert_files(files, branch, commit_message, create_branch_if_missing)
-
-def create_repo_branch(new_branch: str, from_branch: Optional[str] = None) -> dict:
-    """
-    Creates a new branch in the repository.
-
-    Args:
-        new_branch (str): The name of the new branch.
-        from_branch (Optional[str], optional): The branch to base the new one on. 
-                                            Defaults to the repository's default branch.
-
-    Returns:
-        dict: The API response from GitHub.
-    """
-    return repo_manager.create_branch(new_branch, from_branch)
-
-def create_repo_pull_request(head_branch: str, base_branch: Optional[str] = None, title: Optional[str] = None, body: str = "") -> dict:
-    """
-    Creates a new pull request.
-
-    Args:
-        head_branch (str): The name of the branch with the changes.
-        base_branch (Optional[str], optional): The branch to merge the changes into. 
-                                             Defaults to the repository's default branch.
-        title (Optional[str], optional): The title of the pull request. Defaults to a generated title.
-        body (str, optional): The content of the pull request. Defaults to "".
-
-    Returns:
-        dict: The API response from GitHub.
-    """
-    return repo_manager.create_pull_request(head_branch, base_branch, title, body)
+    return repo_manager.upsert_files(files, REPO_BRANCH, commit_message)
 
 list_files_tool = FunctionTool(func=list_repo_files)
 get_file_tool = FunctionTool(func=get_repo_file)
 create_or_update_file_tool = FunctionTool(func=create_or_update_repo_file)
 upsert_files_tool = FunctionTool(func=upsert_repo_files)
-create_branch_tool = FunctionTool(func=create_repo_branch)
-create_pull_request_tool = FunctionTool(func=create_repo_pull_request)
