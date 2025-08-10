@@ -24,7 +24,7 @@ from .instructions import DEVELOPER_AGENT_INSTRUCTION, MASTER_AGENT_INSTRUCTION
 # MODEL_NAME = 'gemini-2.0-flash-live-001'
 SEARCH_MODEL_NAME='gemini-2.5-flash'
 # MODEL_NAME='gemini-live-2.5-flash-preview-native-audio'
-MODEL_NAME='gemini-2.5-flash-lite'
+MODEL_NAME='gemini-2.5-flash'
 
 clickup_api = ClickUpAPI()
 
@@ -46,7 +46,8 @@ developer_agent = Agent(
     name="developer_agent",
     description="A developer agent that can read, write, and modify code directly in the 'development' GitHub branch.",
     instruction=DEVELOPER_AGENT_INSTRUCTION,
-    model=LiteLlm(model="openai/gpt-4.1-nano"),
+    # model=LiteLlm(model="openai/gpt-4.1-nano"),
+    model=MODEL_NAME,
     tools=[
         search_agent_tool,
         list_repo_files,

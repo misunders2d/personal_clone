@@ -1,5 +1,6 @@
 import os
 import base64
+from typing import Optional
 from github import Github
 from github.GithubException import GithubException
 
@@ -123,7 +124,7 @@ def _create_file_in_repo(file_path: str, content: str, commit_message: str):
         print(f"An unexpected error occurred while creating file '{file_path}': {e}")
         return False
 
-def create_or_update_file(file_path: str, content: str, commit_message: str, original_content: str = None):
+def create_or_update_file(file_path: str, content: str, commit_message: str, original_content: Optional[str] = None):
     """
     Creates a new file or updates an existing file in the GitHub repository.
     For updates, original_content must be provided for a safety check.
