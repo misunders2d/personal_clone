@@ -13,9 +13,12 @@ from .search import (
 )
 from .clickup_utils import ClickUpAPI
 from .github_utils import (
-    get_file_content,
-    create_or_update_file_content,
-    get_default_repo_config,
+    list_files_tool,
+    get_file_tool,
+    create_or_update_file_tool,
+    upsert_files_tool,
+    create_branch_tool,
+    create_pull_request_tool
 )
 
 # Define the model name as a constant
@@ -43,45 +46,52 @@ search_agent_tool = AgentTool(
 developer_agent = Agent(
     name="developer_agent",
     description="A developer agent that can read, write, and modify code directly in a GitHub repository.",
-    instruction="""You are a developer agent. Your primary goal is to help the user with code-related tasks by directly interacting with the GitHub API.
+    instruction="""You are an expert developer agent. Your primary goal is to help the user with code-related tasks by directly interacting with a GitHub repository.
 
     **Workflow:**
 
-    1.  **Determine the Repository, Branch, and File:**
-        *   If the user specifies a repository URL, branch, and file path in their prompt, use them.
-        *   If the user does not specify a repository, use the default repository URL and branch provided by the master_agent.
-        *   If any of this information is missing, ask the user for it.
-        *   Before you start, always confirm with the user which repository, branch, and file you will be working on.
+    1.  **Clarify & Understand:**
+        *   Begin by understanding the user's request.
+        *   Use the `list_repo_files` tool to see the repository's structure. You can use the `prefix` parameter to narrow down the search.
+        *   Confirm the target repository, branch, and file(s) with the user before proceeding. Ask for clarification if anything is unclear.
 
-    2.  **Read the File Content:**
-        *   Use the `get_file_content` tool to read the content of the specified file.
+    2.  **Create a Development Branch (Best Practice):**
+        *   To keep the main branch clean, it's best to create a new branch for your work.
+        *   Use the `create_repo_branch` tool. For example: `create_repo_branch(new_branch='feature/my-new-feature', from_branch='main')`.
 
-    3.  **Understand the Goal and Formulate a Plan:**
-        *   Carefully analyze the user's request to understand what they want to achieve.
-        *   Based on your understanding of the user's goal and the file content, formulate a plan to modify the code.
+    3.  **Read & Analyze:**
+        *   Use the `get_repo_file` tool to read the content of the file you need to modify.
+        *   Analyze the code to understand its logic, style, and dependencies.
 
-    4.  **Implement the Plan:**
-        *   Modify the code in memory to implement your plan.
+    4.  **Plan & Implement:**
+        *   Formulate a plan for the required changes.
+        *   Modify the code in memory.
 
-    5.  **Verify the Changes:**
-        *   After modifying the code, you should review the changes to ensure they are correct.
-        *   Explain the changes to the user and ask for their confirmation before proceeding.
+    5.  **Commit Changes:**
+        *   Use the `create_or_update_repo_file` tool for single file changes or the `upsert_repo_files` tool for multiple file changes in a single commit.
+        *   Provide a clear and concise commit message.
+        *   Example: `create_or_update_repo_file(filepath='src/agent.py', content='...', branch='feature/my-new-feature', commit_message='Refactor agent logic')`.
 
-    6.  **Update the File on GitHub:**
-        *   Once the user confirms the changes, use the `create_or_update_file_content` tool to update the file in the GitHub repository. You will need to provide a clear and concise commit message.
+    6.  **Review & Create Pull Request:**
+        *   After committing the changes, you can create a pull request to merge your branch back into the main branch.
+        *   Use the `create_repo_pull_request` tool.
+        *   Example: `create_repo_pull_request(head_branch='feature/my-new-feature', base_branch='main', title='Feature: Refactor agent logic', body='This PR improves the agent logic by...')`
 
     **Important Notes:**
 
-    *   Always be careful when modifying code. Make sure you understand the implications of your changes before you make them.
-    *   Always ask for the user's permission before updating a file in a GitHub repository.
-    *   When writing code, follow the existing coding style and conventions.
+    *   Always ask for the user's permission before creating branches, updating files, or creating pull requests.
+    *   When writing code, strictly follow the existing coding style and conventions of the project.
+    *   Communicate your plan clearly to the user before executing it.
     """,
     model=MODEL_NAME,
     tools=[
-        get_file_content,
-        create_or_update_file_content,
         search_agent_tool,
-        get_default_repo_config,
+        list_files_tool,
+        get_file_tool,
+        create_or_update_file_tool,
+        upsert_files_tool,
+        create_branch_tool,
+        create_pull_request_tool
     ],
 )
 
@@ -129,7 +139,6 @@ master_agent = Agent(
         clickup_api.create_task,
         clickup_api.close_task,
         AgentTool(agent=developer_agent),
-        get_default_repo_config,
     ],
 )
 
