@@ -253,7 +253,8 @@ def create_or_update_repo_file(path: str, filename: str, content: str, commit_me
     Returns:
         dict: The API response from GitHub.
     """
-    filepath = f"{path}/{filename}" if path != '.' else filename
+    # filepath = f"{path}/{filename}" if path != '.' else filename
+    filepath = os.path.join(path, filename).replace("\\", "/")
     return repo_manager.create_or_update_file(filepath, content, REPO_BRANCH, commit_message)
 
 def upsert_repo_files(files: Dict[str, str], commit_message: str = "Batch update files") -> dict:
