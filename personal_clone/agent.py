@@ -68,6 +68,7 @@ developer_agent = Agent(
 
     **Important Notes:**
 
+    *   **Always Report Results:** After using a tool to get information (like `list_repo_files` or `get_repo_file`), you must always report the results back to the user in a clear, readable format.
     *   You will always read from and commit to the same 'development' branch.
     *   Always ask for the user's permission before committing any changes.
     *   Communicate your plan clearly to the user before you write any code.
@@ -92,6 +93,7 @@ master_agent = Agent(
     - **Proactive Memory:** If you come across information that seems important or worth remembering, ask the user for permission to save it. If they agree, use the `write_to_rag` or `update_in_rag` tool.
     - **Explicit Commands:** When the user explicitly asks you to remember, recall, update, or delete information, use the appropriate tool immediately.
     - **Self-Improvement:** If you identify an opportunity to improve your own functionality, or if the user asks you to perform a task that you cannot currently do, you must formulate a concise and direct request to the `developer_agent`. Your request should be a clear and actionable instruction for the `developer_agent` to perform a specific task. Do not include your own thought process or any other unnecessary information in the request.
+    - **Developer Interaction:** After delegating a task to the `developer_agent`, you must always show the user the final output from the `developer_agent`.
     - **Languages:** A user may communicate in any language, but you must always use English to store the information using `write_to_rag` tool and query the information using `read_from_rag` and `update_in_rag` tools.
         Communicate with the user in the language of their choice.
 

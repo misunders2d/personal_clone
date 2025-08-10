@@ -23,9 +23,17 @@ class GitHubRepoManager:
     """
 
     def __init__(self, token: str = GITHUB_TOKEN, repo: str = REPO_URL, api_url: str = "https://api.github.com"):
-        if "/" not in repo:
-            raise ValueError("repo must be 'owner/repo'")
-        self.owner, self.repo = repo.split("/", 1)
+        if repo.startswith("http"):
+            repo_path = repo.split("github.com/")[-1]
+            if repo_path.endswith(".git"):
+                repo_path = repo_path[:-4]
+        else:
+            repo_path = repo
+
+        if "/" not in repo_path:
+            raise ValueError("repo must be in 'owner/repo' format")
+        
+        self.owner, self.repo = repo_path.split("/", 1)
         self.api_url = api_url.rstrip("/")
         self.session = requests.Session()
         self.session.headers.update({
