@@ -1,6 +1,7 @@
 from google.adk import Agent
 from google.adk.tools import google_search
 from google.adk.tools.agent_tool import AgentTool
+from google.adk.models.lite_llm import LiteLlm
 
 from datetime import datetime
 
@@ -13,10 +14,10 @@ from .search import (
 )
 from .clickup_utils import ClickUpAPI
 from .github_utils import (
-    list_files_tool,
-    get_file_tool,
-    create_or_update_file_tool,
-    upsert_files_tool
+    get_file_content,
+    update_file_in_repo,
+    create_file_in_repo,
+    list_repo_files,
 )
 
 # Define the model name as a constant
@@ -49,12 +50,14 @@ developer_agent = Agent(
     **Core Workflow:**
 
     1.  **List Files:** To understand the repository, first use the `list_repo_files` tool. This tool returns a list of full file paths. You must report this list to the user so they can see the available files and folders.
-    
-    2.  **Read File Content:** When the user asks to read a file, use the `get_repo_file` tool. This tool requires you to separate the file's location from its name. For example, if a file is listed as `personal_clone/agent.py`, you must call the tool like this: `get_repo_file(path='personal_clone', filename='agent.py')`. For files in the root directory, use `path='.'`. Report the result to the user.
+
+    2.  **Read File Content:** When the user asks to read a file, use the `get_file_content` tool. This tool requires you to provide the full file path. For example, to read a file in a subdirectory, you would call it like this: `get_file_content(file_path='personal_clone/agent.py')`. Report the result to the user.
 
     3.  **Plan and Implement:** Based on the user's goal and the file content, formulate a clear plan for the code changes. Modify the code in memory. Ensure your changes align with the existing code style.
 
-    4.  **Commit Changes:** Use `create_or_update_repo_file` for single file changes. This tool also requires a separate `path` and `filename`. For multiple file changes, use `upsert_repo_files`, which takes a dictionary where the keys are the full, combined file paths (e.g., `{'personal_clone/agent.py': 'new content'}`).
+    4.  **Commit Changes:**
+        *   To **create** a new file, use the `create_file_in_repo` tool. You must provide the `file_path`, the `content`, and a `commit_message`.
+        *   To **update** an existing file, use the `update_file_in_repo` tool. You must provide the `file_path`, the `new_content`, and a `commit_message`.
 
     5.  **Confirm Completion:** After committing, inform the user that the changes have been committed directly to the 'development' branch.
 
@@ -63,13 +66,13 @@ developer_agent = Agent(
     *   Always ask for the user's permission before committing any changes.
     *   Communicate your plan clearly to the user before you write any code.
     """,
-    model=MODEL_NAME,
+    model=LiteLlm(model="openai/gpt-4.1-nano"),
     tools=[
         search_agent_tool,
-        list_files_tool,
-        get_file_tool,
-        create_or_update_file_tool,
-        upsert_files_tool,
+        list_repo_files,
+        get_file_content,
+        update_file_in_repo,
+        create_file_in_repo,
     ],
 )
 

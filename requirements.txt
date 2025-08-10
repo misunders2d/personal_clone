@@ -7,3 +7,5 @@ pinecone
 google-cloud-aiplatform
 python-dotenv
 requests
+litellm
+PyGithub

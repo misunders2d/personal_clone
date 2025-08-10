@@ -1,276 +1,193 @@
 import os
-import requests
 import base64
-from typing import Dict, List, Union, Optional
-from google.adk.tools import FunctionTool
+from github import Github
+from github.GithubException import GithubException
 
-from dotenv import load_dotenv
-load_dotenv()
-REPO_URL = os.environ.get("GITHUB_DEFAULT_REPO_URL","")
-REPO_BRANCH = os.environ.get("GITHUB_DEFAULT_REPO_BRANCH","")
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN","")
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
+REPO_NAME = os.environ.get('GITHUB_DEFAULT_REPO','')
+BRANCH_NAME = os.environ.get('GITHUB_DEFAULT_REPO_BRANCH','development')
 
+# Initialize GitHub API
+try:
+    g = Github(GITHUB_TOKEN)
+    repo = g.get_repo(REPO_NAME)
+    print("GitHub repository initialized successfully.")
+except GithubException as e:
+    print(f"Error initializing GitHub API or getting repository: {e}")
+    # Handle the error appropriately, e.g., exit or set a flag
+    repo = None # Indicate that the repository is not accessible
+except Exception as e:
+    print(f"An unexpected error occurred during GitHub initialization: {e}")
+    repo = None
 
-class GitHubRepoManager:
+def get_file_content(file_path: str):
     """
-    Minimal helper for listing / reading / creating / updating files in a GitHub repo.
-    Uses Git Data API to perform multi-file commits (blobs -> tree -> commit -> update ref).
+    Gets the content of a file from the GitHub repository.
 
     Args:
-        token: Personal Access Token (PAT)
-        repo: "owner/repo" string
-        api_url: GitHub API base (defaults to api.github.com)
+        file_path (str): The path to the file in the repository.
+
+    Returns:
+        str: The content of the file, or None if an error occurs.
     """
+    if repo is None:
+        print("Error: GitHub repository not initialized. Cannot get file content.")
+        return None
+    try:
+        contents = repo.get_contents(file_path, ref=BRANCH_NAME) # Specify the branch
+        decoded_content = base64.b64decode(contents.content).decode('utf-8')
+        return decoded_content
+    except GithubException as e:
+        # Catch specific GitHub API errors, e.g., file not found (404)
+        print(f"GitHub API error getting file content for '{file_path}': {e}")
+        return None
+    except Exception as e:
+        # Catch any other unexpected errors
+        print(f"An unexpected error occurred while getting file content for '{file_path}': {e}")
+        return None
 
-    def __init__(self, token: str = GITHUB_TOKEN, repo: str = REPO_URL, api_url: str = "https://api.github.com"):
-        if repo.startswith("http"):
-            repo_path = repo.split("github.com/")[-1]
-            if repo_path.endswith(".git"):
-                repo_path = repo_path[:-4]
-        else:
-            repo_path = repo
+def update_file_in_repo(file_path: str, new_content: str, commit_message: str):
+    """
+    Updates a file in the GitHub repository.
 
-        if "/" not in repo_path:
-            raise ValueError("repo must be in 'owner/repo' format")
+    Args:
+        file_path (str): The path to the file in the repository.
+        new_content (str): The new content for the file.
+        commit_message (str): The commit message for the changes.
+
+    Returns:
+        bool: True if the file was updated successfully, False otherwise.
+    """
+    if repo is None:
+        print("Error: GitHub repository not initialized. Cannot update file.")
+        return False
+    try:
+        # Get the existing file to get its SHA
+        contents = repo.get_contents(file_path, ref=BRANCH_NAME)
         
-        self.owner, self.repo = repo_path.split("/", 1)
-        self.api_url = api_url.rstrip("/")
-        self.session = requests.Session()
-        self.session.headers.update({
-            "Authorization": f"token {token}",
-            "Accept": "application/vnd.github+json",
-            "X-GitHub-Api-Version": "2022-11-28"
-        })
-
-    # ---------- low-level helpers ----------
-    def _url(self, path: str) -> str:
-        return f"{self.api_url}{path}"
-
-    def _get(self, path: str, **kwargs):
-        r = self.session.get(self._url(path), **kwargs)
-        return r
-
-    def _req_json(self, method: str, path: str, **kwargs):
-        r = self.session.request(method, self._url(path), **kwargs)
-        if not r.ok:
-            raise RuntimeError(f"{method} {path} -> {r.status_code}: {r.text}")
-        # some endpoints may return 204 No Content with empty body
-        return r.json() if r.content else {}
-
-    # ---------- repo metadata ----------
-    def get_default_branch(self) -> str:
-        repo_info = self._req_json("GET", f"/repos/{self.owner}/{self.repo}")
-        return repo_info["default_branch"]
-
-    def branch_exists(self, branch: str) -> bool:
-        r = self._get(f"/repos/{self.owner}/{self.repo}/git/ref/heads/{branch}")
-        if r.status_code == 200:
-            return True
-        if r.status_code == 404:
-            return False
-        r.raise_for_status()
+        # Update the file
+        update_data = repo.update_file(
+            contents.path,
+            commit_message,
+            new_content,
+            contents.sha,
+            branch=BRANCH_NAME # Specify the branch
+        )
+        print(f"File '{file_path}' updated successfully.")
+        return True
+    except GithubException as e:
+        # Catch specific GitHub API errors
+        print(f"GitHub API error updating file '{file_path}': {e}")
+        return False
+    except Exception as e:
+        # Catch any other unexpected errors
+        print(f"An unexpected error occurred while updating file '{file_path}': {e}")
         return False
 
-    # ---------- branch operations ----------
-    def create_branch(self, new_branch: str, from_branch: Optional[str] = None) -> dict:
-        """Create a new branch pointing at from_branch (default: repo default branch)."""
-        if from_branch is None:
-            from_branch = self.get_default_branch()
-        # get SHA of from_branch
-        ref = self._req_json("GET", f"/repos/{self.owner}/{self.repo}/git/ref/heads/{from_branch}")
-        base_sha = ref["object"]["sha"]
-        return self._req_json("POST", f"/repos/{self.owner}/{self.repo}/git/refs",
-                              json={"ref": f"refs/heads/{new_branch}", "sha": base_sha})
+def create_file_in_repo(file_path: str, content: str, commit_message: str):
+    """
+    Creates a new file in the GitHub repository.
 
-    # ---------- listing ----------
-    def list_files(self, branch: str, path_prefix: Optional[str] = None) -> List[str]:
-        """
-        List all file paths in branch (optionally filtered by path_prefix).
-        Uses the trees API (recursive).
-        """
-        # get commit sha for branch
-        ref = self._req_json("GET", f"/repos/{self.owner}/{self.repo}/git/ref/heads/{branch}")
-        commit_sha = ref["object"]["sha"]
-        commit = self._req_json("GET", f"/repos/{self.owner}/{self.repo}/git/commits/{commit_sha}")
-        tree_sha = commit["tree"]["sha"]
-        tree = self._req_json("GET", f"/repos/{self.owner}/{self.repo}/git/trees/{tree_sha}?recursive=1")
-        files = [item["path"] for item in tree.get("tree", []) if item["type"] == "blob"]
-        if path_prefix:
-            pr = path_prefix.rstrip("/")
-            files = [f for f in files if f == pr or f.startswith(pr + "/")]
-        return files
+    Args:
+        file_path (str): The path for the new file in the repository.
+        content (str): The content of the new file.
+        commit_message (str): The commit message for the creation.
 
-    # ---------- read file ----------
-    def get_file(self, filepath: str, branch: str) -> Dict:
-        """
-        Read a file from repo. Returns dict with keys: path, sha, content_bytes, encoding.
-        content_bytes is raw bytes (decoded from base64 if necessary).
-        """
-        r = self._req_json("GET", f"/repos/{self.owner}/{self.repo}/contents/{filepath}", params={"ref": branch})
-        content = r.get("content")
-        encoding = r.get("encoding", "base64")
-        if content is None:
-            raw = b""
-        else:
-            if encoding == "base64":
-                raw = base64.b64decode(content)
+    Returns:
+        bool: True if the file was created successfully, False otherwise.
+    """
+    if repo is None:
+        print("Error: GitHub repository not initialized. Cannot create file.")
+        return False
+    try:
+        repo.create_file(
+            file_path,
+            commit_message,
+            content,
+            branch=BRANCH_NAME # Specify the branch
+        )
+        print(f"File '{file_path}' created successfully.")
+        return True
+    except GithubException as e:
+        # Catch specific GitHub API errors, e.g., file already exists (422)
+        print(f"GitHub API error creating file '{file_path}': {e}")
+        return False
+    except Exception as e:
+        # Catch any other unexpected errors
+        print(f"An unexpected error occurred while creating file '{file_path}': {e}")
+        return False
+
+def list_repo_files():
+    """
+    Lists all files in the repository recursively.
+
+    Returns:
+        list: A list of file paths, or an empty list if an error occurs.
+    """
+    if repo is None:
+        print("Error: GitHub repository not initialized. Cannot list files.")
+        return []
+    
+    files = []
+    try:
+        contents = repo.get_contents("", ref=BRANCH_NAME)
+        while contents:
+            file_content = contents.pop(0)
+            if file_content.type == "dir":
+                contents.extend(repo.get_contents(file_content.path, ref=BRANCH_NAME))
             else:
-                raw = content.encode("utf-8")
-        return {"path": r["path"], "sha": r["sha"], "content_bytes": raw, "encoding": encoding}
+                files.append(file_content.path)
+    except Exception as e:
+        print(f"An unexpected error occurred while listing files: {e}")
+        return []
+    return files
 
-    # ---------- single-file fallback (contents API) ----------
-    def create_or_update_file(self, filepath: str, content: str, branch: str,
-                              commit_message: str = "Update file") -> dict:
-        """
-        Convenience wrapper for single-file create/update using the Contents API.
-        If file exists, provide its sha automatically to update it.
-        """
-        # check if file exists
-        r = self._get(f"/repos/{self.owner}/{self.repo}/contents/{filepath}", params={"ref": branch})
-        existing_sha = None
-        if r.status_code == 200:
-            existing = r.json()
-            existing_sha = existing.get("sha")
+# Example of how to use the functions (optional)
+if __name__ == "__main__":
+    # Make sure to set the GITHUB_TOKEN environment variable
+    if GITHUB_TOKEN is None:
+        print("Error: GITHUB_TOKEN environment variable not set.")
+    else:
+        # Example usage:
+        # Get content of a file
+        # print("\nAttempting to get README.md content:")
+        # file_content = get_file_content("README.md")
+        # if file_content:
+        #     print("README.md content snippet:")
+        #     print(file_content[:200] + "...") # Print first 200 chars
+        # else:
+        #     print("Failed to retrieve README.md content.")
 
-        body = {"message": commit_message, "content": content, "branch": branch}
-        if existing_sha:
-            body["sha"] = existing_sha
+        # Create a new file (example)
+        # print("\nAttempting to create a test file:")
+        # new_file_path = "test_file_from_clone.txt"
+        # new_file_content = "This is a test file created by the clone script with improved error handling."
+        # commit_msg_create = "CI: Create test_file_from_clone.txt"
+        # create_success = create_file_in_repo(new_file_path, new_file_content, commit_msg_create)
+        # if not create_success:
+        #     print("Failed to create test file.")
 
-        return self._req_json("PUT", f"/repos/{self.owner}/{self.repo}/contents/{filepath}", json=body)
+        # Update a file (example - uncomment and modify path/content to test)
+        # print("\nAttempting to update a file:")
+        # existing_file_path = "README.md" # Example: update README.md
+        # original_content = get_file_content(existing_file_path)
+        # if original_content:
+        #     updated_content = original_content + "\n\n# This is an appended line for testing updates."
+        #     commit_msg_update = "CI: Update README.md with appended line"
+        #     update_success = update_file_in_repo(existing_file_path, updated_content, commit_msg_update)
+        #     if not update_success:
+        #         print(f"Failed to update {existing_file_path}.")
+        # else:
+        #      print(f"Could not retrieve content for {existing_file_path} to test update.")
+        
+        # List all files in the repo
+        # print("\nAttempting to list all files in the repo:")
+        # all_files = list_repo_files()
+        # if all_files:
+        #     print("All files in the repo:")
+        #     for file_path in all_files:
+        #         print(file_path)
+        # else:
+        #     print("Failed to list files in the repo.")
+        pass
 
-    # ---------- multi-file commit (recommended for agent edits) ----------
-    def upsert_files(self,
-                     files: Dict[str, str],
-                     branch: str,
-                     commit_message: str = "Batch update files",
-                     create_branch_if_missing: bool = False) -> dict:
-        """
-        Create or update multiple files in a single commit.
-
-        `files` is a mapping: { "path/to/file.py": "file contents", ... }
-
-        If create_branch_if_missing=True and branch doesn't exist, it will be created
-        from the repo default branch.
-        """
-        file_items = [{"path": p, "content": c} for p, c in files.items()]
-
-        # ensure branch exists (or create it)
-        ref_resp = self._get(f"/repos/{self.owner}/{self.repo}/git/ref/heads/{branch}")
-        if ref_resp.status_code == 404:
-            if create_branch_if_missing:
-                self.create_branch(branch)
-                ref_resp = self._get(f"/repos/{self.owner}/{self.repo}/git/ref/heads/{branch}")
-            else:
-                raise RuntimeError(f"Branch '{branch}' does not exist")
-        elif not ref_resp.ok:
-            ref_resp.raise_for_status()
-
-        head_sha = ref_resp.json()["object"]["sha"]
-
-        # fetch current commit -> base_tree
-        commit = self._req_json("GET", f"/repos/{self.owner}/{self.repo}/git/commits/{head_sha}")
-        base_tree = commit["tree"]["sha"]
-
-        # create blobs for each file
-        tree_entries = []
-        for item in file_items:
-            path = item["path"]
-            content = item["content"]
-            if isinstance(content, bytes):
-                # binary -> post blob with base64
-                blob = self._req_json("POST", f"/repos/{self.owner}/{self.repo}/git/blobs",
-                                       json={"content": base64.b64encode(content).decode("ascii"), "encoding": "base64"})
-            else:
-                blob = self._req_json("POST", f"/repos/{self.owner}/{self.repo}/git/blobs",
-                                       json={"content": content, "encoding": "utf-8"})
-            tree_entries.append({"path": path, "mode": "100644", "type": "blob", "sha": blob["sha"]})
-
-        # create new tree
-        new_tree = self._req_json("POST", f"/repos/{self.owner}/{self.repo}/git/trees",
-                                  json={"base_tree": base_tree, "tree": tree_entries})
-
-        # create commit
-        new_commit = self._req_json("POST", f"/repos/{self.owner}/{self.repo}/git/commits",
-                                    json={"message": commit_message, "tree": new_tree["sha"], "parents": [head_sha]})
-
-        # update branch ref
-        updated_ref = self._req_json("PATCH", f"/repos/{self.owner}/{self.repo}/git/refs/heads/{branch}",
-                                     json={"sha": new_commit["sha"]})
-
-        return {"commit": new_commit, "tree": new_tree, "ref": updated_ref}
-
-    # ---------- convenience: create PR ----------
-    def create_pull_request(self, head_branch: str, base_branch: Optional[str] = None,
-                            title: Optional[str] = None, body: str = "") -> dict:
-        if base_branch is None:
-            base_branch = self.get_default_branch()
-        if title is None:
-            title = f"Automated changes: {head_branch} -> {base_branch}"
-        pr = self._req_json("POST", f"/repos/{self.owner}/{self.repo}/pulls",
-                            json={"title": title, "head": head_branch, "base": base_branch, "body": body})
-        return pr
-
-
-repo_manager = GitHubRepoManager()
-
-def list_repo_files(prefix: str = '') -> dict:
-    """
-    Lists all file paths in the default repository branch.
-
-    Args:
-        prefix (str, optional): A path prefix to filter the results. Defaults to an empty string.
-
-    Returns:
-        dict: A dictionary containing a list of file paths.
-    """
-    files = repo_manager.list_files(REPO_BRANCH, prefix)
-    return {"files": files}
-
-def get_repo_file(path: str, filename: str) -> dict:
-    """
-    Reads a file from the default repository branch and returns its content.
-
-    Args:
-        path (str): The path to the folder containing the file. Use '.' for the root directory.
-        filename (str): The name of the file.
-
-    Returns:
-        dict: A dictionary with file metadata and content.
-    """
-    filepath = f"{path}/{filename}" if path != '.' else filename
-    return repo_manager.get_file(filepath, REPO_BRANCH)
-
-def create_or_update_repo_file(path: str, filename: str, content: str, commit_message: str = "Update file") -> dict:
-    """
-    Creates a new file or updates an existing one in the default repository branch.
-
-    Args:
-        path (str): The path to the folder containing the file. Use '.' for the root directory.
-        filename (str): The name of the file.
-        content (str): The content to write to the file.
-        commit_message (str, optional): The commit message. Defaults to "Update file".
-
-    Returns:
-        dict: The API response from GitHub.
-    """
-    # filepath = f"{path}/{filename}" if path != '.' else filename
-    filepath = os.path.join(path, filename).replace("\\", "/")
-    return repo_manager.create_or_update_file(filepath, content, REPO_BRANCH, commit_message)
-
-def upsert_repo_files(files: Dict[str, str], commit_message: str = "Batch update files") -> dict:
-    """
-    Creates or updates multiple files in the default repository branch in a single commit.
-
-    Args:
-        files (Dict[str, str]): A dictionary mapping file paths to their string content.
-        commit_message (str, optional): The commit message for the batch update. Defaults to "Batch update files".
-
-    Returns:
-        dict: The API response from GitHub for the commit.
-    """
-    return repo_manager.upsert_files(files, REPO_BRANCH, commit_message)
-
-list_files_tool = FunctionTool(func=list_repo_files)
-get_file_tool = FunctionTool(func=get_repo_file)
-create_or_update_file_tool = FunctionTool(func=create_or_update_repo_file)
-upsert_files_tool = FunctionTool(func=upsert_repo_files)
