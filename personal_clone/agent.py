@@ -68,6 +68,7 @@ developer_agent = Agent(
 
     **Important Notes:**
 
+    *   **Use Full File Paths:** When using `get_repo_file` or any tool that needs a file path, you **must** provide the full, exact file path as returned by the `list_repo_files` tool. Do not use partial or relative paths.
     *   **Always Report Results:** After using a tool to get information (like `list_repo_files` or `get_repo_file`), you must always report the results back to the user in a clear, readable format.
     *   You will always read from and commit to the same 'development' branch.
     *   Always ask for the user's permission before committing any changes.
