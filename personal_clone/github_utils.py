@@ -1,12 +1,13 @@
 import os
 import base64
+import streamlit as st
 from typing import Optional
 from github import Github
 from github.GithubException import GithubException
 
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
-REPO_NAME = os.environ.get('GITHUB_DEFAULT_REPO','')
-BRANCH_NAME = os.environ.get('GITHUB_DEFAULT_REPO_BRANCH','development')
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", st.secrets["GITHUB_TOKEN"])
+REPO_NAME = os.environ.get('GITHUB_DEFAULT_REPO', st.secrets["GITHUB_DEFAULT_REPO"])
+BRANCH_NAME = os.environ.get('GITHUB_DEFAULT_REPO_BRANCH', st.secrets["GITHUB_DEFAULT_REPO_BRANCH"])
 
 # Initialize GitHub API
 try:
@@ -161,6 +162,66 @@ def list_repo_files():
         print(f"An unexpected error occurred while listing files: {e}")
         return []
     return all_files
+
+def create_branch(base_branch: str, new_branch_name: str) -> Optional[str]:
+    """
+    Creates a new branch from a specified base branch.
+
+    Args:
+        base_branch (str): The name of the branch to create the new branch from.
+        new_branch_name (str): The name of the new branch to create.
+
+    Returns:
+        str: The name of the new branch if successful, None otherwise.
+    """
+    if repo is None:
+        print("Error: GitHub repository not initialized. Cannot create branch.")
+        return None
+    try:
+        # Get the base branch reference
+        base_ref = repo.get_git_ref(f"heads/{base_branch}")
+        # Create the new branch
+        repo.create_git_ref(f"refs/heads/{new_branch_name}", base_ref.sha)
+        print(f"Branch '{new_branch_name}' created successfully from '{base_branch}'.")
+        return new_branch_name
+    except GithubException as e:
+        print(f"GitHub API error creating branch '{new_branch_name}': {e}")
+        return None
+    except Exception as e:
+        print(f"An unexpected error occurred while creating branch '{new_branch_name}': {e}")
+        return None
+
+def create_pull_request(title: str, body: str, head_branch: str, base_branch: str) -> Optional[str]:
+    """
+    Creates a pull request.
+
+    Args:
+        title (str): The title of the pull request.
+        body (str): The body/description of the pull request.
+        head_branch (str): The name of the branch where the changes are (feature branch).
+        base_branch (str): The name of the branch to merge the changes into (e.g., 'development').
+
+    Returns:
+        str: The URL of the created pull request if successful, None otherwise.
+    """
+    if repo is None:
+        print("Error: GitHub repository not initialized. Cannot create pull request.")
+        return None
+    try:
+        pull = repo.create_pull(
+            title=title,
+            body=body,
+            head=head_branch,
+            base=base_branch
+        )
+        print(f"Pull request '{title}' created successfully: {pull.html_url}")
+        return pull.html_url
+    except GithubException as e:
+        print(f"GitHub API error creating pull request: {e}")
+        return None
+    except Exception as e:
+        print(f"An unexpected error occurred while creating pull request: {e}")
+        return None
 
 # Example of how to use the functions (optional)
 if __name__ == "__main__":

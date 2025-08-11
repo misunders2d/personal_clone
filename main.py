@@ -29,9 +29,9 @@ async def main():
     # Initialize Vertex AI with project and location from .env
     # This ensures the correct project is used, overriding gcloud config if necessary.
     vertexai.init(
-        project=os.environ.get("GOOGLE_CLOUD_PROJECT"),
-        location=os.environ.get("GOOGLE_CLOUD_LOCATION")
-    )
+        project=os.environ.get("GOOGLE_CLOUD_PROJECT", st.secrets["GOOGLE_CLOUD_PROJECT"]),
+        location=os.environ.get("GOOGLE_CLOUD_LOCATION", st.secrets["GOOGLE_CLOUD_LOCATION"])
+        )
 
     # Initialize services and runner, and store them in session_state
     if "runner" not in st.session_state:
