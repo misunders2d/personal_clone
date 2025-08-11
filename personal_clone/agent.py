@@ -74,6 +74,18 @@ search_agent_tool = AgentTool(
 
 # --- Developer Workflow Sub-Agents ---
 
+planner_agent = Agent(
+    name="planner_agent",
+    description="Creates and refines development plans.",
+    instruction=PLANNER_AGENT_INSTRUCTION,
+    model=MODEL_NAME,
+    tools=[
+        search_agent_tool,
+        list_repo_files,
+        get_file_content,
+    ],
+)
+
 code_reviewer_agent = Agent(
     name="code_reviewer_agent",
     description="Reviews development plans for quality and adherence to project standards.",
@@ -95,27 +107,15 @@ plan_refiner_agent = Agent(
     tools=[],
 )
 
-planner_agent = Agent(
-    name="planner_agent",
-    description="Creates and refines development plans.",
-    instruction=PLANNER_AGENT_INSTRUCTION,
-    model=MODEL_NAME,
-    tools=[
-        search_agent_tool,
-        list_repo_files,
-        get_file_content,
-    ],
-)
-
 # --- Workflow Agents ---
 
 plan_and_review_agent = SequentialAgent(
     name="plan_and_review_agent",
     description="A workflow that creates a plan, then iteratively reviews and refines it.",
     sub_agents=[
-        planner_agent,
-        LoopAgent(name="review_loop",sub_agents=[code_reviewer_agent,plan_refiner_agent],
-            max_iterations=5)
+        LoopAgent(name="review_loop",sub_agents=[planner_agent, code_reviewer_agent],
+            max_iterations=5),
+        plan_refiner_agent
     ]
 )
 
