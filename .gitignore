@@ -215,3 +215,6 @@ integrations/
 improvements.md
 
 *.bak
+
+.streamlit/
+.streamlit/config.toml
