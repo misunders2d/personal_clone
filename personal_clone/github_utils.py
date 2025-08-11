@@ -47,50 +47,6 @@ def get_file_content(file_path: str):
         print(f"An unexpected error occurred while getting file content for '{file_path}': {e}")
         return None
 
-def _update_file_in_repo(file_path: str, new_content: str, commit_message: str, original_content: str):
-    """
-    Updates a file in the GitHub repository with a safety check.
-
-    Args:
-        file_path (str): The path to the file in the repository.
-        new_content (str): The new content for the file.
-        commit_message (str): The commit message for the changes.
-        original_content (str): The original content of the file, used for a safety check.
-
-    Returns:
-        bool: True if the file was updated successfully, False otherwise.
-    """
-    if repo is None:
-        print("Error: GitHub repository not initialized. Cannot update file.")
-        return False
-    try:
-        # Get the existing file to get its SHA
-        contents = repo.get_contents(file_path, ref=BRANCH_NAME)
-        
-        # Safety check: Ensure original content is part of the new content
-        if original_content not in new_content:
-            print(f"Safety check failed for '{file_path}': Original content not found in new content. Aborting to prevent data loss.")
-            return False
-
-        # Update the file
-        update_data = repo.update_file(
-            contents.path,
-            commit_message,
-            new_content,
-            contents.sha,
-            branch=BRANCH_NAME # Specify the branch
-        )
-        print(f"File '{file_path}' updated successfully.")
-        return True
-    except GithubException as e:
-        # Catch specific GitHub API errors
-        print(f"GitHub API error updating file '{file_path}': {e}")
-        return False
-    except Exception as e:
-        # Catch any other unexpected errors
-        print(f"An unexpected error occurred while updating file '{file_path}': {e}")
-        return False
-
 def _create_file_in_repo(file_path: str, content: str, commit_message: str):
     """
     Creates a new file in the GitHub repository.
@@ -124,16 +80,15 @@ def _create_file_in_repo(file_path: str, content: str, commit_message: str):
         print(f"An unexpected error occurred while creating file '{file_path}': {e}")
         return False
 
-def create_or_update_file(file_path: str, content: str, commit_message: str, original_content: Optional[str] = None):
+def create_or_update_file(file_path: str, content: str, commit_message: str):
     """
     Creates a new file or updates an existing file in the GitHub repository.
-    For updates, original_content must be provided for a safety check.
+    For updates, it uses the file's SHA for a safe, atomic update.
 
     Args:
         file_path (str): The path to the file in the repository.
         content (str): The content of the file.
         commit_message (str): The commit message for the changes.
-        original_content (str, optional): The original content of the file. Required for updates.
 
     Returns:
         bool: True if the file was created or updated successfully, False otherwise.
@@ -143,22 +98,31 @@ def create_or_update_file(file_path: str, content: str, commit_message: str, ori
         return False
     
     try:
-        # Check if the file exists
+        # Check if the file exists to get its SHA for updating
         contents = repo.get_contents(file_path, ref=BRANCH_NAME)
-        # If it exists, update it
-        if original_content is None:
-            print(f"Error: original_content must be provided to update existing file '{file_path}'.")
-            return False
-        return _update_file_in_repo(file_path, content, commit_message, original_content)
+        
+        # If it exists, update it using its SHA
+        repo.update_file(
+            contents.path,
+            commit_message,
+            content,
+            contents.sha,
+            branch=BRANCH_NAME
+        )
+        print(f"File '{file_path}' updated successfully.")
+        return True
     except GithubException as e:
         if e.status == 404:
-            # If it does not exist, create it
+            # If the file does not exist, create it.
             return _create_file_in_repo(file_path, content, commit_message)
         else:
-            # Catch other GitHub API errors
-            print(f"GitHub API error checking file '{file_path}': {e.status}")
-            print(f"GitHub API error data: {e.data}")
+            # Catch other GitHub API errors during the get_contents or update_file call
+            print(f"GitHub API error handling file '{file_path}': {e}")
             return False
+    except Exception as e:
+        # Catch any other unexpected errors
+        print(f"An unexpected error occurred while creating or updating file '{file_path}': {e}")
+        return False
 
 def list_repo_files():
     """
@@ -171,19 +135,21 @@ def list_repo_files():
         print("Error: GitHub repository not initialized. Cannot list files.")
         return []
     
-    files = []
+    all_files = []
+    dirs_to_visit = [""]  # Start with the root directory
     try:
-        contents = repo.get_contents("", ref=BRANCH_NAME)
-        while contents:
-            file_content = contents.pop(0)
-            if file_content.type == "dir":
-                contents.extend(repo.get_contents(file_content.path, ref=BRANCH_NAME))
-            else:
-                files.append(file_content.path)
+        while dirs_to_visit:
+            path = dirs_to_visit.pop()
+            contents = repo.get_contents(path, ref=BRANCH_NAME)
+            for file_content in contents:
+                if file_content.type == "dir":
+                    dirs_to_visit.append(file_content.path)
+                else:
+                    all_files.append(file_content.path)
     except Exception as e:
         print(f"An unexpected error occurred while listing files: {e}")
         return []
-    return files
+    return all_files
 
 # Example of how to use the functions (optional)
 if __name__ == "__main__":
@@ -206,7 +172,7 @@ if __name__ == "__main__":
         # new_file_path = "test_file_from_clone.txt"
         # new_file_content = "This is a test file created by the clone script with improved error handling."
         # commit_msg_create = "CI: Create test_file_from_clone.txt"
-        # create_success = create_file_in_repo(new_file_path, new_file_content, commit_msg_create)
+        # create_success = _create_file_in_repo(new_file_path, new_file_content, commit_msg_create)
         # if not create_success:
         #     print("Failed to create test file.")
 
@@ -214,10 +180,11 @@ if __name__ == "__main__":
         # print("\nAttempting to update a file:")
         # existing_file_path = "README.md" # Example: update README.md
         # original_content = get_file_content(existing_file_path)
-        # if original_content:
+        # if original_content is not None:
         #     updated_content = original_content + "\n\n# This is an appended line for testing updates."
         #     commit_msg_update = "CI: Update README.md with appended line"
-        #     update_success = update_file_in_repo(existing_file_path, updated_content, commit_msg_update)
+        #     # The create_or_update_file function handles both creation and updates safely.
+        #     update_success = create_or_update_file(existing_file_path, updated_content, commit_msg_update)
         #     if not update_success:
         #         print(f"Failed to update {existing_file_path}.")
         # else:
@@ -233,4 +200,3 @@ if __name__ == "__main__":
         # else:
         #     print("Failed to list files in the repo.")
         pass
-
