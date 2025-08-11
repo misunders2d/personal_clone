@@ -19,7 +19,7 @@ from .github_utils import (
     list_repo_files,
     create_or_update_file,
 )
-from .log_utils import query_session_log
+from .session_utils import get_session_events_as_json
 from .instructions import (
     DEVELOPER_AGENT_INSTRUCTION, 
     MASTER_AGENT_INSTRUCTION,
@@ -112,11 +112,11 @@ planner_agent = Agent(
 
 session_analyzer_agent = Agent(
     name="session_analyzer_agent",
-    description="Analyzes a JSON session log to diagnose issues and summarize behavior.",
+    description="Analyzes the current session to diagnose issues and summarize behavior.",
     instruction=SESSION_ANALYZER_INSTRUCTION,
     model=MODEL_NAME,
     tools=[
-        query_session_log,
+        get_session_events_as_json,
         get_file_content, # To read instructions.py or other relevant files
     ]
 )

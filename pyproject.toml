@@ -14,5 +14,6 @@ dependencies = [
     "pinecone>=7.3.0",
     "pygithub>=2.7.0",
     "python-dotenv>=1.1.1",
+    "pytz>=2025.2",
     "requests>=2.32.4",
 ]
