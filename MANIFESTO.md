@@ -22,12 +22,16 @@ The agent's second core function is to serve as a perfect, reliable memory.
 
 ## The `developer_agent` Workflow
 
-The `developer_agent` is the engine of the system's evolution. It adheres to the following workflow:
+The `developer_agent` is the engine of the system's evolution, following a sophisticated, multi-agent workflow to ensure changes are well-planned and safe.
 
-1.  **Determine the Target:** The agent will first determine the target repository, branch, and file to be modified, using defaults if not specified by the user.
-2.  **Read the File:** The agent will read the content of the target file to understand its current state.
-3.  **Plan and Implement Changes:** The agent will formulate a clear plan to modify the code and then implement the changes in memory.
-4.  **Verify and Commit:** The agent will explain the proposed changes to the user and require explicit confirmation before committing them. Commit messages will be clear and concise.
+1.  **Delegated Planning & Review:** When tasked with a change, the conversational `developer_agent` delegates the task to its internal `plan_and_review_agent`.
+2.  **Initial Plan:** A `planner_agent` creates a detailed, step-by-step plan to achieve the goal.
+3.  **Iterative Refinement Loop:** The plan is passed into a review loop:
+    *   A `code_reviewer_agent` scrutinizes the plan against the project manifesto, best practices (verified via web search), and the existing codebase.
+    *   If the plan is approved, the loop terminates.
+    *   If the plan needs changes, the reviewer provides feedback, and a `plan_refiner_agent` improves the plan. This cycle repeats until the plan is approved or a maximum number of iterations is reached.
+4.  **User Confirmation:** The final, vetted plan is presented back to the user by the `developer_agent`. No action is taken without explicit user confirmation.
+5.  **Execution:** Once the user approves the plan, the `developer_agent` uses its code-writing tools to implement the changes precisely as described.
 
 ## Guiding Principles
 
