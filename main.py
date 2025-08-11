@@ -80,12 +80,12 @@ async def main():
         st.session_state.messages.append({"role": "user", "content": prompt})
 
         # Handle file uploads
-        parts = [types.Part(text=prompt)]
+        parts = [types.Part.from_text(text=prompt)]
         if uploaded_files:
             file_names = []
             for uploaded_file in uploaded_files:
                 file_names.append(uploaded_file.name)
-                parts.append(types.Part(text=f"\n\n--- Attached File: {uploaded_file.name} ---\n\n"))
+                parts.append(types.Part.from_text(text=f"\n\n--- Attached File: {uploaded_file.name} ---\n\n"))
                 parts.append(types.Part(inline_data=types.Blob(mime_type=uploaded_file.type, data=uploaded_file.getvalue())))
             
             # Add a message to chat history about uploaded files
@@ -95,30 +95,37 @@ async def main():
         new_message = types.Content(role="user", parts=parts)
 
         # Process the prompt using the ADK Runner
-        response_events = st.session_state.runner.run_async(
+        response_events_iterator = st.session_state.runner.run_async(
             user_id=USER_ID, 
             session_id=st.session_state.session_id, 
             new_message=new_message
         )
-        
-        agent_response = ""
-        with st.chat_message("assistant"):
-            message_placeholder = st.empty()
-            async for event in response_events:
+
+        # Collect all events from the async iterator
+        all_events = []
+        async for event in response_events_iterator:
+            all_events.append(event)
+
+        def stream_agent_response_sync(events): # This is now a regular generator
+            full_response_content = ""
+            for event in events: # Regular for loop
                 function_calls = event.get_function_calls()
                 if function_calls:
                     for call in function_calls:
-                        st.info(f"Calling tool: {call.name}")
+                        st.toast(f"Calling tool: {call.name}")
                 function_responses = event.get_function_responses()
                 if function_responses:
                     for response in function_responses:
-                        st.info(f"Tool response from {response.name}: {response.response}")
+                        response_text = f"Tool response from {response.name}: {response.response}\n"
+                        full_response_content += response_text
+                        yield response_text
                 if event.content and event.content.parts and event.content.parts[0].text is not None:
-                    agent_response += str(event.content.parts[0].text)
-                    message_placeholder.markdown(agent_response + "▌") # Add a blinking cursor
-                if event.is_final_response():
-                    break
-            message_placeholder.markdown(agent_response) # Display final response without cursor
+                    text_content = str(event.content.parts[0].text)
+                    full_response_content += text_content
+                    yield text_content
+
+        with st.chat_message("assistant"):
+            agent_response = st.write_stream(stream_agent_response_sync(all_events))
         st.session_state.messages.append({"role": "assistant", "content": agent_response})
 
 if __name__ == "__main__":
