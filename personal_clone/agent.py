@@ -19,7 +19,6 @@ from .github_utils import (
     list_repo_files,
     create_or_update_file,
 )
-from .session_utils import get_session_events_as_json
 from .instructions import (
     DEVELOPER_AGENT_INSTRUCTION, 
     MASTER_AGENT_INSTRUCTION,
@@ -79,7 +78,7 @@ code_reviewer_agent = Agent(
     name="code_reviewer_agent",
     description="Reviews development plans for quality and adherence to project standards.",
     instruction=CODE_REVIEWER_AGENT_INSTRUCTION,
-    model=MODEL_NAME,
+    model=LiteLlm('openai/gpt-4.1-nano'),
     tools=[
         get_file_content,
         list_repo_files,
@@ -108,19 +107,6 @@ planner_agent = Agent(
     ],
 )
 
-# --- Specialist Agents ---
-
-session_analyzer_agent = Agent(
-    name="session_analyzer_agent",
-    description="Analyzes the current session to diagnose issues and summarize behavior.",
-    instruction=SESSION_ANALYZER_INSTRUCTION,
-    model=MODEL_NAME,
-    tools=[
-        get_session_events_as_json,
-        get_file_content, # To read instructions.py or other relevant files
-    ]
-)
-
 # --- Workflow Agents ---
 
 plan_and_review_agent = SequentialAgent(
@@ -129,7 +115,7 @@ plan_and_review_agent = SequentialAgent(
     sub_agents=[
         planner_agent,
         LoopAgent(name="review_loop",sub_agents=[code_reviewer_agent,plan_refiner_agent],
-            max_iterations=5,)
+            max_iterations=5)
     ]
 )
 
@@ -166,7 +152,6 @@ master_agent = Agent(
         clickup_api.create_task,
         clickup_api.close_task,
         AgentTool(agent=developer_agent),
-        AgentTool(agent=session_analyzer_agent),
     ],
 )
 
