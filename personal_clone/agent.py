@@ -99,25 +99,22 @@ code_reviewer_agent = Agent(
     ],
 )
 
-plan_refiner_agent = Agent(
-    name="plan_refiner_agent",
-    description="Refines development plans based on reviewer feedback.",
-    instruction=PLAN_REFINER_AGENT_INSTRUCTION,
-    model=MODEL_NAME,
-    tools=[],
-)
+# plan_refiner_agent = Agent(
+#     name="plan_refiner_agent",
+#     description="Refines development plans based on reviewer feedback.",
+#     instruction=PLAN_REFINER_AGENT_INSTRUCTION,
+#     model=MODEL_NAME,
+#     tools=[],
+# )
 
 # --- Workflow Agents ---
 
-plan_and_review_agent = SequentialAgent(
-    name="plan_and_review_agent",
-    description="A workflow that creates a plan, then iteratively reviews and refines it.",
-    sub_agents=[
-        LoopAgent(name="review_loop",sub_agents=[planner_agent, code_reviewer_agent],
-            max_iterations=5),
-        plan_refiner_agent
-    ]
-)
+plan_and_review_agent = LoopAgent(
+    name="review_loop",
+    description="A loop agent that creates and reviews development plans iteratively to achieve best results.",
+    sub_agents=[planner_agent, code_reviewer_agent],
+    max_iterations=5)
+
 
 # --- Primary User-Facing Agents ---
 
