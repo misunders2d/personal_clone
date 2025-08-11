@@ -24,13 +24,13 @@ from .instructions import (
     MASTER_AGENT_INSTRUCTION,
     CODE_REVIEWER_AGENT_INSTRUCTION,
     PLAN_REFINER_AGENT_INSTRUCTION,
-    PLANNER_AGENT_INSTRUCTION,
-    SESSION_ANALYZER_INSTRUCTION
-)
+    PLANNER_AGENT_INSTRUCTION
+    )
 
 # --- Constants ---
 SEARCH_MODEL_NAME='gemini-2.5-flash'
 MODEL_NAME='gemini-2.5-flash'
+MASTER_AGENT_MODEL='gemini-2.5-pro'
 
 # --- Ancillary Services & Tools ---
 clickup_api = ClickUpAPI()
@@ -139,7 +139,7 @@ master_agent = Agent(
     name="personal_clone",
     description="A personal clone that acts as a second brain, helping to remember, recall, find, update, and delete experiences, and also to develop itself.",
     instruction=MASTER_AGENT_INSTRUCTION,
-    model=MODEL_NAME,
+    model=MASTER_AGENT_MODEL,
     tools=[
         get_current_date,
         write_to_rag,

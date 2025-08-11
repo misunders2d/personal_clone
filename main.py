@@ -23,8 +23,8 @@ st.title("Personal Clone")
 
 async def main():
     # --- App Constants ---
-    APP_NAME = "personal-clone-app"
-    USER_ID = "streamlit-user"
+    APP_NAME = "misunderstood-personal-clone-app"
+    USER_ID = "misunderstood"
 
     # Initialize Vertex AI with project and location from .env
     # This ensures the correct project is used, overriding gcloud config if necessary.
@@ -32,11 +32,6 @@ async def main():
         project=os.environ.get("GOOGLE_CLOUD_PROJECT"),
         location=os.environ.get("GOOGLE_CLOUD_LOCATION")
     )
-
-    # Debugging: Display GOOGLE_GENAI_USE_VERTEXAI value
-    st.write(f"GOOGLE_GENAI_USE_VERTEXAI: {os.environ.get("GOOGLE_GENAI_USE_VERTEXAI")}")
-    st.write(f"GOOGLE_CLOUD_PROJECT: {os.environ.get("GOOGLE_CLOUD_PROJECT")}")
-    st.write(f"GOOGLE_CLOUD_LOCATION: {os.environ.get("GOOGLE_CLOUD_LOCATION")}")
 
     # Initialize services and runner, and store them in session_state
     if "runner" not in st.session_state:
@@ -107,14 +102,23 @@ async def main():
         )
         
         agent_response = ""
-        async for event in response_events:
-            if event.is_final_response() and event.content and event.content.parts:
-                agent_response = event.content.parts[0].text
-                break
-
-        # Display assistant response
         with st.chat_message("assistant"):
-            st.markdown(agent_response)
+            message_placeholder = st.empty()
+            async for event in response_events:
+                function_calls = event.get_function_calls()
+                if function_calls:
+                    for call in function_calls:
+                        st.info(f"Calling tool: {call.name}")
+                function_responses = event.get_function_responses()
+                if function_responses:
+                    for response in function_responses:
+                        st.info(f"Tool response from {response.name}: {response.response}")
+                if event.content and event.content.parts and event.content.parts[0].text is not None:
+                    agent_response += str(event.content.parts[0].text)
+                    message_placeholder.markdown(agent_response + "▌") # Add a blinking cursor
+                if event.is_final_response():
+                    break
+            message_placeholder.markdown(agent_response) # Display final response without cursor
         st.session_state.messages.append({"role": "assistant", "content": agent_response})
 
 if __name__ == "__main__":
