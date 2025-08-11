@@ -216,4 +216,4 @@ improvements.md
 
 *.bak
 
-.streamlit/
+.streamlit/secrets.toml
