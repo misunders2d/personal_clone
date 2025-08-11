@@ -2,6 +2,7 @@ from google.adk.agents import Agent, SequentialAgent, LoopAgent
 from google.adk.tools import google_search, exit_loop
 from google.adk.tools.agent_tool import AgentTool
 from google.adk.models.lite_llm import LiteLlm
+import pytz
 
 from datetime import datetime
 
@@ -18,12 +19,14 @@ from .github_utils import (
     list_repo_files,
     create_or_update_file,
 )
+from .log_utils import query_session_log
 from .instructions import (
     DEVELOPER_AGENT_INSTRUCTION, 
     MASTER_AGENT_INSTRUCTION,
     CODE_REVIEWER_AGENT_INSTRUCTION,
     PLAN_REFINER_AGENT_INSTRUCTION,
-    PLANNER_AGENT_INSTRUCTION
+    PLANNER_AGENT_INSTRUCTION,
+    SESSION_ANALYZER_INSTRUCTION
 )
 
 # --- Constants ---
@@ -34,8 +37,31 @@ MODEL_NAME='gemini-2.5-flash'
 clickup_api = ClickUpAPI()
 
 def get_current_date():
-    """Returns the current date and time in YYYY-MM-DD HH:MM:SS format."""
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    """
+    Returns the current date and time in YYYY-MM-DD HH:MM:SS format
+    for Kiev and New York timezones.
+    """
+    # Define timezones
+    kiev_tz = pytz.timezone("Europe/Kiev")
+    new_york_tz = pytz.timezone("America/New_York")
+
+    # Get current UTC time
+    utc_now = datetime.now(pytz.utc)
+
+    # Convert to Kiev time
+    kiev_time = utc_now.astimezone(kiev_tz)
+
+    # Convert to New York time
+    new_york_time = utc_now.astimezone(new_york_tz)
+
+    # Format times
+    kiev_formatted = kiev_time.strftime("%Y-%m-%d %H:%M:%S %Z%z")
+    new_york_formatted = new_york_time.strftime("%Y-%m-%d %H:%M:%S %Z%z")
+
+    return {
+        "kiev_time": kiev_formatted,
+        "new_york_time": new_york_formatted
+    }
 
 search_agent_tool = AgentTool(
     agent=Agent(
@@ -82,7 +108,20 @@ planner_agent = Agent(
     ],
 )
 
-# --- Planning and Review Workflow ---
+# --- Specialist Agents ---
+
+session_analyzer_agent = Agent(
+    name="session_analyzer_agent",
+    description="Analyzes a JSON session log to diagnose issues and summarize behavior.",
+    instruction=SESSION_ANALYZER_INSTRUCTION,
+    model=MODEL_NAME,
+    tools=[
+        query_session_log,
+        get_file_content, # To read instructions.py or other relevant files
+    ]
+)
+
+# --- Workflow Agents ---
 
 plan_and_review_agent = SequentialAgent(
     name="plan_and_review_agent",
@@ -94,7 +133,7 @@ plan_and_review_agent = SequentialAgent(
     ]
 )
 
-# --- Primary Developer Agent ---
+# --- Primary User-Facing Agents ---
 
 developer_agent = Agent(
     name="developer_agent",
@@ -109,8 +148,6 @@ developer_agent = Agent(
         search_agent_tool,
     ],
 )
-
-# --- Master Agent ---
 
 master_agent = Agent(
     name="personal_clone",
@@ -129,6 +166,7 @@ master_agent = Agent(
         clickup_api.create_task,
         clickup_api.close_task,
         AgentTool(agent=developer_agent),
+        AgentTool(agent=session_analyzer_agent),
     ],
 )
 

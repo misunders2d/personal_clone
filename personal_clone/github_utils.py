@@ -36,6 +36,9 @@ def get_file_content(file_path: str):
         return None
     try:
         contents = repo.get_contents(file_path, ref=BRANCH_NAME) # Specify the branch
+        if isinstance(contents, list):
+            print(f"Error: The path '{file_path}' refers to a directory, not a file.")
+            return None
         decoded_content = base64.b64decode(contents.content).decode('utf-8')
         return decoded_content
     except GithubException as e:
@@ -100,7 +103,11 @@ def create_or_update_file(file_path: str, content: str, commit_message: str):
     try:
         # Check if the file exists to get its SHA for updating
         contents = repo.get_contents(file_path, ref=BRANCH_NAME)
-        
+        # If get_contents returns a list, the path is a directory, which is not supported for file updates
+        if isinstance(contents, list):
+            print(f"Error: The path '{file_path}' refers to a directory, not a file.")
+            return False
+
         # If it exists, update it using its SHA
         repo.update_file(
             contents.path,
@@ -141,11 +148,15 @@ def list_repo_files():
         while dirs_to_visit:
             path = dirs_to_visit.pop()
             contents = repo.get_contents(path, ref=BRANCH_NAME)
-            for file_content in contents:
-                if file_content.type == "dir":
-                    dirs_to_visit.append(file_content.path)
-                else:
-                    all_files.append(file_content.path)
+            if isinstance(contents, list):
+                for file_content in contents:
+                    if file_content.type == "dir":
+                        dirs_to_visit.append(file_content.path)
+                    else:
+                        all_files.append(file_content.path)
+            else:
+                # It's a single file, not a directory
+                all_files.append(contents.path)
     except Exception as e:
         print(f"An unexpected error occurred while listing files: {e}")
         return []
