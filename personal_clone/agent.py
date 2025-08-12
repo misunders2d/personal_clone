@@ -23,9 +23,10 @@ from .instructions import (
     DEVELOPER_AGENT_INSTRUCTION, 
     MASTER_AGENT_INSTRUCTION,
     CODE_REVIEWER_AGENT_INSTRUCTION,
-    PLAN_REFINER_AGENT_INSTRUCTION,
+    PLAN_FETCHER_AGENT_INSTRUCTION,
     PLANNER_AGENT_INSTRUCTION
     )
+
 
 # --- Constants ---
 SEARCH_MODEL_NAME='gemini-2.5-flash'
@@ -83,7 +84,8 @@ planner_agent = Agent(
         search_agent_tool,
         list_repo_files,
         get_file_content,
-    ],
+        exit_loop
+    ], output_key='development_plan'
 )
 
 code_reviewer_agent = Agent(
@@ -95,26 +97,32 @@ code_reviewer_agent = Agent(
         get_file_content,
         list_repo_files,
         search_agent_tool,
-        exit_loop,
     ],
+    output_key='reviewer_feedback'
 )
 
-# plan_refiner_agent = Agent(
-#     name="plan_refiner_agent",
-#     description="Refines development plans based on reviewer feedback.",
-#     instruction=PLAN_REFINER_AGENT_INSTRUCTION,
-#     model=MODEL_NAME,
-#     tools=[],
-# )
+plan_fetcher_agent = Agent(
+    name="plan_fetcher_agent",
+    description="Refines development plans based on reviewer feedback.",
+    instruction=PLAN_FETCHER_AGENT_INSTRUCTION,
+    model=MODEL_NAME,
+    tools=[],
+)
 
 # --- Workflow Agents ---
 
-plan_and_review_agent = LoopAgent(
+code_review_loop = LoopAgent(
     name="review_loop",
     description="A loop agent that creates and reviews development plans iteratively to achieve best results.",
     sub_agents=[planner_agent, code_reviewer_agent],
     max_iterations=5)
 
+
+plan_and_review_agent = SequentialAgent(
+    name="plan_and_review_agent",
+    description="An agent that creates a development plan and reviews it iteratively until approved.",
+    sub_agents = [code_review_loop, plan_fetcher_agent],
+    )
 
 # --- Primary User-Facing Agents ---
 
