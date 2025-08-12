@@ -1,10 +1,7 @@
 import streamlit as st
-import dotenv
 from login import login_st
-import vertexai
-
-dotenv.load_dotenv()
-vertexai.init(project=st.secrets['GOOGLE_CLOUD_PROJECT'], location=st.secrets['GOOGLE_CLOUD_LOCATION'])
+from dotenv import load_dotenv
+load_dotenv()
 
 # Import ADK services and types
 from google.adk.sessions import InMemorySessionService
