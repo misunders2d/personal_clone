@@ -1,7 +1,5 @@
 import streamlit as st
 from login import login_st
-import vertexai
-from google.oauth2 import service_account
 
 # Import ADK services and types
 from google.adk.sessions import InMemorySessionService
@@ -12,8 +10,6 @@ from google.adk.runners import Runner
 # Import master_agent after dotenv.load_dotenv() to ensure env vars are loaded
 from personal_clone.agent import master_agent
 
-key_path = service_account.Credentials.from_service_account_info(st.secrets['gcp_service_account'])
-vertexai.init(credentials=key_path)
 
 st.set_page_config(layout="wide")
 

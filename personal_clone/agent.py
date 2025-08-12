@@ -2,7 +2,12 @@ from google.adk.agents import Agent, SequentialAgent, LoopAgent
 from google.adk.tools import google_search, exit_loop
 from google.adk.tools.agent_tool import AgentTool
 from google.adk.models.lite_llm import LiteLlm
-from typing import Optional, Any
+from typing import Optional
+import streamlit as st
+import vertexai
+from google.oauth2 import service_account
+
+
 import pytz
 from pydantic import PrivateAttr
 
@@ -31,6 +36,11 @@ from .instructions import (
     PLAN_FETCHER_AGENT_INSTRUCTION,
     PLANNER_AGENT_INSTRUCTION
     )
+
+
+key_path = service_account.Credentials.from_service_account_info(st.secrets['gcp_service_account'])
+vertexai.init(credentials=key_path)
+
 
 
 # --- Constants ---
