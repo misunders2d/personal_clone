@@ -4,7 +4,7 @@ from login import login_st
 import vertexai
 
 dotenv.load_dotenv()
-vertexai.init(project=st.secrets['gcp_service_account']['project_id'], location=st.secrets['gcp_service_account']['location'])
+vertexai.init(project=st.secrets['GOOGLE_CLOUD_PROJECT'], location=st.secrets['GOOGLE_CLOUD_LOCATION'])
 
 # Import ADK services and types
 from google.adk.sessions import InMemorySessionService

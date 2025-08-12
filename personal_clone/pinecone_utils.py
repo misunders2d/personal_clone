@@ -2,7 +2,6 @@ import os
 import streamlit as st
 from pinecone import Pinecone, ServerlessSpec, QueryResponse, NotFoundException
 from dotenv import load_dotenv
-import vertexai
 from vertexai.language_models import TextEmbeddingModel
 import json
 import tempfile
