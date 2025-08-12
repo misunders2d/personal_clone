@@ -1,9 +1,10 @@
-import os
 from google.adk.agents import Agent, SequentialAgent, LoopAgent
 from google.adk.tools import google_search, exit_loop
 from google.adk.tools.agent_tool import AgentTool
 from google.adk.models.lite_llm import LiteLlm
+from typing import Optional, Any
 import pytz
+from pydantic import PrivateAttr
 
 from datetime import datetime
 
@@ -131,11 +132,11 @@ plan_and_review_agent = SequentialAgent(
 # --- Primary User-Facing Agents ---
 
 class DeveloperAgent(Agent):
+    _feature_branch_name: Optional[str] = PrivateAttr(None)
+    _base_branch: str = PrivateAttr(BRANCH_NAME)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.feature_branch_name = None
-        self.base_branch = BRANCH_NAME # Use the imported default branch name
-
         # Dynamically set up tools and sub_agents after self is available
         self.tools = [
             self._create_or_update_file_wrapper,
@@ -151,19 +152,19 @@ class DeveloperAgent(Agent):
         """
         Wrapper for create_or_update_file that uses the active feature branch.
         """
-        return create_or_update_file(file_path, content, commit_message, branch=self.feature_branch_name or self.base_branch)
+        return create_or_update_file(file_path, content, commit_message, branch=self._feature_branch_name or self._base_branch) # type: ignore
 
     def _get_file_content_wrapper(self, file_path: str):
         """
         Wrapper for get_file_content that uses the active feature branch.
         """
-        return get_file_content(file_path, branch=self.feature_branch_name or self.base_branch)
+        return get_file_content(file_path, branch=self._feature_branch_name or self._base_branch) # type: ignore
 
     def _list_repo_files_wrapper(self):
         """
         Wrapper for list_repo_files that uses the active feature branch.
         """
-        return list_repo_files(branch=self.feature_branch_name or self.base_branch)
+        return list_repo_files(branch=self._feature_branch_name or self._base_branch) # type: ignore
 
     def setup_feature_branch(self, task_description: str) -> str:
         """
@@ -181,16 +182,16 @@ class DeveloperAgent(Agent):
         if not sanitized_task_name:
             sanitized_task_name = "unnamed-feature"
         
-        self.feature_branch_name = f"feature/{sanitized_task_name[:30].strip('-')}-{timestamp}"
+        self._feature_branch_name = f"feature/{sanitized_task_name[:30].strip('-')}-{timestamp}" # type: ignore
         
-        print(f"Attempting to create feature branch: {self.feature_branch_name} from base branch: {self.base_branch}")
-        result = create_branch(self.base_branch, self.feature_branch_name)
+        print(f"Attempting to create feature branch: {self._feature_branch_name} from base branch: {self._base_branch}") # type: ignore
+        result = create_branch(self.base_branch, self.feature_branch_name) # type: ignore
         if result:
-            print(f"Successfully created feature branch: {self.feature_branch_name}")
-            return self.feature_branch_name
+            print(f"Successfully created feature branch: {self._feature_branch_name}") # type: ignore
+            return self._feature_branch_name # type: ignore
         else:
-            print(f"Failed to create feature branch: {self.feature_branch_name}")
-            self.feature_branch_name = None # Reset if creation failed
+            print(f"Failed to create feature branch: {self._feature_branch_name}") # type: ignore
+            self._feature_branch_name = None # Reset if creation failed # type: ignore
             return ""
 
     def create_pr(self, title: str, body: str) -> Optional[str]:
@@ -204,12 +205,12 @@ class DeveloperAgent(Agent):
         Returns:
             str: The URL of the created pull request if successful, None otherwise.
         """
-        if self.feature_branch_name:
-            print(f"Attempting to create pull request from {self.feature_branch_name} to {self.base_branch}")
-            pr_url = create_pull_request(title, body, self.feature_branch_name, self.base_branch)
+        if self._feature_branch_name: # type: ignore
+            print(f"Attempting to create pull request from {self._feature_branch_name} to {self._base_branch}") # type: ignore
+            pr_url = create_pull_request(title, body, self._feature_branch_name, self._base_branch) # type: ignore
             if pr_url:
                 print(f"Pull Request created: {pr_url}")
-                self.feature_branch_name = None # Reset after PR
+                self._feature_branch_name = None # Reset after PR # type: ignore
                 return pr_url
             else:
                 print("Failed to create pull request.")

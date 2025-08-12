@@ -1,3 +1,4 @@
+Authlib
 google-adk
 python-dotenv
 google-api-python-client

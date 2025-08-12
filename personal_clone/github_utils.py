@@ -187,7 +187,7 @@ def create_branch(base_branch: str, new_branch_name: str) -> Optional[str]:
         # Get the base branch reference
         base_ref = repo.get_git_ref(f"heads/{base_branch}")
         # Create the new branch
-        repo.create_git_ref(f"refs/heads/{new_branch_name}", base_ref.sha)
+        repo.create_git_ref(f"refs/heads/{new_branch_name}", base_ref.object.sha)
         print(f"Branch '{new_branch_name}' created successfully from '{base_branch}'.")
         return new_branch_name
     except GithubException as e:
@@ -228,53 +228,3 @@ def create_pull_request(title: str, body: str, head_branch: str, base_branch: st
     except Exception as e:
         print(f"An unexpected error occurred while creating pull request: {e}")
         return None
-
-# Example of how to use the functions (optional)
-if __name__ == "__main__":
-    # Make sure to set the GITHUB_TOKEN environment variable
-    if GITHUB_TOKEN is None:
-        print("Error: GITHUB_TOKEN environment variable not set.")
-    else:
-        # Example usage:
-        # Get content of a file
-        # print("\nAttempting to get README.md content:")
-        # file_content = get_file_content("README.md")
-        # if file_content:
-        #     print("README.md content snippet:")
-        #     print(file_content[:200] + "...") # Print first 200 chars
-        # else:
-        #     print("Failed to retrieve README.md content.")
-
-        # Create a new file (example)
-        # print("\nAttempting to create a test file:")
-        # new_file_path = "test_file_from_clone.txt"
-        # new_file_content = "This is a test file created by the clone script with improved error handling."
-        # commit_msg_create = "CI: Create test_file_from_clone.txt"
-        # create_success = _create_file_in_repo(new_file_path, new_file_content, commit_msg_create)
-        # if not create_success:
-        #     print("Failed to create test file.")
-
-        # Update a file (example - uncomment and modify path/content to test)
-        # print("\nAttempting to update a file:")
-        # existing_file_path = "README.md" # Example: update README.md
-        # original_content = get_file_content(existing_file_path)
-        # if original_content is not None:
-        #     updated_content = original_content + "\n\n# This is an appended line for testing updates."
-        #     commit_msg_update = "CI: Update README.md with appended line"
-        #     # The create_or_update_file function handles both creation and updates safely.
-        #     update_success = create_or_update_file(existing_file_path, updated_content, commit_msg_update)
-        #     if not update_success:
-        #         print(f"Failed to update {existing_file_path}.")
-        # else:
-        #      print(f"Could not retrieve content for {existing_file_path} to test update.")
-        
-        # List all files in the repo
-        # print("\nAttempting to list all files in the repo:")
-        # all_files = list_repo_files()
-        # if all_files:
-        #     print("All files in the repo:")
-        #     for file_path in all_files:
-        #         print(file_path)
-        # else:
-        #     print("Failed to list files in the repo.")
-        pass
