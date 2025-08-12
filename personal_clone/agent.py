@@ -120,7 +120,7 @@ code_review_loop = LoopAgent(
     name="review_loop",
     description="A loop agent that creates and reviews development plans iteratively to achieve best results.",
     sub_agents=[planner_agent, code_reviewer_agent],
-    max_iterations=5)
+    max_iterations=10)
 
 
 plan_and_review_agent = SequentialAgent(

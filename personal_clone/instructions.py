@@ -122,7 +122,7 @@ After your review, you MUST perform one of the following two actions:
 """
 
 PLAN_FETCHER_AGENT_INSTRUCTION = """
-Your only job is to fetch the approved development plan from the `development_plan` key of the session.
+Your only job is to fetch the approved development plan from the st.session_state['development_plan'].
 DO NOT MODIFY THE PLAN IN ANY WAY. OUTPUT THE PLAN AS IS.
-If the `development_plan` key is empty - you must convey this explicitly: "The plan has not been developed"
+If the st.session_state['development_plan'] key is empty - you must convey this explicitly: "The plan has not been developed"
 """
