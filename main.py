@@ -78,16 +78,16 @@ if login_st():
                 ):
                 new_msg += event.content.parts[0].function_response.response['result']
                 yield event.content.parts[0].function_response.response['result']
-            #handle errors
-            elif event.error_code:
-                st.error(f"Sorry, the following error happened:\n{event.error_code}")
-                async for event in runner.run_async(
-                    user_id=user_id,
-                    session_id=session_id,
-                    new_message=types.Content(role='user', parts=[types.Part(text=f'This error happened, please check: {event}')])):
-                    if event.content and event.content.parts and event.content.parts[0].text:
-                        new_msg += event.content.parts[0].text
-                        yield event.content.parts[0].text
+            # #handle errors
+            # elif event.error_code:
+            #     st.error(f"Sorry, the following error happened:\n{event.error_code}")
+            #     async for event in runner.run_async(
+            #         user_id=user_id,
+            #         session_id=session_id,
+            #         new_message=types.Content(role='user', parts=[types.Part(text=f'This error happened, please check: {event}')])):
+            #         if event.content and event.content.parts and event.content.parts[0].text:
+            #             new_msg += event.content.parts[0].text
+            #             yield event.content.parts[0].text
                 
             # else:
             #     yield event
