@@ -45,8 +45,8 @@ from .instructions import (
     )
 
 
-key_path = service_account.Credentials.from_service_account_info(st.secrets['gcp_service_account'])
-vertexai.init(credentials=key_path)
+# key_path = service_account.Credentials.from_service_account_info(st.secrets['gcp_service_account'])
+# vertexai.init(credentials=key_path)
 
 
 
