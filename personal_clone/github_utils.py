@@ -188,14 +188,11 @@ def create_branch(base_branch: str, new_branch_name: str) -> Optional[str]:
         base_ref = repo.get_git_ref(f"heads/{base_branch}")
         # Create the new branch
         repo.create_git_ref(f"refs/heads/{new_branch_name}", base_ref.object.sha)
-        print(f"Branch '{new_branch_name}' created successfully from '{base_branch}'.")
-        return new_branch_name
+        return(f"Branch '{new_branch_name}' created successfully from '{base_branch}'.")
     except GithubException as e:
-        print(f"GitHub API error creating branch '{new_branch_name}': {e}")
-        return None
+        return(f"GitHub API error creating branch '{new_branch_name}': {e}")
     except Exception as e:
-        print(f"An unexpected error occurred while creating branch '{new_branch_name}': {e}")
-        return None
+        return(f"An unexpected error occurred while creating branch '{new_branch_name}': {e}")
 
 def create_pull_request(title: str, body: str, head_branch: str, base_branch: str) -> Optional[str]:
     """
