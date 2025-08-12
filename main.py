@@ -13,6 +13,7 @@ from google.adk.runners import Runner
 
 # Import master_agent after dotenv.load_dotenv() to ensure env vars are loaded
 from personal_clone.agent import master_agent
+import traceback
 
 st.set_page_config(layout="wide")
 
@@ -78,19 +79,19 @@ if login_st():
                 ):
                 new_msg += event.content.parts[0].function_response.response['result']
                 yield event.content.parts[0].function_response.response['result']
-            # #handle errors
-            # elif event.error_code:
-            #     st.error(f"Sorry, the following error happened:\n{event.error_code}")
-            #     async for event in runner.run_async(
-            #         user_id=user_id,
-            #         session_id=session_id,
-            #         new_message=types.Content(role='user', parts=[types.Part(text=f'This error happened, please check: {event}')])):
-            #         if event.content and event.content.parts and event.content.parts[0].text:
-            #             new_msg += event.content.parts[0].text
-            #             yield event.content.parts[0].text
+            #handle errors
+            elif event.error_code:
+                st.error(f"Sorry, the following error happened:\n{event.error_code}")
+                async for event in runner.run_async(
+                    user_id=user_id,
+                    session_id=session_id,
+                    new_message=types.Content(role='user', parts=[types.Part(text=f'This error happened, please check: {event}')])):
+                    if event.content and event.content.parts and event.content.parts[0].text:
+                        new_msg += event.content.parts[0].text
+                        yield event.content.parts[0].text
                 
-            # else:
-            #     yield event
+            else:
+                yield event
 
 
 
@@ -105,5 +106,6 @@ if login_st():
                 st.write_stream(run_agent(user_input=prompt_text, session_id='session123', user_id=USER_ID))
             except Exception as e:
                 st.write(f'Sorry, an error occurred, please try later:\n{e}')
+                st.write(traceback.format_exc())
         st.session_state.messages.append({"role": "assistant", "content": new_msg})
 
