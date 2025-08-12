@@ -1,13 +1,25 @@
 import os
+import streamlit as st
 from pinecone import Pinecone, ServerlessSpec, QueryResponse, NotFoundException
 from dotenv import load_dotenv
+import vertexai
 from vertexai.language_models import TextEmbeddingModel
+import json
+import tempfile
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '../.env'))
 
 # Load environment variables
-PINECONE_API_KEY = os.getenv('PINECONE_API_KEY', "")
-PINECONE_INDEX_NAME = os.getenv('PINECONE_INDEX_NAME', "")
+PINECONE_API_KEY = os.environ.get('PINECONE_API_KEY', st.secrets["PINECONE_API_KEY"])
+PINECONE_INDEX_NAME = os.environ.get('PINECONE_INDEX_NAME', st.secrets["PINECONE_INDEX_NAME"])
+
+# Handle Google Cloud service account credentials for Vertex AI
+if "gcp_service_account" in st.secrets:
+    gcp_service_account_info = st.secrets["gcp_service_account"]
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json") as temp_key_file:
+        json.dump(dict(gcp_service_account_info), temp_key_file)
+        temp_key_file_path = temp_key_file.name
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_key_file_path
 
 # Initialize clients
 pc = Pinecone(api_key=PINECONE_API_KEY)

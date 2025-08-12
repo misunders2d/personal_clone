@@ -37,6 +37,11 @@ The agent provides five primary functions to manage your knowledge base:
     *   **`create_task(title, description=None, due_date=None, start_date=None)`**: Creates a new task in your configured ClickUp list. `description`, `due_date` (Unix timestamp in milliseconds), and `start_date` (Unix timestamp in milliseconds) are optional.
     *   **`close_task(task_id)`**: Marks a ClickUp task as complete.
 
+7.  **Self-Development (`developer_agent`)**:
+    *   **Purpose**: To evolve the agent's own capabilities by modifying its source code.
+    *   **Usage**: You can ask the agent to fix bugs, add new tools, or refactor its code. The `developer_agent` will handle the request.
+    *   **Workflow**: The agent follows a rigorous internal process to ensure changes are safe and well-designed. It first creates a detailed development plan, which is then reviewed and refined by specialized sub-agents in an iterative loop. This approved plan is then presented to you for final confirmation before any code is written to the repository.
+
 ## Autonomous Operation
 
 The agent is designed to be more than just a passive tool. It has the autonomy to make decisions and take initiative:
