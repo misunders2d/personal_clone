@@ -70,8 +70,7 @@ if login_st():
                 new_msg += event.content.parts[0].text
                 yield event.content.parts[0].text
             elif event.content and event.content.parts and event.content.parts[0].function_call:
-                # yield f'Running {event.content.parts[0].function_call.name} function\n'
-                st.toast(f'Running {event.content.parts[0].function_call.name} function\n')
+                st.toast(f'Running {event.content.parts[0].function_call.name}')
             elif (
                 event.content and event.content.parts
                 and event.content.parts[0].function_response
