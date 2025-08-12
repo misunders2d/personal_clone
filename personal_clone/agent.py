@@ -25,6 +25,7 @@ from .github_utils import (
     create_pull_request,
     BRANCH_NAME # Import the default branch name
 )
+import personal_clone.github_agent
 from .instructions import (
     DEVELOPER_AGENT_INSTRUCTION, 
     MASTER_AGENT_INSTRUCTION,
@@ -129,6 +130,19 @@ plan_and_review_agent = SequentialAgent(
     sub_agents = [code_review_loop, plan_fetcher_agent],
     )
 
+github_agent = Agent(
+    name="github_agent",
+    description="An agent that can manage GitHub issues.",
+    instruction="You are a GitHub issue management agent. Use the provided tools to create, retrieve, list, and edit GitHub issues.",
+    model=MODEL_NAME,
+    tools=[
+        personal_clone.github_agent.create_github_issue,
+        personal_clone.github_agent.get_github_issue,
+        personal_clone.github_agent.get_open_github_issues,
+        personal_clone.github_agent.edit_github_issue,
+    ],
+)
+
 # --- Primary User-Facing Agents ---
 
 
@@ -164,6 +178,7 @@ master_agent = Agent(
         clickup_api.create_task,
         clickup_api.close_task,
         AgentTool(agent=developer_agent),
+        AgentTool(agent=github_agent),
     ],
 )
 
