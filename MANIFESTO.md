@@ -33,6 +33,15 @@ The `developer_agent` is the engine of the system's evolution, following a sophi
 4.  **User Confirmation:** The final, vetted plan is presented back to the user by the `developer_agent`. No action is taken without explicit user confirmation.
 5.  **Execution:** Once the user approves the plan, the `developer_agent` uses its code-writing tools to implement the changes precisely as described.
 
+### Feature Branch Workflow
+
+To ensure isolated and manageable development, the `developer_agent` now operates using a feature branching strategy:
+
+1.  **Branch Creation:** Before initiating any code changes, the `developer_agent` creates a new, dedicated feature branch from the `development` (or default base) branch. This ensures that ongoing work does not interfere with the main codebase.
+2.  **Isolated Development:** All subsequent file operations (reading, creating, updating) performed by the `developer_agent` are conducted on this new feature branch.
+3.  **Commit Changes:** As changes are implemented, they are committed to the feature branch.
+4.  **Pull Request:** Once all planned modifications are complete and verified, the `developer_agent` automatically creates a Pull Request (PR) from the feature branch back to the `development` (or default base) branch. This initiates the code review and merge process, ensuring changes are properly integrated.
+
 ## Guiding Principles
 
 The development and operation of the `personal_clone` agent are governed by these core principles:
