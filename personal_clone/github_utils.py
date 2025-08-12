@@ -22,12 +22,13 @@ except Exception as e:
     print(f"An unexpected error occurred during GitHub initialization: {e}")
     repo = None
 
-def get_file_content(file_path: str):
+def get_file_content(file_path: str, branch: Optional[str] = None):
     """
     Gets the content of a file from the GitHub repository.
 
     Args:
         file_path (str): The path to the file in the repository.
+        branch (str, optional): The name of the branch to get the file from. Defaults to the default branch.
 
     Returns:
         str: The content of the file, or None if an error occurs.
@@ -36,7 +37,7 @@ def get_file_content(file_path: str):
         print("Error: GitHub repository not initialized. Cannot get file content.")
         return None
     try:
-        contents = repo.get_contents(file_path, ref=BRANCH_NAME) # Specify the branch
+        contents = repo.get_contents(file_path, ref=branch or BRANCH_NAME) # Specify the branch
         if isinstance(contents, list):
             print(f"Error: The path '{file_path}' refers to a directory, not a file.")
             return None
@@ -51,7 +52,7 @@ def get_file_content(file_path: str):
         print(f"An unexpected error occurred while getting file content for '{file_path}': {e}")
         return None
 
-def _create_file_in_repo(file_path: str, content: str, commit_message: str):
+def _create_file_in_repo(file_path: str, content: str, commit_message: str, branch: Optional[str] = None):
     """
     Creates a new file in the GitHub repository.
 
@@ -59,6 +60,7 @@ def _create_file_in_repo(file_path: str, content: str, commit_message: str):
         file_path (str): The path for the new file in the repository.
         content (str): The content of the new file.
         commit_message (str): The commit message for the creation.
+        branch (str, optional): The name of the branch to create the file in. Defaults to the default branch.
 
     Returns:
         bool: True if the file was created successfully, False otherwise.
@@ -71,7 +73,7 @@ def _create_file_in_repo(file_path: str, content: str, commit_message: str):
             file_path,
             commit_message,
             content,
-            branch=BRANCH_NAME # Specify the branch
+            branch=branch or BRANCH_NAME # Specify the branch
         )
         print(f"File '{file_path}' created successfully.")
         return True
@@ -84,7 +86,7 @@ def _create_file_in_repo(file_path: str, content: str, commit_message: str):
         print(f"An unexpected error occurred while creating file '{file_path}': {e}")
         return False
 
-def create_or_update_file(file_path: str, content: str, commit_message: str):
+def create_or_update_file(file_path: str, content: str, commit_message: str, branch: Optional[str] = None):
     """
     Creates a new file or updates an existing file in the GitHub repository.
     For updates, it uses the file's SHA for a safe, atomic update.
@@ -93,6 +95,7 @@ def create_or_update_file(file_path: str, content: str, commit_message: str):
         file_path (str): The path to the file in the repository.
         content (str): The content of the file.
         commit_message (str): The commit message for the changes.
+        branch (str, optional): The name of the branch to create or update the file in. Defaults to the default branch.
 
     Returns:
         bool: True if the file was created or updated successfully, False otherwise.
@@ -103,7 +106,7 @@ def create_or_update_file(file_path: str, content: str, commit_message: str):
     
     try:
         # Check if the file exists to get its SHA for updating
-        contents = repo.get_contents(file_path, ref=BRANCH_NAME)
+        contents = repo.get_contents(file_path, ref=branch or BRANCH_NAME)
         # If get_contents returns a list, the path is a directory, which is not supported for file updates
         if isinstance(contents, list):
             print(f"Error: The path '{file_path}' refers to a directory, not a file.")
@@ -115,14 +118,14 @@ def create_or_update_file(file_path: str, content: str, commit_message: str):
             commit_message,
             content,
             contents.sha,
-            branch=BRANCH_NAME
+            branch=branch or BRANCH_NAME
         )
         print(f"File '{file_path}' updated successfully.")
         return True
     except GithubException as e:
         if e.status == 404:
             # If the file does not exist, create it.
-            return _create_file_in_repo(file_path, content, commit_message)
+            return _create_file_in_repo(file_path, content, commit_message, branch)
         else:
             # Catch other GitHub API errors during the get_contents or update_file call
             print(f"GitHub API error handling file '{file_path}': {e}")
@@ -132,9 +135,12 @@ def create_or_update_file(file_path: str, content: str, commit_message: str):
         print(f"An unexpected error occurred while creating or updating file '{file_path}': {e}")
         return False
 
-def list_repo_files():
+def list_repo_files(branch: Optional[str] = None):
     """
     Lists all files in the repository recursively.
+
+    Args:
+        branch (str, optional): The name of the branch to list files from. Defaults to the default branch.
 
     Returns:
         list: A list of file paths, or an empty list if an error occurs.
@@ -148,7 +154,7 @@ def list_repo_files():
     try:
         while dirs_to_visit:
             path = dirs_to_visit.pop()
-            contents = repo.get_contents(path, ref=BRANCH_NAME)
+            contents = repo.get_contents(path, ref=branch or BRANCH_NAME)
             if isinstance(contents, list):
                 for file_content in contents:
                     if file_content.type == "dir":
