@@ -8,11 +8,6 @@ import vertexai
 from google.oauth2 import service_account
 
 import os
-from dotenv import load_dotenv
-
-for i in range(20):
-    print('#' * 20)
-print(f'Environment loaded? {load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))}')
 
 
 import pytz

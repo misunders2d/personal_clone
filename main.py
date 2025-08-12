@@ -1,5 +1,9 @@
 import streamlit as st
 from login import login_st
+from dotenv import load_dotenv
+
+# Load environment variables at the very beginning
+load_dotenv()
 
 # Import ADK services and types
 from google.adk.sessions import InMemorySessionService
