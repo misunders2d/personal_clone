@@ -1,3 +1,4 @@
+import os
 from google.adk.agents import Agent, SequentialAgent, LoopAgent
 from google.adk.tools import google_search, exit_loop
 from google.adk.tools.agent_tool import AgentTool
@@ -18,6 +19,9 @@ from .github_utils import (
     get_file_content,
     list_repo_files,
     create_or_update_file,
+    create_branch,
+    create_pull_request,
+    BRANCH_NAME # Import the default branch name
 )
 from .instructions import (
     DEVELOPER_AGENT_INSTRUCTION, 
@@ -126,18 +130,100 @@ plan_and_review_agent = SequentialAgent(
 
 # --- Primary User-Facing Agents ---
 
-developer_agent = Agent(
+class DeveloperAgent(Agent):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.feature_branch_name = None
+        self.base_branch = BRANCH_NAME # Use the imported default branch name
+
+        # Dynamically set up tools and sub_agents after self is available
+        self.tools = [
+            self._create_or_update_file_wrapper,
+            self._get_file_content_wrapper,
+            self._list_repo_files_wrapper,
+            search_agent_tool,
+            self.setup_feature_branch,
+            self.create_pr,
+        ]
+        self.sub_agents = [plan_and_review_agent] # Add back sub_agent
+
+    def _create_or_update_file_wrapper(self, file_path: str, content: str, commit_message: str):
+        """
+        Wrapper for create_or_update_file that uses the active feature branch.
+        """
+        return create_or_update_file(file_path, content, commit_message, branch=self.feature_branch_name or self.base_branch)
+
+    def _get_file_content_wrapper(self, file_path: str):
+        """
+        Wrapper for get_file_content that uses the active feature branch.
+        """
+        return get_file_content(file_path, branch=self.feature_branch_name or self.base_branch)
+
+    def _list_repo_files_wrapper(self):
+        """
+        Wrapper for list_repo_files that uses the active feature branch.
+        """
+        return list_repo_files(branch=self.feature_branch_name or self.base_branch)
+
+    def setup_feature_branch(self, task_description: str) -> str:
+        """
+        Creates a new feature branch for the current development task.
+
+        Args:
+            task_description (str): A brief description of the task for naming the branch.
+
+        Returns:
+            str: The name of the new branch if successful, empty string otherwise.
+        """
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        # Sanitize task description for a valid branch name
+        sanitized_task_name = "".join(c for c in task_description if c.isalnum() or c == "-").lower()
+        if not sanitized_task_name:
+            sanitized_task_name = "unnamed-feature"
+        
+        self.feature_branch_name = f"feature/{sanitized_task_name[:30].strip('-')}-{timestamp}"
+        
+        print(f"Attempting to create feature branch: {self.feature_branch_name} from base branch: {self.base_branch}")
+        result = create_branch(self.base_branch, self.feature_branch_name)
+        if result:
+            print(f"Successfully created feature branch: {self.feature_branch_name}")
+            return self.feature_branch_name
+        else:
+            print(f"Failed to create feature branch: {self.feature_branch_name}")
+            self.feature_branch_name = None # Reset if creation failed
+            return ""
+
+    def create_pr(self, title: str, body: str) -> Optional[str]:
+        """
+        Creates a pull request from the active feature branch to the base branch.
+
+        Args:
+            title (str): The title of the pull request.
+            body (str): The body/description of the pull request.
+
+        Returns:
+            str: The URL of the created pull request if successful, None otherwise.
+        """
+        if self.feature_branch_name:
+            print(f"Attempting to create pull request from {self.feature_branch_name} to {self.base_branch}")
+            pr_url = create_pull_request(title, body, self.feature_branch_name, self.base_branch)
+            if pr_url:
+                print(f"Pull Request created: {pr_url}")
+                self.feature_branch_name = None # Reset after PR
+                return pr_url
+            else:
+                print("Failed to create pull request.")
+                return None
+        else:
+            print("No active feature branch to create a pull request from.")
+            return None
+
+developer_agent = DeveloperAgent(
     name="developer_agent",
     description="A developer agent that can plan and execute code changes after user approval.",
     instruction=DEVELOPER_AGENT_INSTRUCTION,
     model=MODEL_NAME,
-    sub_agents=[plan_and_review_agent],
-    tools=[
-        create_or_update_file,
-        get_file_content,
-        list_repo_files,
-        search_agent_tool,
-    ],
+    # sub_agents and tools are now managed within the DeveloperAgent's __init__
 )
 
 master_agent = Agent(
