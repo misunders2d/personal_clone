@@ -1,6 +1,7 @@
 from google.adk.agents import Agent, SequentialAgent, LoopAgent
 from google.adk.tools import google_search, exit_loop
 from google.adk.tools.agent_tool import AgentTool
+from google.adk.tools.mcp_tool import MCPToolset 
 from google.adk.models.lite_llm import LiteLlm
 from typing import Optional
 
@@ -23,7 +24,7 @@ from .github_utils import (
     create_or_update_file,
     create_branch,
     create_pull_request,
-    BRANCH_NAME # Import the default branch name
+    BRANCH_NAME 
 )
 from .instructions import (
     DEVELOPER_AGENT_INSTRUCTION, 
@@ -77,6 +78,10 @@ search_agent_tool = AgentTool(
         model=SEARCH_MODEL_NAME
     ),
     skip_summarization=True)
+
+# Instantiate MCPToolset for the Weather Tool (MCP Market)
+# IMPORTANT: Replace "http://weather-mcp-market.example.com/mcp/" with the actual URL of the Weather MCP Market server.
+mcp_weather_toolset = MCPToolset(url="http://weather-mcp-market.example.com/mcp/") 
 
 # --- Developer Workflow Sub-Agents ---
 
@@ -164,6 +169,7 @@ master_agent = Agent(
         clickup_api.create_task,
         clickup_api.close_task,
         AgentTool(agent=developer_agent),
+        mcp_weather_toolset, 
     ],
 )
 
