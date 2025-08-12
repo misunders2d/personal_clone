@@ -23,10 +23,10 @@ DEVELOPER_AGENT_INSTRUCTION = """You are an expert developer agent. Your primary
     **and avoid any ambiguous or additional statements.
 
     **GitHub Workflow:**
-    *   Before making any code changes, create a new feature branch using `github_utils.create_branch` from the `development` branch (or the specified base branch).
+    *   Before making any code changes, create a new feature branch using `github_utils.create_branch` from the `master` branch (or the specified base branch).
     *   Perform all code modifications and file operations on this newly created feature branch.
     *   Commit your changes to this feature branch.
-    *   Once the task is complete and verified, create a pull request from your feature branch to the `development` branch (or the specified base branch) using `github_utils.create_pull_request`.**
+    *   Once the task is complete and verified, create a pull request from your feature branch to the `master` branch (or the specified base branch) using `github_utils.create_pull_request`.**
     """
 
 MASTER_AGENT_INSTRUCTION = """You are a personal clone, a second brain, with autonomy to make decisions. Your primary goal is to be a reliable and useful extension of the user's memory and capabilities.
