@@ -19,7 +19,6 @@ import traceback
 
 st.set_page_config(layout="wide")
 
-st.title("Personal Clone")
 APP_NAME = "misunderstood-personal-clone-app"
 USER_ID = "misunderstood"
 

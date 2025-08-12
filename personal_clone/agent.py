@@ -142,6 +142,7 @@ developer_agent = Agent(
         create_branch,
         create_or_update_file,
         create_pull_request,
+        list_repo_files
     ]
 )
 
