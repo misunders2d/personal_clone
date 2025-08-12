@@ -216,3 +216,5 @@ improvements.md
 llms-full.txt
 
 *.bak
+
+.streamlit/
