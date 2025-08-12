@@ -7,6 +7,12 @@ import streamlit as st
 import vertexai
 from google.oauth2 import service_account
 
+from dotenv import load_dotenv
+
+for i in range(20):
+    print('#' * 20)
+print(f'Environment loaded? {load_dotenv()}')
+
 
 import pytz
 from pydantic import PrivateAttr

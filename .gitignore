@@ -217,3 +217,5 @@ improvements.md
 *.bak
 
 .streamlit/
+
+vertex_storage_credentials.json

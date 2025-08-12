@@ -1,7 +1,5 @@
 import streamlit as st
 from login import login_st
-import json
-import os
 
 # Import ADK services and types
 from google.adk.sessions import InMemorySessionService
@@ -11,13 +9,6 @@ from google.adk.runners import Runner
 
 # Import master_agent after dotenv.load_dotenv() to ensure env vars are loaded
 from personal_clone.agent import master_agent
-
-# authorize vertex
-VERTEX_CREDS = st.secrets['gcp_service_account']
-
-with open("vertex_storage_credentials.json", "w") as f:
-    json.dump(dict(VERTEX_CREDS), f)
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "vertex_storage_credentials.json"
 
 st.set_page_config(layout="wide")
 
