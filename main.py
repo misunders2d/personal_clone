@@ -1,9 +1,11 @@
 import streamlit as st
 from login import login_st
-from dotenv import load_dotenv
+import os
 
-# Load environment variables at the very beginning
-load_dotenv()
+# Set environment variables from Streamlit secrets
+os.environ["GOOGLE_CLOUD_PROJECT"] = st.secrets["GOOGLE_CLOUD_PROJECT"]
+os.environ["GOOGLE_CLOUD_LOCATION"] = st.secrets["GOOGLE_CLOUD_LOCATION"]
+os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = str(st.secrets["GOOGLE_GENAI_USE_VERTEXAI"]).lower()
 
 # Import ADK services and types
 from google.adk.sessions import InMemorySessionService
