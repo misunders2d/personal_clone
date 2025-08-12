@@ -1,8 +1,10 @@
 import streamlit as st
 import dotenv
 from login import login_st
+import vertexai
 
 dotenv.load_dotenv()
+vertexai.init(project=st.secrets['gcp_service_account']['project_id'], location=st.secrets['gcp_service_account']['location'])
 
 # Import ADK services and types
 from google.adk.sessions import InMemorySessionService
