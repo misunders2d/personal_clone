@@ -126,7 +126,7 @@ def create_code_reviewer_agent(
             get_file_content,
             list_repo_files,
             create_search_agent_tool(),
-            AgentTool(agent=create_code_inspector_agent()),
+            AgentTool(agent=create_code_inspector_agent(name='code_inspector_for_reviewer_agent')),
             load_web_page,
         ],
         output_key=output_key,
