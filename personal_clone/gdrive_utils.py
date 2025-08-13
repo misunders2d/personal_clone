@@ -1,7 +1,7 @@
 import os
 import pickle
 import streamlit as st
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google_auth_oauthlib.flow import InstalledApp Flow
 from google.auth.transport.requests import Request
 from google.auth.exceptions import RefreshError
 from googleapiclient.discovery import build
@@ -167,3 +167,61 @@ def list_files_in_folder(folder_id: str = "root") -> list[dict]:
     )
     items = results.get("files", [])
     return items
+
+def transfer_ownership(file_id: str, new_owner_email: str) -> bool:
+    """Transfers ownership of a Google Drive file to a new user.
+
+    The service account (current owner) will automatically be downgraded to a writer.
+
+    Args:
+        file_id: The ID of the file to transfer ownership.
+        new_owner_email: The email address of the new owner.
+
+    Returns:
+        True if ownership transfer was successful, False otherwise.
+    """
+    service = get_drive_service()
+    try:
+        # Create a new permission for the new owner with 'owner' role
+        new_permission = {
+            'type': 'user',
+            'role': 'owner',
+            'emailAddress': new_owner_email
+        }
+        # Use transferOwnership=True to explicitly trigger the ownership transfer.
+        # sendNotificationEmail=True (default behavior) ensures the new owner is notified.
+        service.permissions().create(
+            fileId=file_id,
+            body=new_permission,
+            transferOwnership=True,
+            fields='id' # Request only the ID field in the response
+        ).execute()
+
+        print(f"Ownership of file {file_id} successfully transferred to {new_owner_email}")
+        return True
+    except Exception as e:
+        print(f"Error transferring ownership for file {file_id} to {new_owner_email}: {e}")
+        return False
+
+def create_and_transfer_file_ownership(file_name: str, content: str, folder_id: str, new_owner_email: str) -> str | None:
+    """Uploads a file to Google Drive using the service account and then transfers its ownership.
+
+    Args:
+        file_name: The name of the file to upload.
+        content: The content of the file as a string.
+        folder_id: The ID of the Google Drive folder where the file will be uploaded.
+        new_owner_email: The email address of the new owner.
+
+    Returns:
+        The ID of the uploaded file if both upload and ownership transfer were successful,
+        None otherwise.
+    """
+    file_id = upload_file_to_drive(file_name, content, folder_id)
+    if file_id:
+        if transfer_ownership(file_id, new_owner_email):
+            return file_id
+        else:
+            # Log or handle the scenario where the file was uploaded but ownership transfer failed.
+            print(f"Warning: File {file_id} was uploaded, but ownership transfer to {new_owner_email} failed.")
+            return None
+    return None
