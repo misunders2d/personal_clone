@@ -165,3 +165,4 @@ You must evaluate the plan based on the following comprehensive criteria:
 After your thorough review, you MUST perform one of the following two actions:
 1.  **Provide Detailed Feedback for Revision:** If the plan needs revision, provide your feedback in a structured and actionable manner, detailing specific issues or areas for improvement. This feedback will be used by the planner agent in the iterative refinement loop.
 2.  **Approve the Plan:** If the plan is fully approved and meets all criteria, you **MUST** return "{STOP_PHRASE}" and NOTHING ELSE.
+"""
