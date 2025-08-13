@@ -1,8 +1,7 @@
-from google.adk.agents import Agent, SequentialAgent, LoopAgent
+from google.adk.agents import Agent, SequentialAgent, LoopAgent, ParallelAgent
 from google.adk.tools import google_search, exit_loop
 from google.adk.tools.agent_tool import AgentTool
 from google.adk.models.lite_llm import LiteLlm
-from typing import Optional
 
 import pytz
 from pydantic import PrivateAttr
@@ -23,23 +22,23 @@ from .github_utils import (
     create_or_update_file,
     create_branch,
     create_pull_request,
-    BRANCH_NAME # Import the default branch name
+    BRANCH_NAME,  # Import the default branch name
 )
 from .instructions import (
-    DEVELOPER_AGENT_INSTRUCTION, 
+    DEVELOPER_AGENT_INSTRUCTION,
     MASTER_AGENT_INSTRUCTION,
     CODE_REVIEWER_AGENT_INSTRUCTION,
-    PLAN_FETCHER_AGENT_INSTRUCTION,
-    PLANNER_AGENT_INSTRUCTION
-    )
+    PLANNER_AGENT_INSTRUCTION,
+)
 
 # --- Constants ---
-SEARCH_MODEL_NAME='gemini-2.5-flash'
-MODEL_NAME='gemini-2.5-flash'
-MASTER_AGENT_MODEL='gemini-2.5-pro'
+SEARCH_MODEL_NAME = "gemini-2.5-flash"
+MODEL_NAME = "gemini-2.5-flash"
+MASTER_AGENT_MODEL = "gemini-2.5-pro"
 
 # --- Ancillary Services & Tools ---
 clickup_api = ClickUpAPI()
+
 
 def get_current_date():
     """
@@ -63,108 +62,171 @@ def get_current_date():
     kiev_formatted = kiev_time.strftime("%Y-%m-%d %H:%M:%S %Z%z")
     new_york_formatted = new_york_time.strftime("%Y-%m-%d %H:%M:%S %Z%z")
 
-    return {
-        "kiev_time": kiev_formatted,
-        "new_york_time": new_york_formatted
-    }
+    return {"kiev_time": kiev_formatted, "new_york_time": new_york_formatted}
 
-search_agent_tool = AgentTool(
-    agent=Agent(
-        name="web_search_agent",
-        description="A web search agent that can search the web and find information.",
-        instruction="You are a web search agent. Use the `google_search` tool to find relevant information online.",
-        tools=[google_search],
-        model=SEARCH_MODEL_NAME
-    ),
-    skip_summarization=True)
+
+def create_search_agent_tool(name="web_search_agent"):
+    search_agent_tool = AgentTool(
+        agent=Agent(
+            name=name,
+            description="A web search agent that can search the web and find information.",
+            instruction="You are a web search agent. Use the `google_search` tool to find relevant information online.",
+            tools=[google_search],
+            model=SEARCH_MODEL_NAME,
+        ),
+        skip_summarization=True,
+    )
+    return search_agent_tool
+
 
 # --- Developer Workflow Sub-Agents ---
 
-planner_agent = Agent(
-    name="planner_agent",
-    description="Creates and refines development plans.",
-    instruction=PLANNER_AGENT_INSTRUCTION,
-    model=MODEL_NAME,
-    tools=[
-        search_agent_tool,
-        list_repo_files,
-        get_file_content,
-        exit_loop
-    ], output_key='development_plan'
-)
 
-code_reviewer_agent = Agent(
-    name="code_reviewer_agent",
-    description="Reviews development plans for quality and adherence to project standards.",
-    instruction=CODE_REVIEWER_AGENT_INSTRUCTION,
-    model=LiteLlm('openai/gpt-4.1-nano'),
-    tools=[
-        get_file_content,
-        list_repo_files,
-        search_agent_tool,
-    ],
-    output_key='reviewer_feedback'
-)
+def create_planner_agent(name="planner_agent", output_key="development_plan"):
+    planner_agent = Agent(
+        name=name,
+        description="Creates and refines development plans.",
+        instruction=PLANNER_AGENT_INSTRUCTION,
+        model=MODEL_NAME,
+        tools=[
+            create_search_agent_tool(),
+            list_repo_files,
+            get_file_content,
+            exit_loop,
+        ],
+        output_key=output_key,
+    )
+    return planner_agent
 
-plan_fetcher_agent = Agent(
-    name="plan_fetcher_agent",
-    description="Refines development plans based on reviewer feedback.",
-    instruction=PLAN_FETCHER_AGENT_INSTRUCTION,
-    model=MODEL_NAME,
-    tools=[],
-)
+
+def create_code_reviewer_agent(
+    name="code_reviewer_agent", output_key="reviewer_feedback"
+):
+    code_reviewer_agent = Agent(
+        name=name,
+        description="Reviews development plans for quality and adherence to project standards.",
+        instruction=CODE_REVIEWER_AGENT_INSTRUCTION,
+        model=LiteLlm("openai/gpt-4.1-nano"),
+        tools=[
+            get_file_content,
+            list_repo_files,
+            create_search_agent_tool(),
+        ],
+        output_key=output_key,
+    )
+    return code_reviewer_agent
+
+
+def create_plan_fetcher_agent(
+    name="plan_fetcher_agent", session_key="development_plan"
+):
+    plan_fetcher_agent = Agent(
+        name=name,
+        description="Refines development plans based on reviewer feedback.",
+        instruction=f"""
+Your only job is to fetch the approved development plan from the st.session_state['{session_key}'].
+DO NOT MODIFY THE PLAN IN ANY WAY. OUTPUT THE PLAN AS IS.
+If the st.session_state['{session_key}'] key is empty - you must convey this explicitly: "The {session_key} has not been developed"
+""",
+        model=MODEL_NAME,
+        tools=[],
+    )
+    return plan_fetcher_agent
+
 
 # --- Workflow Agents ---
 
-code_review_loop = LoopAgent(
+
+def create_code_review_loop(
     name="review_loop",
-    description="A loop agent that creates and reviews development plans iteratively to achieve best results.",
-    sub_agents=[planner_agent, code_reviewer_agent],
-    max_iterations=10)
-
-
-plan_and_review_agent = SequentialAgent(
-    name="plan_and_review_agent",
-    description="An agent that creates a development plan and reviews it iteratively until approved.",
-    sub_agents = [code_review_loop, plan_fetcher_agent],
+    planner_name="planner_agent",
+    planner_output="development_plan",
+    code_reviewer_name="code_reviewer_agent",
+    code_reviewer_output="reviewer_feedback",
+):
+    code_review_loop = LoopAgent(
+        name=name,
+        description="A loop agent that creates and reviews development plans iteratively to achieve best results.",
+        sub_agents=[
+            create_planner_agent(planner_name, planner_output),
+            create_code_reviewer_agent(code_reviewer_name, code_reviewer_output),
+        ],
+        max_iterations=10,
     )
+    return code_review_loop
+
+
+def create_planner_sequence(n=1):
+    planner_sequence = SequentialAgent(
+        name=f"planner_sequence_{n}",
+        description="An agent that creates a development plan and reviews it iteratively until approved.",
+        sub_agents=[
+            create_code_review_loop(
+                name=f"review_loop_{n}",
+                planner_name=f"planner_agent_{n}",
+                planner_output=f"development_plan_{n}",
+                code_reviewer_name=f"code_reviewer_agent_{n}",
+                code_reviewer_output=f"reviewer_feedback_{n}",
+            ),
+            create_plan_fetcher_agent(
+                name=f"plan_fetcher_agent_{n}", session_key=f"development_plan_{n}"
+            ),
+        ],
+    )
+    return planner_sequence
+
+
+def plan_and_review_agent():
+    plan_and_review_agent = ParallelAgent(
+        name="plan_and_review_agent",
+        description="An agent that runs multiple code planning and review processes in parallel and outputs all plans",
+        sub_agents=[create_planner_sequence(1), create_planner_sequence(2)],
+    )
+    return plan_and_review_agent
+
 
 # --- Primary User-Facing Agents ---
 
 
-developer_agent = Agent(
-    name="developer_agent",
-    description="A developer agent that can plan and execute code changes after user approval.",
-    instruction=DEVELOPER_AGENT_INSTRUCTION,
-    model=MODEL_NAME,
-    sub_agents=[plan_and_review_agent],
-    tools=[
-        create_branch,
-        create_or_update_file,
-        create_pull_request,
-        list_repo_files,
-        get_file_content
-    ]
-)
+def create_developer_agent():
+    developer_agent = Agent(
+        name="developer_agent",
+        description="A developer agent that can plan and execute code changes after user approval.",
+        instruction=DEVELOPER_AGENT_INSTRUCTION,
+        model=MODEL_NAME,
+        sub_agents=[plan_and_review_agent()],
+        tools=[
+            create_branch,
+            create_or_update_file,
+            create_pull_request,
+            list_repo_files,
+            get_file_content,
+        ],
+    )
+    return developer_agent
 
-master_agent = Agent(
-    name="personal_clone",
-    description="A personal clone that acts as a second brain, helping to remember, recall, find, update, and delete experiences, and also to develop itself.",
-    instruction=MASTER_AGENT_INSTRUCTION,
-    model=MASTER_AGENT_MODEL,
-    tools=[
-        get_current_date,
-        write_to_rag,
-        read_from_rag,
-        update_in_rag,
-        delete_from_rag,
-        find_experiences,
-        search_agent_tool,
-        clickup_api.get_tasks,
-        clickup_api.create_task,
-        clickup_api.close_task,
-        AgentTool(agent=developer_agent),
-    ],
-)
 
-root_agent = master_agent
+def create_master_agent():
+    master_agent = Agent(
+        name="personal_clone",
+        description="A personal clone that acts as a second brain, helping to remember, recall, find, update, and delete experiences, and also to develop itself.",
+        instruction=MASTER_AGENT_INSTRUCTION,
+        model=MASTER_AGENT_MODEL,
+        tools=[
+            get_current_date,
+            write_to_rag,
+            read_from_rag,
+            update_in_rag,
+            delete_from_rag,
+            find_experiences,
+            create_search_agent_tool(),
+            clickup_api.get_tasks,
+            clickup_api.create_task,
+            clickup_api.close_task,
+            AgentTool(agent=create_developer_agent()),
+        ],
+    )
+    return master_agent
+
+
+root_agent = create_master_agent()

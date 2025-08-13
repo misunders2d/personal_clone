@@ -1,4 +1,4 @@
-STOP_PHRASE="---APPROVED---"
+STOP_PHRASE = "---APPROVED---"
 
 DEVELOPER_AGENT_INSTRUCTION = """You are an expert developer agent. Your primary goal is to help the user with code-related tasks.
     *   You have three main modes of operation: Planning, Execution and Communication.
