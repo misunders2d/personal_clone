@@ -15,7 +15,9 @@ import tempfile
 # load_dotenv(os.path.join(os.path.dirname(__file__), '../.env'))
 
 # If modifying these scopes, delete the file token.pickle.
-SCOPES = ['https://www.googleapis.com/auth/drive'] # Allows access to files created or opened by the app
+SCOPES = [
+    "https://www.googleapis.com/auth/drive"
+]  # Allows access to files created or opened by the app
 
 # GOOGLE_DRIVE_CLIENT_ID = os.environ.get("GOOGLE_DRIVE_CLIENT_ID", st.secrets["GOOGLE_DRIVE_CLIENT_ID"])
 # GOOGLE_DRIVE_CLIENT_SECRET = os.environ.get("GOOGLE_DRIVE_CLIENT_SECRET", st.secrets["GOOGLE_DRIVE_CLIENT_SECRET"])
@@ -23,7 +25,9 @@ SCOPES = ['https://www.googleapis.com/auth/drive'] # Allows access to files crea
 
 if "gcp_service_account" in st.secrets:
     gcp_service_account_info = st.secrets["gcp_service_account"]
-    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json") as temp_key_file:
+    with tempfile.NamedTemporaryFile(
+        mode="w", delete=False, suffix=".json"
+    ) as temp_key_file:
         json.dump(dict(gcp_service_account_info), temp_key_file)
         temp_key_file_path = temp_key_file.name
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_key_file_path
@@ -35,9 +39,10 @@ def get_drive_service():
     credentials = service_account.Credentials.from_service_account_info(
         service_account_info, scopes=SCOPES
     )
-    return build('drive', 'v3', credentials=credentials)
+    return build("drive", "v3", credentials=credentials)
 
-def get_or_create_folder(folder_name: str, parent_folder_id: str = 'root') -> str:
+
+def get_or_create_folder(folder_name: str, parent_folder_id: str = "root") -> str:
     """Gets the ID of an existing folder or creates a new one if it doesn't exist.
 
     Args:
@@ -51,19 +56,20 @@ def get_or_create_folder(folder_name: str, parent_folder_id: str = 'root') -> st
     # Search for the folder
     query = f"name = '{folder_name}' and '{parent_folder_id}' in parents and mimeType = 'application/vnd.google-apps.folder'"
     results = service.files().list(q=query, fields="files(id)").execute()
-    items = results.get('files', [])
+    items = results.get("files", [])
 
     if items:
-        return items[0]['id']
+        return items[0]["id"]
     else:
         # Create the folder if it doesn't exist
         file_metadata = {
-            'name': folder_name,
-            'mimeType': 'application/vnd.google-apps.folder',
-            'parents': [parent_folder_id]
+            "name": folder_name,
+            "mimeType": "application/vnd.google-apps.folder",
+            "parents": [parent_folder_id],
         }
-        folder = service.files().create(body=file_metadata, fields='id').execute()
-        return folder.get('id')
+        folder = service.files().create(body=file_metadata, fields="id").execute()
+        return folder.get("id")
+
 
 def upload_file_to_drive(file_name: str, content: str, folder_id: str) -> str:
     """Uploads a file to Google Drive within a specified folder.
@@ -77,13 +83,17 @@ def upload_file_to_drive(file_name: str, content: str, folder_id: str) -> str:
         The ID of the uploaded file.
     """
     service = get_drive_service()
-    file_metadata = {
-        'name': file_name,
-        'parents': [folder_id]
-    }
-    media = MediaIoBaseUpload(BytesIO(content.encode('utf-8')), mimetype='text/plain', resumable=True)
-    file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-    return file.get('id')
+    file_metadata = {"name": file_name, "parents": [folder_id]}
+    media = MediaIoBaseUpload(
+        BytesIO(content.encode("utf-8")), mimetype="text/plain", resumable=True
+    )
+    file = (
+        service.files()
+        .create(body=file_metadata, media_body=media, fields="id")
+        .execute()
+    )
+    return file.get("id")
+
 
 def download_file_from_drive(file_id: str) -> str:
     """Downloads a file from Google Drive.
@@ -101,7 +111,8 @@ def download_file_from_drive(file_id: str) -> str:
     done = False
     while done is False:
         status, done = downloader.next_chunk()
-    return fh.getvalue().decode('utf-8')
+    return fh.getvalue().decode("utf-8")
+
 
 def update_file_in_drive(file_id: str, new_content: str) -> str:
     """Updates the content of an existing file in Google Drive.
@@ -114,9 +125,12 @@ def update_file_in_drive(file_id: str, new_content: str) -> str:
         The ID of the updated file.
     """
     service = get_drive_service()
-    media = MediaIoBaseUpload(BytesIO(new_content.encode('utf-8')), mimetype='text/plain', resumable=True)
+    media = MediaIoBaseUpload(
+        BytesIO(new_content.encode("utf-8")), mimetype="text/plain", resumable=True
+    )
     file = service.files().update(fileId=file_id, media_body=media).execute()
-    return file.get('id')
+    return file.get("id")
+
 
 def delete_file_from_drive(file_id: str) -> bool:
     """Deletes a file from Google Drive.
@@ -131,7 +145,8 @@ def delete_file_from_drive(file_id: str) -> bool:
     service.files().delete(fileId=file_id).execute()
     return True
 
-def list_files_in_folder(folder_id: str = 'root') -> list[dict]:
+
+def list_files_in_folder(folder_id: str = "root") -> list[dict]:
     """Lists files within a specified Google Drive folder.
 
     Args:
@@ -141,8 +156,14 @@ def list_files_in_folder(folder_id: str = 'root') -> list[dict]:
         A list of dictionaries, each representing a file with 'id' and 'name'.
     """
     service = get_drive_service()
-    results = service.files().list(
-        q=f"'{folder_id}' in parents",
-        pageSize=100, fields="nextPageToken, files(id, name)").execute()
-    items = results.get('files', [])
+    results = (
+        service.files()
+        .list(
+            q=f"'{folder_id}' in parents",
+            pageSize=100,
+            fields="nextPageToken, files(id, name)",
+        )
+        .execute()
+    )
+    items = results.get("files", [])
     return items

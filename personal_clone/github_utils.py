@@ -6,8 +6,10 @@ from github import Github
 from github.GithubException import GithubException
 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", st.secrets["GITHUB_TOKEN"])
-REPO_NAME = os.environ.get('GITHUB_DEFAULT_REPO', st.secrets["GITHUB_DEFAULT_REPO"])
-BRANCH_NAME = os.environ.get('GITHUB_DEFAULT_REPO_BRANCH', st.secrets["GITHUB_DEFAULT_REPO_BRANCH"])
+REPO_NAME = os.environ.get("GITHUB_DEFAULT_REPO", st.secrets["GITHUB_DEFAULT_REPO"])
+BRANCH_NAME = os.environ.get(
+    "GITHUB_DEFAULT_REPO_BRANCH", st.secrets["GITHUB_DEFAULT_REPO_BRANCH"]
+)
 
 # Initialize GitHub API
 try:
@@ -17,10 +19,11 @@ try:
 except GithubException as e:
     print(f"Error initializing GitHub API or getting repository: {e}")
     # Handle the error appropriately, e.g., exit or set a flag
-    repo = None # Indicate that the repository is not accessible
+    repo = None  # Indicate that the repository is not accessible
 except Exception as e:
     print(f"An unexpected error occurred during GitHub initialization: {e}")
     repo = None
+
 
 def get_file_content(file_path: str, branch: Optional[str] = None):
     """
@@ -34,21 +37,26 @@ def get_file_content(file_path: str, branch: Optional[str] = None):
         str: The content of the file, or None if an error occurs.
     """
     if repo is None:
-        return("Error: GitHub repository not initialized. Cannot get file content.")
+        return "Error: GitHub repository not initialized. Cannot get file content."
     try:
-        contents = repo.get_contents(file_path, ref=branch or BRANCH_NAME) # Specify the branch
+        contents = repo.get_contents(
+            file_path, ref=branch or BRANCH_NAME
+        )  # Specify the branch
         if isinstance(contents, list):
-            return(f"Error: The path '{file_path}' refers to a directory, not a file.")
-        decoded_content = base64.b64decode(contents.content).decode('utf-8')
+            return f"Error: The path '{file_path}' refers to a directory, not a file."
+        decoded_content = base64.b64decode(contents.content).decode("utf-8")
         return decoded_content
     except GithubException as e:
         # Catch specific GitHub API errors, e.g., file not found (404)
-        return(f"GitHub API error getting file content for '{file_path}': {e}")
+        return f"GitHub API error getting file content for '{file_path}': {e}"
     except Exception as e:
         # Catch any other unexpected errors
-        return(f"An unexpected error occurred while getting file content for '{file_path}': {e}")
+        return f"An unexpected error occurred while getting file content for '{file_path}': {e}"
 
-def _create_file_in_repo(file_path: str, content: str, commit_message: str, branch: Optional[str] = None):
+
+def _create_file_in_repo(
+    file_path: str, content: str, commit_message: str, branch: Optional[str] = None
+):
     """
     Creates a new file in the GitHub repository.
 
@@ -62,23 +70,26 @@ def _create_file_in_repo(file_path: str, content: str, commit_message: str, bran
         bool: True if the file was created successfully, False otherwise.
     """
     if repo is None:
-        return("Error: GitHub repository not initialized. Cannot create file.")
+        return "Error: GitHub repository not initialized. Cannot create file."
     try:
         repo.create_file(
             file_path,
             commit_message,
             content,
-            branch=branch or BRANCH_NAME # Specify the branch
+            branch=branch or BRANCH_NAME,  # Specify the branch
         )
-        return(f"File '{file_path}' created successfully.")
+        return f"File '{file_path}' created successfully."
     except GithubException as e:
         # Catch specific GitHub API errors, e.g., file already exists (422)
-        return(f"GitHub API error creating file '{file_path}': {e}")
+        return f"GitHub API error creating file '{file_path}': {e}"
     except Exception as e:
         # Catch any other unexpected errors
-        return(f"An unexpected error occurred while creating file '{file_path}': {e}")
+        return f"An unexpected error occurred while creating file '{file_path}': {e}"
 
-def create_or_update_file(file_path: str, content: str, commit_message: str, branch: Optional[str] = None):
+
+def create_or_update_file(
+    file_path: str, content: str, commit_message: str, branch: Optional[str] = None
+):
     """
     Creates a new file or updates an existing file in the GitHub repository.
     For updates, it uses the file's SHA for a safe, atomic update.
@@ -93,14 +104,14 @@ def create_or_update_file(file_path: str, content: str, commit_message: str, bra
         bool: True if the file was created or updated successfully, False otherwise.
     """
     if repo is None:
-        return("Error: GitHub repository not initialized. Cannot create or update file.")
-    
+        return "Error: GitHub repository not initialized. Cannot create or update file."
+
     try:
         # Check if the file exists to get its SHA for updating
         contents = repo.get_contents(file_path, ref=branch or BRANCH_NAME)
         # If get_contents returns a list, the path is a directory, which is not supported for file updates
         if isinstance(contents, list):
-            return(f"Error: The path '{file_path}' refers to a directory, not a file.")
+            return f"Error: The path '{file_path}' refers to a directory, not a file."
 
         # If it exists, update it using its SHA
         repo.update_file(
@@ -108,20 +119,21 @@ def create_or_update_file(file_path: str, content: str, commit_message: str, bra
             commit_message,
             content,
             contents.sha,
-            branch=branch or BRANCH_NAME
+            branch=branch or BRANCH_NAME,
         )
-        return(f"File '{file_path}' updated successfully.")
+        return f"File '{file_path}' updated successfully."
     except GithubException as e:
         if e.status == 404:
             # If the file does not exist, create it.
             return _create_file_in_repo(file_path, content, commit_message, branch)
         else:
             # Catch other GitHub API errors during the get_contents or update_file call
-            return(f"GitHub API error handling file '{file_path}': {e}")
+            return f"GitHub API error handling file '{file_path}': {e}"
             return False
     except Exception as e:
         # Catch any other unexpected errors
-        return(f"An unexpected error occurred while creating or updating file '{file_path}': {e}")
+        return f"An unexpected error occurred while creating or updating file '{file_path}': {e}"
+
 
 def list_repo_files(branch: Optional[str] = None):
     """
@@ -134,8 +146,8 @@ def list_repo_files(branch: Optional[str] = None):
         list: A list of file paths, or an empty list if an error occurs.
     """
     if repo is None:
-        return("Error: GitHub repository not initialized. Cannot list files.")
-    
+        return "Error: GitHub repository not initialized. Cannot list files."
+
     all_files = []
     dirs_to_visit = [""]  # Start with the root directory
     try:
@@ -152,8 +164,9 @@ def list_repo_files(branch: Optional[str] = None):
                 # It's a single file, not a directory
                 all_files.append(contents.path)
     except Exception as e:
-        return(f"An unexpected error occurred while listing files: {e}")
+        return f"An unexpected error occurred while listing files: {e}"
     return all_files
+
 
 def create_branch(base_branch: str, new_branch_name: str) -> Optional[str]:
     """
@@ -167,19 +180,22 @@ def create_branch(base_branch: str, new_branch_name: str) -> Optional[str]:
         str: The name of the new branch if successful, None otherwise.
     """
     if repo is None:
-        return("Error: GitHub repository not initialized. Cannot create branch.")
+        return "Error: GitHub repository not initialized. Cannot create branch."
     try:
         # Get the base branch reference
         base_ref = repo.get_git_ref(f"heads/{base_branch}")
         # Create the new branch
         repo.create_git_ref(f"refs/heads/{new_branch_name}", base_ref.object.sha)
-        return(f"Branch '{new_branch_name}' created successfully from '{base_branch}'.")
+        return f"Branch '{new_branch_name}' created successfully from '{base_branch}'."
     except GithubException as e:
-        return(f"GitHub API error creating branch '{new_branch_name}': {e}")
+        return f"GitHub API error creating branch '{new_branch_name}': {e}"
     except Exception as e:
-        return(f"An unexpected error occurred while creating branch '{new_branch_name}': {e}")
+        return f"An unexpected error occurred while creating branch '{new_branch_name}': {e}"
 
-def create_pull_request(title: str, body: str, head_branch: str, base_branch: str) -> Optional[str]:
+
+def create_pull_request(
+    title: str, body: str, head_branch: str, base_branch: str
+) -> Optional[str]:
     """
     Creates a pull request.
 
@@ -193,16 +209,13 @@ def create_pull_request(title: str, body: str, head_branch: str, base_branch: st
         str: The URL of the created pull request if successful, None otherwise.
     """
     if repo is None:
-        return("Error: GitHub repository not initialized. Cannot create pull request.")
+        return "Error: GitHub repository not initialized. Cannot create pull request."
     try:
         pull = repo.create_pull(
-            title=title,
-            body=body,
-            head=head_branch,
-            base=base_branch
+            title=title, body=body, head=head_branch, base=base_branch
         )
-        return(f"Pull request '{title}' created successfully: {pull.html_url}")
+        return f"Pull request '{title}' created successfully: {pull.html_url}"
     except GithubException as e:
-        return(f"GitHub API error creating pull request: {e}")
+        return f"GitHub API error creating pull request: {e}"
     except Exception as e:
-        return(f"An unexpected error occurred while creating pull request: {e}")
+        return f"An unexpected error occurred while creating pull request: {e}"

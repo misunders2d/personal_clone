@@ -4,15 +4,22 @@ import requests
 from typing import Optional
 from datetime import datetime, timezone
 
+
 class ClickUpAPI:
     def __init__(self):
-        self.api_token = os.environ.get("CLICKUP_API_TOKEN", st.secrets["CLICKUP_API_TOKEN"])
-        self.space_id = os.environ.get("CLICKUP_SPACE_ID", st.secrets["CLICKUP_SPACE_ID"])
+        self.api_token = os.environ.get(
+            "CLICKUP_API_TOKEN", st.secrets["CLICKUP_API_TOKEN"]
+        )
+        self.space_id = os.environ.get(
+            "CLICKUP_SPACE_ID", st.secrets["CLICKUP_SPACE_ID"]
+        )
         self.list_id = os.environ.get("CLICKUP_LIST_ID", st.secrets["CLICKUP_LIST_ID"])
-        self.user_email = os.environ.get("CLICKUP_USER_EMAIL", st.secrets["CLICKUP_USER_EMAIL"])
+        self.user_email = os.environ.get(
+            "CLICKUP_USER_EMAIL", st.secrets["CLICKUP_USER_EMAIL"]
+        )
         self.headers = {
             "Authorization": self.api_token,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
         self.base_url = "https://api.clickup.com/api/v2"
 
@@ -22,7 +29,7 @@ class ClickUpAPI:
         try:
             response = requests.get(url, headers=self.headers)
             response.raise_for_status()
-            return {"teams": response.json().get('teams', [])}
+            return {"teams": response.json().get("teams", [])}
         except requests.exceptions.RequestException as e:
             return {"error": f"Error fetching authorized teams: {e}"}
 
@@ -32,7 +39,7 @@ class ClickUpAPI:
         try:
             response = requests.get(url, headers=self.headers)
             response.raise_for_status()
-            return {"spaces": response.json().get('spaces', [])}
+            return {"spaces": response.json().get("spaces", [])}
         except requests.exceptions.RequestException as e:
             return {"error": f"Error fetching spaces: {e}"}
 
@@ -42,7 +49,7 @@ class ClickUpAPI:
         try:
             response = requests.get(url, headers=self.headers)
             response.raise_for_status()
-            return {"lists": response.json().get('lists', [])}
+            return {"lists": response.json().get("lists", [])}
         except requests.exceptions.RequestException as e:
             return {"error": f"Error fetching lists: {e}"}
 
@@ -64,8 +71,10 @@ class ClickUpAPI:
         if timestamp:
             try:
                 # ClickUp timestamps are in milliseconds
-                dt_object = datetime.fromtimestamp(int(timestamp) / 1000, tz=timezone.utc)
-                return dt_object.strftime('%Y-%m-%d %H:%M:%S UTC')
+                dt_object = datetime.fromtimestamp(
+                    int(timestamp) / 1000, tz=timezone.utc
+                )
+                return dt_object.strftime("%Y-%m-%d %H:%M:%S UTC")
             except ValueError:
                 return None
         return None
@@ -76,19 +85,21 @@ class ClickUpAPI:
 
         url = f"{self.base_url}/list/{self.list_id}/task"
         params = {}
-        
+
         if self.user_email:
             user_id_response = self._get_user_id(self.user_email)
             if "error" in user_id_response:
                 return {"error": user_id_response["error"]}
             user_id = user_id_response["user_id"]
-            params["assignees[]"] = [user_id] # ClickUp API uses assignees[] for filtering by assignee ID
+            params["assignees[]"] = [
+                user_id
+            ]  # ClickUp API uses assignees[] for filtering by assignee ID
 
         try:
             response = requests.get(url, headers=self.headers, params=params)
             response.raise_for_status()
-            tasks_data = response.json().get('tasks', [])
-            
+            tasks_data = response.json().get("tasks", [])
+
             formatted_tasks = []
             for task in tasks_data:
                 formatted_task = {
@@ -96,14 +107,20 @@ class ClickUpAPI:
                     "name": task.get("name"),
                     "description": task.get("description"),
                     "status": task.get("status", {}).get("status"),
-                    "due_date": self._format_timestamp(task.get("due_date"))
+                    "due_date": self._format_timestamp(task.get("due_date")),
                 }
                 formatted_tasks.append(formatted_task)
             return {"tasks": formatted_tasks}
         except requests.exceptions.RequestException as e:
             return {"error": f"Error fetching tasks: {e}"}
 
-    def create_task(self, title: str, description: Optional[str] = None, due_date: Optional[int] = None, start_date: Optional[int] = None):
+    def create_task(
+        self,
+        title: str,
+        description: Optional[str] = None,
+        due_date: Optional[int] = None,
+        start_date: Optional[int] = None,
+    ):
         if not self.list_id:
             return {"error": "ClickUp List ID not provided in .env."}
 
@@ -118,12 +135,12 @@ class ClickUpAPI:
             if "error" in user_id_response:
                 return {"error": user_id_response["error"]}
             user_id = user_id_response["user_id"]
-            payload["assignees"] = [user_id] #type: ignore
+            payload["assignees"] = [user_id]  # type: ignore
 
         if due_date:
-            payload["due_date"] = due_date #type: ignore
+            payload["due_date"] = due_date  # type: ignore
         if start_date:
-            payload["start_date"] = start_date #type: ignore
+            payload["start_date"] = start_date  # type: ignore
 
         try:
             response = requests.post(url, headers=self.headers, json=payload)
@@ -138,7 +155,7 @@ class ClickUpAPI:
 
         url = f"{self.base_url}/task/{task_id}"
         payload = {
-            "status": "complete" # Assuming "complete" is a valid status to close a task
+            "status": "complete"  # Assuming "complete" is a valid status to close a task
         }
         try:
             response = requests.put(url, headers=self.headers, json=payload)

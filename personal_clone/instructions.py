@@ -1,6 +1,6 @@
 STOP_PHRASE = "--APPROVED--"
 
-DOCUMENTATION_LINKS="""
+DOCUMENTATION_LINKS = """
     *   `https://google.github.io/adk-docs/`
     *   `https://google.github.io/adk-docs/agents/workflow-agents/`
     *   `https://google.github.io/adk-docs/tools/`

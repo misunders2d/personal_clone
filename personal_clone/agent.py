@@ -1,4 +1,4 @@
-#author: misunderstood
+# author: misunderstood
 from google.adk.agents import Agent, SequentialAgent, LoopAgent, ParallelAgent
 from google.adk.tools import google_search, exit_loop
 from google.adk.tools.load_web_page import load_web_page
@@ -42,7 +42,7 @@ SEARCH_MODEL_NAME = "gemini-2.5-flash"
 MODEL_NAME = "gemini-2.5-flash"
 MASTER_AGENT_MODEL = "gemini-2.5-pro"
 PARALLELS_NUMBER = 2
-MAX_ITERATIONS=5
+MAX_ITERATIONS = 5
 COINGECKO_MCP_HOST = "https://mcp.api.coingecko.com/sse"
 
 # --- Ancillary Services & Tools ---
@@ -90,15 +90,17 @@ def create_search_agent_tool(name="web_search_agent"):
 
 # --- Developer Workflow Sub-Agents ---
 
+
 def create_code_inspector_agent(name="code_inspector_agent"):
     inspector_agent = Agent(
         name=name,
         model=MODEL_NAME,
         code_executor=BuiltInCodeExecutor(),
         instruction=CODE_INSPECTOR_AGENT_INSTRUCTION,
-        description="A sandboxed agent that executes Python code snippets for introspection and verification."
+        description="A sandboxed agent that executes Python code snippets for introspection and verification.",
     )
     return inspector_agent
+
 
 def create_planner_agent(n=1):
     planner_agent = Agent(
@@ -117,10 +119,9 @@ def create_planner_agent(n=1):
         output_key=f"development_plan_{n}",
         planner=BuiltInPlanner(
             thinking_config=types.ThinkingConfig(
-                include_thoughts=True,
-                thinking_budget=2048
+                include_thoughts=True, thinking_budget=2048
             )
-        )
+        ),
     )
     return planner_agent
 
@@ -135,7 +136,11 @@ def create_code_reviewer_agent(n=1):
             get_file_content,
             list_repo_files,
             create_search_agent_tool(),
-            AgentTool(agent=create_code_inspector_agent(name='code_inspector_for_reviewer_agent')),
+            AgentTool(
+                agent=create_code_inspector_agent(
+                    name="code_inspector_for_reviewer_agent"
+                )
+            ),
             load_web_page,
         ],
         output_key=f"reviewer_feedback_{n}",
@@ -144,15 +149,17 @@ def create_code_reviewer_agent(n=1):
 
 
 def create_plan_fetcher_agent():
-    SESSION_KEYS = ", ".join([f"{{development_plan_{n}}}" for n in range(1, PARALLELS_NUMBER+1)])
+    SESSION_KEYS = ", ".join(
+        [f"{{development_plan_{n}}}" for n in range(1, PARALLELS_NUMBER + 1)]
+    )
     plan_fetcher_agent = Agent(
         name="plan_fetcher_agent",
         description="Refines development plans based on reviewer feedback.",
-        instruction=f'''
+        instruction=f"""
 Your only job is to fetch the approved development plan(s) from {SESSION_KEYS}'].
 IMPORTANT! Prepend each of the plans with their respective number (i.e. "development_plan_1", "development_plan_2" etc.)
 DO NOT MODIFY THE PLANS IN ANY WAY. OUTPUT THEM UNCHANGED!
-''',
+""",
         model=MODEL_NAME,
         tools=[],
     )
@@ -166,7 +173,7 @@ def create_code_review_loop(n=1):
     code_review_loop = LoopAgent(
         name=f"review_loop_{n}",
         description="A loop agent that creates and reviews development plans iteratively to achieve best results.",
-        sub_agents=[create_planner_agent(n),create_code_reviewer_agent(n)],
+        sub_agents=[create_planner_agent(n), create_code_reviewer_agent(n)],
         max_iterations=MAX_ITERATIONS,
     )
     return code_review_loop
@@ -176,7 +183,7 @@ def create_planner_flows():
     planner_sequence = ParallelAgent(
         name=f"planner_loop",
         description="An agent that creates a development plan and reviews it iteratively until approved.",
-        sub_agents=[create_code_review_loop(n) for n in range(1,PARALLELS_NUMBER+1)],
+        sub_agents=[create_code_review_loop(n) for n in range(1, PARALLELS_NUMBER + 1)],
     )
     return planner_sequence
 
@@ -185,10 +192,7 @@ def plan_and_review_agent():
     plan_and_review_agent = SequentialAgent(
         name="plan_and_review_agent",
         description="An agent that runs multiple code planning and review processes in parallel and outputs all plans",
-        sub_agents=[
-            create_planner_flows(),
-            create_plan_fetcher_agent()
-            ],
+        sub_agents=[create_planner_flows(), create_plan_fetcher_agent()],
     )
     return plan_and_review_agent
 
@@ -208,7 +212,7 @@ def create_financial_analyst_agent(name="financial_analyst_agent"):
     financial_analyst_agent = Agent(
         name=name,
         description="Provides cryptocurrency buy/sell recommendations for Ton, Ethereum, and Bitcoin.",
-        instruction='''
+        instruction="""
         You are a Financial Analyst Agent. Your primary role is to provide cryptocurrency buy, sell, or hold
         recommendations for Ton, Ethereum, and Bitcoin.
 
@@ -228,8 +232,8 @@ def create_financial_analyst_agent(name="financial_analyst_agent"):
         5. Provide clear, concise, and actionable recommendations.
         6. Handle cases where data for a specific cryptocurrency might be temporarily unavailable gracefully by
            stating the limitation.
-        ''',
-        model=MODEL_NAME, # Use the existing MODEL_NAME from agent.py
+        """,
+        model=MODEL_NAME,  # Use the existing MODEL_NAME from agent.py
         tools=[
             coingecko_toolset,
         ],
@@ -250,7 +254,7 @@ def create_developer_agent():
             create_pull_request,
             list_repo_files,
             get_file_content,
-            load_web_page
+            load_web_page,
         ],
     )
     return developer_agent
@@ -263,7 +267,7 @@ def create_master_agent():
         instruction=MASTER_AGENT_INSTRUCTION,
         model=MASTER_AGENT_MODEL,
         tools=[
-            create_search_agent_tool('master_search_agent'),
+            create_search_agent_tool("master_search_agent"),
             load_web_page,
             get_current_date,
             write_to_rag,
@@ -276,9 +280,7 @@ def create_master_agent():
             clickup_api.create_task,
             clickup_api.close_task,
             AgentTool(agent=create_developer_agent()),
-            AgentTool(agent=create_financial_analyst_agent()), # Add this line
+            AgentTool(agent=create_financial_analyst_agent()),  # Add this line
         ],
     )
     return master_agent
-
-
