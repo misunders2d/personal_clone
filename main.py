@@ -14,7 +14,7 @@ from google.genai import types
 from google.adk.runners import Runner
 
 # Import master_agent after dotenv.load_dotenv() to ensure env vars are loaded
-from personal_clone.agent import root_agent
+from personal_clone.agent import create_master_agent
 import traceback
 
 st.set_page_config(layout="wide")
@@ -54,7 +54,7 @@ if login_st():
         artifact_service = InMemoryArtifactService()
 
         runner = Runner(
-            agent=root_agent,
+            agent=create_master_agent(),
             app_name=APP_NAME,
             session_service=session_service,
             artifact_service=artifact_service

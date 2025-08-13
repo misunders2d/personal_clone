@@ -291,4 +291,3 @@ def create_master_agent():
     return master_agent
 
 
-root_agent = create_master_agent()
