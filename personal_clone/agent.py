@@ -3,6 +3,7 @@ from google.adk.tools import google_search, exit_loop
 from google.adk.tools.load_web_page import load_web_page
 from google.adk.tools.agent_tool import AgentTool
 from google.adk.models.lite_llm import LiteLlm
+from google.adk.tools.mcp import MCPToolset
 
 import pytz
 from pydantic import PrivateAttr
@@ -36,6 +37,7 @@ from .instructions import (
 SEARCH_MODEL_NAME = "gemini-2.5-flash"
 MODEL_NAME = "gemini-2.5-flash"
 MASTER_AGENT_MODEL = "gemini-2.5-pro"
+COINGECKO_MCP_HOST = "https://mcp.api.coingecko.com/sse"
 
 # --- Ancillary Services & Tools ---
 clickup_api = ClickUpAPI()
@@ -126,11 +128,11 @@ def create_plan_fetcher_agent(
     plan_fetcher_agent = Agent(
         name=name,
         description="Refines development plans based on reviewer feedback.",
-        instruction=f"""
+        instruction=f'''
 Your only job is to fetch the approved development plan from the st.session_state['{session_key}'].
 DO NOT MODIFY THE PLAN IN ANY WAY. OUTPUT THE PLAN AS IS.
 If the st.session_state['{session_key}'] key is empty - you must convey this explicitly: "The {session_key} has not been developed"
-""",
+''',
         model=MODEL_NAME,
         tools=[],
     )
@@ -191,6 +193,52 @@ def plan_and_review_agent():
 # --- Primary User-Facing Agents ---
 
 
+def create_financial_analyst_agent(name="financial_analyst_agent"):
+    """
+    Creates an ADK Agent capable of providing cryptocurrency buy/sell recommendations
+    for Ton, Ethereum, and Bitcoin using the CoinGecko MCP Server.
+    """
+    coingecko_toolset = MCPToolset(
+        host=COINGECKO_MCP_HOST,
+        tool_filter=[
+            "get_price",  # Assumed tool name for getting current price
+            "get_historical_data", # Assumed tool name for getting historical data
+            # Add other specific CoinGecko MCP tool names as confirmed by documentation
+        ]
+    )
+
+    financial_analyst_agent = Agent(
+        name=name,
+        description="Provides cryptocurrency buy/sell recommendations for Ton, Ethereum, and Bitcoin.",
+        instruction='''
+        You are a Financial Analyst Agent. Your primary role is to provide cryptocurrency buy, sell, or hold
+        recommendations for Ton, Ethereum, and Bitcoin.
+
+        To formulate your recommendations:
+        1. Use the CoinGecko tools to fetch the *current price* of Ton, Ethereum, and Bitcoin.
+        2. Use the CoinGecko tools to fetch *historical price data* (e.g., last 24 hours, 7 days) for these cryptocurrencies
+           to identify recent trends.
+        3. Based on the current price and recent trends:
+           - If a cryptocurrency's price has shown a significant upward trend (e.g., >5% increase in 24 hours),
+             recommend 'Hold' or 'Consider Selling' if it's already high.
+           - If a cryptocurrency's price has shown a significant downward trend (e.g., >5% decrease in 24 hours),
+             recommend 'Consider Buying' or 'Hold'.
+           - If the price is relatively stable, recommend 'Monitor'.
+           - Always clearly state the current price as part of your recommendation.
+        4. If a user asks for a cryptocurrency not explicitly mentioned (Ton, Ethereum, Bitcoin),
+           kindly inform them that your analysis is limited to these three, but you can still fetch their current price.
+        5. Provide clear, concise, and actionable recommendations.
+        6. Handle cases where data for a specific cryptocurrency might be temporarily unavailable gracefully by
+           stating the limitation.
+        ''',
+        model=MODEL_NAME, # Use the existing MODEL_NAME from agent.py
+        tools=[
+            coingecko_toolset,
+        ],
+    )
+    return financial_analyst_agent
+
+
 def create_developer_agent():
     developer_agent = Agent(
         name="developer_agent",
@@ -230,6 +278,7 @@ def create_master_agent():
             clickup_api.create_task,
             clickup_api.close_task,
             AgentTool(agent=create_developer_agent()),
+            AgentTool(agent=create_financial_analyst_agent()), # Add this line
         ],
     )
     return master_agent
