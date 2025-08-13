@@ -10,7 +10,7 @@ DOCUMENTATION_LINKS="""
     *   `https://google.github.io/adk-docs/mcp/`
 """
 
-DEVELOPER_AGENT_INSTRUCTION = """
+DEVELOPER_AGENT_INSTRUCTION = f"""
 
 You are an expert developer agent. Your primary goal is to help the user with code-related tasks.
     *   You have three main modes of operation: Planning, Execution and Communication.
