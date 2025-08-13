@@ -14,7 +14,7 @@ The agent provides five primary functions to manage your knowledge base:
 2.  **Recalling Information (`read_from_rag`)**:
     *   **Purpose**: To search your knowledge base for relevant information based on content. This function performs a semantic search using Pinecone.
     *   **Usage**: Provide a clear `query`. You can also filter by `access_type` and `folder_id`.
-    *   **Output**: Returns a list of dictionaries. Each dictionary contains the `file_id`, `file_name`, `content`, `description`, `tags`, and `access_type` of the relevant experience. This `file_id` is crucial for subsequent update or delete operations.
+    *   **Output**: Returns a list of dictionaries. Each dictionary contains the `file_id`, `file_name`, `content`, `description`, `tags`, and `access_type` of the relevant experience.
 
 3.  **Finding Experiences (`find_experiences`)**:
     *   **Purpose**: To locate experiences based on patterns in their filenames. This is useful when you know part of the filename or a specific naming convention.
@@ -38,9 +38,9 @@ The agent provides five primary functions to manage your knowledge base:
     *   **`close_task(task_id)`**: Marks a ClickUp task as complete.
 
 7.  **Self-Development (`developer_agent`)**:
-    *   **Purpose**: To evolve the agent's own capabilities by modifying its source code.
+    *   **Purpose**: To evolve the agent\'s own capabilities by modifying its source code.
     *   **Usage**: You can ask the agent to fix bugs, add new tools, or refactor its code. The `developer_agent` will handle the request.
-    *   **Workflow**: The agent follows a rigorous internal process to ensure changes are safe and well-designed. It first creates a detailed development plan, which is then reviewed and refined by specialized sub-agents in an iterative loop. This approved plan is then presented to you for final confirmation before any code is written to the repository.
+    *   **Workflow**: For any new features, bug fixes, or design changes, the agent will first delegate the task to the `plan_and_review_agent` for planning and review. After a detailed development plan is created and refined by specialized sub-agents, it will be presented to you for explicit approval. Only after your approval will the agent proceed with code modifications.
 
 ## Autonomous Operation
 
@@ -83,7 +83,7 @@ To get `personal_clone` up and running, follow these steps:
 
 ### Google Cloud Project Setup
 
-1.  **Create a Google Cloud Project**: If you don't have one, create a new project in the [Google Cloud Console](https://console.cloud.google.com/).
+1.  **Create a Google Cloud Project**: If you don\'t have one, create a new project in the [Google Cloud Console](https://console.cloud.google.com/).
 2.  **Enable Google Drive API**:
     *   In your Google Cloud Project, navigate to "APIs & Services" > "Library".
     *   Search for "Google Drive API" and enable it.
@@ -104,7 +104,7 @@ To get `personal_clone` up and running, follow these steps:
 5.  **Share Google Drive Folder with Service Account**:
     *   Open the JSON key file you downloaded. You will find a `client_email` field.
     *   In Google Drive, create a folder where the agent will store its files.
-    *   Share this folder with the service account's email address (`client_email`) and give it "Editor" permissions.
+    *   Share this folder with the service account\'s email address (`client_email`) and give it "Editor" permissions.
 6.  **Set Streamlit Secret**:
     *   Open the JSON key file and copy its entire content.
     *   In your Streamlit Cloud project, go to "Settings" > "Secrets".
@@ -112,7 +112,7 @@ To get `personal_clone` up and running, follow these steps:
 
 ### Pinecone Setup
 
-1.  **Create a Pinecone Account**: If you don't have one, sign up at [Pinecone](https://www.pinecone.io/).
+1.  **Create a Pinecone Account**: If you don\'t have one, sign up at [Pinecone](https://www.pinecone.io/).
 2.  **Get API Key and Environment**:
     *   Once logged in, navigate to your API Keys section.
     *   Copy your `API Key` and `Environment` (e.g., `us-west-2-gcp`).
