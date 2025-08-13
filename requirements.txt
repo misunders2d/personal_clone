@@ -1,4 +1,5 @@
 Authlib
+beautifulsoup4
 google-adk
 python-dotenv
 google-api-python-client
