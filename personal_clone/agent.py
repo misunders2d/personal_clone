@@ -3,10 +3,10 @@ from google.adk.tools import google_search, exit_loop
 from google.adk.tools.load_web_page import load_web_page
 from google.adk.tools.agent_tool import AgentTool
 from google.adk.models.lite_llm import LiteLlm
-from google.adk.tools.mcp import MCPToolset
+from google.adk.tools.mcp_tool import MCPToolset, SseConnectionParams
+from google.adk.code_executors import BuiltInCodeExecutor
 
 import pytz
-from pydantic import PrivateAttr
 
 from datetime import datetime
 
@@ -31,6 +31,7 @@ from .instructions import (
     MASTER_AGENT_INSTRUCTION,
     CODE_REVIEWER_AGENT_INSTRUCTION,
     PLANNER_AGENT_INSTRUCTION,
+    CODE_INSPECTOR_AGENT_INSTRUCTION,
 )
 
 # --- Constants ---
@@ -84,6 +85,15 @@ def create_search_agent_tool(name="web_search_agent"):
 
 # --- Developer Workflow Sub-Agents ---
 
+def create_code_inspector_agent(name="code_inspector_agent"):
+    inspector_agent = Agent(
+        name=name,
+        model=MODEL_NAME,
+        code_executor=BuiltInCodeExecutor(),
+        instruction=CODE_INSPECTOR_AGENT_INSTRUCTION,
+        description="A sandboxed agent that executes Python code snippets for introspection and verification."
+    )
+    return inspector_agent
 
 def create_planner_agent(name="planner_agent", output_key="development_plan"):
     planner_agent = Agent(
@@ -93,6 +103,7 @@ def create_planner_agent(name="planner_agent", output_key="development_plan"):
         model=MODEL_NAME,
         tools=[
             create_search_agent_tool(),
+            AgentTool(agent=create_code_inspector_agent()),
             list_repo_files,
             get_file_content,
             exit_loop,
@@ -115,6 +126,7 @@ def create_code_reviewer_agent(
             get_file_content,
             list_repo_files,
             create_search_agent_tool(),
+            AgentTool(agent=create_code_inspector_agent()),
             load_web_page,
         ],
         output_key=output_key,
@@ -199,12 +211,7 @@ def create_financial_analyst_agent(name="financial_analyst_agent"):
     for Ton, Ethereum, and Bitcoin using the CoinGecko MCP Server.
     """
     coingecko_toolset = MCPToolset(
-        host=COINGECKO_MCP_HOST,
-        tool_filter=[
-            "get_price",  # Assumed tool name for getting current price
-            "get_historical_data", # Assumed tool name for getting historical data
-            # Add other specific CoinGecko MCP tool names as confirmed by documentation
-        ]
+        connection_params=SseConnectionParams(url=COINGECKO_MCP_HOST)
     )
 
     financial_analyst_agent = Agent(
