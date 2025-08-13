@@ -41,6 +41,7 @@ SEARCH_MODEL_NAME = "gemini-2.5-flash"
 MODEL_NAME = "gemini-2.5-flash"
 MASTER_AGENT_MODEL = "gemini-2.5-pro"
 PARALLELS_NUMBER = 2
+MAX_ITERATIONS=5
 COINGECKO_MCP_HOST = "https://mcp.api.coingecko.com/sse"
 
 # --- Ancillary Services & Tools ---
@@ -164,7 +165,7 @@ def create_code_review_loop(n=1):
         name=f"review_loop_{n}",
         description="A loop agent that creates and reviews development plans iteratively to achieve best results.",
         sub_agents=[create_planner_agent(n),create_code_reviewer_agent(n)],
-        max_iterations=10,
+        max_iterations=MAX_ITERATIONS,
     )
     return code_review_loop
 
