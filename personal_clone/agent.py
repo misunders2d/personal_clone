@@ -5,6 +5,8 @@ from google.adk.tools.agent_tool import AgentTool
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.tools.mcp_tool import MCPToolset, SseConnectionParams
 from google.adk.code_executors import BuiltInCodeExecutor
+from google.adk.planners import BuiltInPlanner
+from google.genai import types
 
 import pytz
 
@@ -110,6 +112,12 @@ def create_planner_agent(name="planner_agent", output_key="development_plan"):
             load_web_page,
         ],
         output_key=output_key,
+        planner=BuiltInPlanner(
+            thinking_config=types.ThinkingConfig(
+                include_thoughts=True,
+                thinking_budget=2048
+            )
+        )
     )
     return planner_agent
 
