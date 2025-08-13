@@ -40,6 +40,7 @@ from .instructions import (
 SEARCH_MODEL_NAME = "gemini-2.5-flash"
 MODEL_NAME = "gemini-2.5-flash"
 MASTER_AGENT_MODEL = "gemini-2.5-pro"
+PARALLELS_NUMBER = 2
 COINGECKO_MCP_HOST = "https://mcp.api.coingecko.com/sse"
 
 # --- Ancillary Services & Tools ---
@@ -97,9 +98,9 @@ def create_code_inspector_agent(name="code_inspector_agent"):
     )
     return inspector_agent
 
-def create_planner_agent(name="planner_agent", output_key="development_plan"):
+def create_planner_agent(n=1):
     planner_agent = Agent(
-        name=name,
+        name=f"planner_agent_{n}",
         description="Creates and refines development plans.",
         instruction=PLANNER_AGENT_INSTRUCTION,
         model=MODEL_NAME,
@@ -111,7 +112,7 @@ def create_planner_agent(name="planner_agent", output_key="development_plan"):
             exit_loop,
             load_web_page,
         ],
-        output_key=output_key,
+        output_key=f"development_plan_{n}",
         planner=BuiltInPlanner(
             thinking_config=types.ThinkingConfig(
                 include_thoughts=True,
@@ -122,11 +123,9 @@ def create_planner_agent(name="planner_agent", output_key="development_plan"):
     return planner_agent
 
 
-def create_code_reviewer_agent(
-    name="code_reviewer_agent", output_key="reviewer_feedback"
-):
+def create_code_reviewer_agent(n=1):
     code_reviewer_agent = Agent(
-        name=name,
+        name=f"code_reviewer_agent_{n}",
         description="Reviews development plans for quality and adherence to project standards.",
         instruction=CODE_REVIEWER_AGENT_INSTRUCTION,
         model=LiteLlm("openai/gpt-4.1-nano"),
@@ -137,21 +136,19 @@ def create_code_reviewer_agent(
             AgentTool(agent=create_code_inspector_agent(name='code_inspector_for_reviewer_agent')),
             load_web_page,
         ],
-        output_key=output_key,
+        output_key=f"reviewer_feedback_{n}",
     )
     return code_reviewer_agent
 
 
-def create_plan_fetcher_agent(
-    name="plan_fetcher_agent", session_key="development_plan"
-):
+def create_plan_fetcher_agent():
+    SESSION_KEYS = ", ".join([f"{{development_plan_{n}}}" for n in range(1, PARALLELS_NUMBER+1)])
     plan_fetcher_agent = Agent(
-        name=name,
+        name="plan_fetcher_agent",
         description="Refines development plans based on reviewer feedback.",
         instruction=f'''
-Your only job is to fetch the approved development plan from the st.session_state['{session_key}'].
-DO NOT MODIFY THE PLAN IN ANY WAY. OUTPUT THE PLAN AS IS.
-If the st.session_state['{session_key}'] key is empty - you must convey this explicitly: "The {session_key} has not been developed"
+Your only job is to fetch the approved development plan(s) from {SESSION_KEYS}'].
+DO NOT MODIFY THE PLANS IN ANY WAY. OUTPUT THEM UNCHANGED!.
 ''',
         model=MODEL_NAME,
         tools=[],
@@ -162,50 +159,33 @@ If the st.session_state['{session_key}'] key is empty - you must convey this exp
 # --- Workflow Agents ---
 
 
-def create_code_review_loop(
-    name="review_loop",
-    planner_name="planner_agent",
-    planner_output="development_plan",
-    code_reviewer_name="code_reviewer_agent",
-    code_reviewer_output="reviewer_feedback",
-):
+def create_code_review_loop(n=1):
     code_review_loop = LoopAgent(
-        name=name,
+        name=f"review_loop_{n}",
         description="A loop agent that creates and reviews development plans iteratively to achieve best results.",
-        sub_agents=[
-            create_planner_agent(planner_name, planner_output),
-            create_code_reviewer_agent(code_reviewer_name, code_reviewer_output),
-        ],
+        sub_agents=[create_planner_agent(n),create_code_reviewer_agent(n)],
         max_iterations=10,
     )
     return code_review_loop
 
 
-def create_planner_sequence(n=1):
-    planner_sequence = SequentialAgent(
-        name=f"planner_sequence_{n}",
+def create_planner_flows():
+    planner_sequence = ParallelAgent(
+        name=f"planner_loop",
         description="An agent that creates a development plan and reviews it iteratively until approved.",
-        sub_agents=[
-            create_code_review_loop(
-                name=f"review_loop_{n}",
-                planner_name=f"planner_agent_{n}",
-                planner_output=f"development_plan_{n}",
-                code_reviewer_name=f"code_reviewer_agent_{n}",
-                code_reviewer_output=f"reviewer_feedback_{n}",
-            ),
-            create_plan_fetcher_agent(
-                name=f"plan_fetcher_agent_{n}", session_key=f"development_plan_{n}"
-            ),
-        ],
+        sub_agents=[create_code_review_loop(n) for n in range(1,PARALLELS_NUMBER+1)],
     )
     return planner_sequence
 
 
 def plan_and_review_agent():
-    plan_and_review_agent = ParallelAgent(
+    plan_and_review_agent = SequentialAgent(
         name="plan_and_review_agent",
         description="An agent that runs multiple code planning and review processes in parallel and outputs all plans",
-        sub_agents=[create_planner_sequence(1), create_planner_sequence(2)],
+        sub_agents=[
+            create_planner_flows(),
+            create_plan_fetcher_agent()
+            ],
     )
     return plan_and_review_agent
 
