@@ -31,6 +31,9 @@ from .instructions import (
     PLANNER_AGENT_INSTRUCTION,
 )
 
+# Import the new financial analyst agent
+from agents.financial_analyst_agent import FinancialAnalystAgent
+
 # --- Constants ---
 SEARCH_MODEL_NAME = "gemini-2.5-flash"
 MODEL_NAME = "gemini-2.5-flash"
@@ -205,6 +208,30 @@ def create_developer_agent():
     )
     return developer_agent
 
+def create_financial_analyst_agent():
+    # Instantiate the financial analyst agent
+    fa_agent_instance = FinancialAnalystAgent()
+
+    financial_analyst_agent = Agent(
+        name=fa_agent_instance.name,
+        description=fa_agent_instance.description,
+        instruction="You are an expert financial analyst. Use your tools to process financial data and recommend actions.",
+        model=MODEL_NAME, # Or a more suitable model if needed
+        tools=[
+            AgentTool(
+                name="process_financial_data",
+                description="Processes raw financial data to extract key insights.",
+                func=fa_agent_instance.process_data,
+            ),
+            AgentTool(
+                name="recommend_financial_action",
+                description="Recommends financial actions based on processed financial analysis.",
+                func=fa_agent_instance.recommend_action,
+            ),
+        ],
+    )
+    return financial_analyst_agent
+
 
 def create_master_agent():
     master_agent = Agent(
@@ -224,6 +251,7 @@ def create_master_agent():
             clickup_api.create_task,
             clickup_api.close_task,
             AgentTool(agent=create_developer_agent()),
+            AgentTool(agent=create_financial_analyst_agent()), # Add the new agent here
         ],
     )
     return master_agent
