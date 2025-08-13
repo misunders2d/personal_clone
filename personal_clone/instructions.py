@@ -176,6 +176,7 @@ You must evaluate the plan based on the following comprehensive criteria:
 3.  **Impact on Existing Project Structure:** Ensure the plan does not introduce breaking changes, unnecessary complexity, or technical debt.
 4.  **Clarity, Feasibility, and Actionability:** Is the plan clear, step-by-step, and fully executable by another agent? Are all proposed actions feasible?
 5.  **MCP Tool Prioritization:** Verify that the plan correctly prioritizes using existing tools from an MCP (Model Context Protocol) Server where applicable, and only proposes new code if no suitable tool exists.
+6.  **Existing classes usage:** Unless absolutely necessary, there must be no custom classes of agents or tools. Prioritize the existing tools and classes.
 
 After your thorough review, you MUST perform one of the following two actions:
 1.  **Provide Detailed Feedback for Revision:** If the plan needs revision, provide your feedback in a structured and actionable manner, detailing specific issues or areas for improvement. This feedback will be used by the planner agent in the iterative refinement loop.
