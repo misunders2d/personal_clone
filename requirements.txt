@@ -10,6 +10,7 @@ google-cloud-aiplatform
 python-dotenv
 requests
 litellm
+lxml
 PyGithub
 pytz
 streamlit

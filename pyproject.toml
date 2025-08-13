@@ -13,6 +13,7 @@ dependencies = [
     "google-auth-oauthlib>=1.2.2",
     "google-cloud-aiplatform>=1.108.0",
     "litellm>=1.75.5.post1",
+    "lxml>=6.0.0",
     "pinecone>=7.3.0",
     "pygithub>=2.7.0",
     "python-dotenv>=1.1.1",
