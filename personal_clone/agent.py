@@ -1,5 +1,6 @@
 from google.adk.agents import Agent, SequentialAgent, LoopAgent, ParallelAgent
 from google.adk.tools import google_search, exit_loop
+from google.adk.tools.load_web_page import load_web_page
 from google.adk.tools.agent_tool import AgentTool
 from google.adk.models.lite_llm import LiteLlm
 
@@ -93,6 +94,7 @@ def create_planner_agent(name="planner_agent", output_key="development_plan"):
             list_repo_files,
             get_file_content,
             exit_loop,
+            load_web_page,
         ],
         output_key=output_key,
     )
@@ -111,6 +113,7 @@ def create_code_reviewer_agent(
             get_file_content,
             list_repo_files,
             create_search_agent_tool(),
+            load_web_page,
         ],
         output_key=output_key,
     )
@@ -201,6 +204,7 @@ def create_developer_agent():
             create_pull_request,
             list_repo_files,
             get_file_content,
+            load_web_page
         ],
     )
     return developer_agent
@@ -213,6 +217,8 @@ def create_master_agent():
         instruction=MASTER_AGENT_INSTRUCTION,
         model=MASTER_AGENT_MODEL,
         tools=[
+            create_search_agent_tool('master_search_agent'),
+            load_web_page,
             get_current_date,
             write_to_rag,
             read_from_rag,
