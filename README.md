@@ -50,9 +50,14 @@ The agent is designed to be more than just a passive tool. It has the autonomy t
 *   **Proactive Memory**: If the agent identifies information that could be valuable to remember, it will ask for your permission to save it to your knowledge base.
 *   **Explicit Commands**: The agent will always prioritize your direct commands to remember, recall, update, or delete information.
 
+## Streamlit UI
+
+The user interface for `personal_clone` is built with Streamlit. It provides a chat-based interface for interacting with the agent. The UI is defined in `main.py` and uses various Streamlit components to create a seamless user experience.
+
 ## Technology Stack
 
 *   **Agent Framework**: Google ADK (Agent Development Kit)
+*   **UI Framework**: Streamlit
 *   **Storage**: Google Drive for storing raw experience files.
 *   **Search & Retrieval**: Pinecone for indexing and semantic search capabilities.
 
@@ -65,7 +70,7 @@ The `file_id` is a critical identifier for `update_in_rag` and `delete_from_rag`
 
 ## Google Drive Authentication
 
-This agent uses OAuth 2.0 for Google Drive authentication. The first time you run an operation that interacts with Google Drive, a browser window will open, prompting you to authenticate with your Google account. This will create a `token.pickle` file, which stores your credentials for future use. Ensure you have `GOOGLE_DRIVE_CLIENT_ID` and `GOOGLE_DRIVE_CLIENT_SECRET` set in your `.env` file, obtained from an OAuth 2.0 Client ID (Desktop app type) in your Google Cloud project.
+This agent uses a Google Cloud service account for authentication with Google Drive. This method is more secure and better suited for applications running on a server. The service account key is stored securely in Streamlit secrets.
 
 ## Setup
 
@@ -82,20 +87,28 @@ To get `personal_clone` up and running, follow these steps:
 2.  **Enable Google Drive API**:
     *   In your Google Cloud Project, navigate to "APIs & Services" > "Library".
     *   Search for "Google Drive API" and enable it.
-3.  **Create OAuth 2.0 Client ID**:
-    *   In your Google Cloud Project, navigate to "APIs & Services" > "Credentials".
-    *   Click "Create Credentials" > "OAuth client ID".
-    *   Select "Desktop app" as the application type.
-    *   Give it a name (e.g., `personal_clone_desktop`).
-    *   Click "Create". You will be provided with your `client_id` and `client_secret`.
-4.  **Set Environment Variables**:
-    *   Create a `.env` file in the root directory of this project (if it doesn't exist, you can copy `.env.example`).
-    *   Add the following lines to your `.env` file, replacing the placeholders with your actual credentials:
-        ```
-        GOOGLE_DRIVE_CLIENT_ID="YOUR_CLIENT_ID"
-        GOOGLE_DRIVE_CLIENT_SECRET="YOUR_CLIENT_SECRET"
-        TOKEN_PATH="token.pickle" # Path to store your Google Drive token
-        ```
+3.  **Create a Service Account**:
+    *   In your Google Cloud Project, navigate to "IAM & Admin" > "Service Accounts".
+    *   Click "Create Service Account".
+    *   Give the service account a name (e.g., `personal-clone-gdrive`) and a description.
+    *   Click "Create and Continue".
+    *   Grant the service account the "Editor" role to allow it to create, edit, and delete files in Google Drive.
+    *   Click "Continue".
+    *   Click "Done".
+4.  **Create a Service Account Key**:
+    *   Find the service account you just created in the list.
+    *   Click on the three dots under "Actions" and select "Manage keys".
+    *   Click "Add Key" > "Create new key".
+    *   Select "JSON" as the key type and click "Create".
+    *   A JSON file with the service account key will be downloaded to your computer.
+5.  **Share Google Drive Folder with Service Account**:
+    *   Open the JSON key file you downloaded. You will find a `client_email` field.
+    *   In Google Drive, create a folder where the agent will store its files.
+    *   Share this folder with the service account's email address (`client_email`) and give it "Editor" permissions.
+6.  **Set Streamlit Secret**:
+    *   Open the JSON key file and copy its entire content.
+    *   In your Streamlit Cloud project, go to "Settings" > "Secrets".
+    *   Create a new secret with the name `gcp_service_account` and paste the JSON content as the value.
 
 ### Pinecone Setup
 
@@ -139,5 +152,15 @@ To get `personal_clone` up and running, follow these steps:
     ```bash
     pip install -r requirements.txt
     ```
+
+## Running the Application
+
+To run the `personal_clone` application, execute the following command in your terminal:
+
+```bash
+streamlit run main.py
+```
+
+This will start the Streamlit development server and open the application in your web browser.
 
 Now you are ready to use `personal_clone`!
