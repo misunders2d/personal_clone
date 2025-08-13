@@ -150,7 +150,8 @@ def create_plan_fetcher_agent():
         description="Refines development plans based on reviewer feedback.",
         instruction=f'''
 Your only job is to fetch the approved development plan(s) from {SESSION_KEYS}'].
-DO NOT MODIFY THE PLANS IN ANY WAY. OUTPUT THEM UNCHANGED!.
+IMPORTANT! Prepend each of the plans with their respective number (i.e. "development_plan_1", "development_plan_2" etc.)
+DO NOT MODIFY THE PLANS IN ANY WAY. OUTPUT THEM UNCHANGED!
 ''',
         model=MODEL_NAME,
         tools=[],
