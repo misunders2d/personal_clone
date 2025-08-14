@@ -6,9 +6,9 @@ from google.adk.code_executors import BuiltInCodeExecutor
 from google.adk.planners import BuiltInPlanner
 from google.genai import types
 
-from search_agent import create_search_agent_tool
+from .search_agent import create_search_agent_tool
 
-from utils.github_utils import (
+from ..utils.github_utils import (
     get_file_content,
     list_repo_files,
     create_or_update_file,
@@ -16,7 +16,7 @@ from utils.github_utils import (
     create_pull_request,
 )
 
-import instructions
+from .. import instructions
 
 import os
 
@@ -112,7 +112,7 @@ def create_code_review_loop():
 def plan_and_review_agent():
     plan_and_review_agent = SequentialAgent(
         name="plan_and_review_agent",
-        description="An agent that runs multiple code planning and review processes in parallel and outputs all plans",
+        description="An agent that runs code planning and review processes and outputs streamlined plans",
         sub_agents=[create_code_review_loop(), create_plan_fetcher_agent()],
     )
     return plan_and_review_agent
