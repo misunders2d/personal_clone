@@ -5,8 +5,8 @@ import seaborn as sns
 from google.adk.agents import Agent
 import os
 
-def create_visualization_from_data(data: str, chart_type: str, title: str) -> bytes:
-    """
+def create_visualization_from_data(data: str, chart_type: str, title: str) -> dict:
+    \"\"\"
     Creates a visualization from data and returns the image as bytes.
 
     Args:
@@ -15,8 +15,8 @@ def create_visualization_from_data(data: str, chart_type: str, title: str) -> by
         title (str): The title of the chart.
 
     Returns:
-        bytes: The image of the chart as bytes.
-    """
+        dict: A dictionary containing the image of the chart as bytes, chart type, and title.
+    \"\"\"
     # Use a string IO object to read the CSV data
     data_io = io.StringIO(data)
     df = pd.read_csv(data_io)
@@ -45,16 +45,20 @@ def create_visualization_from_data(data: str, chart_type: str, title: str) -> by
     # Clear the current figure
     plt.clf()
     
-    return buf.getvalue()
+    return {
+        "image_bytes": buf.getvalue(),
+        "chart_type": chart_type,
+        "title": title
+    }
 
 def create_data_analyst_agent():
-    """
+    \"\"\"
     Creates the data analyst agent.
-    """
+    \"\"\"
     return Agent(
-        name="data_analyst_agent",
-        description="An agent that can create visualizations from data.",
-        model = os.environ["MODEL_NAME"],
-        instruction = "You are a data analyst agent capable of plotting data",
+        name=\"data_analyst_agent\",
+        description=\"An agent that can create visualizations from data.\",
+        model = os.environ[\"MODEL_NAME\"],\
+        instruction = \"You are a data analyst agent capable of plotting data\",
         tools=[create_visualization_from_data]
     )
