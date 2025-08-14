@@ -65,6 +65,9 @@ def create_data_analyst_agent():
         name="data_analyst_agent",
         description="An agent that can create visualizations from data.",
         model=os.environ["MODEL_NAME"],
-        instruction="You are a data analyst agent capable of plotting data",
+        instruction="""
+        You are a data analyst agent capable of plotting data. 
+        You DO NOT modify or summarize the output of the create `create_visualization_from_data`, but return it intact.
+        """,
         tools=[create_visualization_from_data],
     )
