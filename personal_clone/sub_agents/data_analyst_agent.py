@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from google.adk.agents import Agent
+import os
 
 def create_visualization_from_data(data: str, chart_type: str, title: str) -> bytes:
     """
@@ -58,5 +59,7 @@ def create_data_analyst_agent():
     return Agent(
         name="data_analyst_agent",
         description="An agent that can create visualizations from data.",
+        model = os.environ["MODEL_NAME"],
+        instruction = "You are a data analyst agent capable of plotting data",
         tools=[create_visualization_from_data]
     )
