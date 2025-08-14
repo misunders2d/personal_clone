@@ -236,3 +236,27 @@ def create_pull_request(
         return f"GitHub API error creating pull request: {e}"
     except Exception as e:
         return f"An unexpected error occurred while creating pull request: {e}"
+
+def merge_pull_request(pull_request_number: int):
+    """
+    Merges a pull request.
+
+    Args:
+        pull_request_number (int): The number of the pull request to merge.
+
+    Returns:
+        str: A message indicating whether the merge was successful.
+    """
+    if repo is None:
+        return "Error: GitHub repository not initialized. Cannot merge pull request."
+    try:
+        pull = repo.get_pull(pull_request_number)
+        if pull.mergeable:
+            pull.merge()
+            return f"Pull request #{pull_request_number} merged successfully."
+        else:
+            return f"Pull request #{pull_request_number} is not mergeable."
+    except GithubException as e:
+        return f"GitHub API error merging pull request #{pull_request_number}: {e}"
+    except Exception as e:
+        return f"An unexpected error occurred while merging pull request #{pull_request_number}: {e}"
