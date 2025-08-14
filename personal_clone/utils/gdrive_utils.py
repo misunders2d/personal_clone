@@ -1,12 +1,11 @@
 import os
-import pickle
 import streamlit as st
-from google_auth_oauthlib.flow import Flow
-from google.auth.transport.requests import Request
-from google.auth.exceptions import RefreshError
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 from io import BytesIO
+from google.oauth2 import service_account
+import json
+import tempfile
 
 
 # If modifying these scopes, delete the file token.pickle.
@@ -14,73 +13,23 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive"
 ]  # Allows access to files created or opened by the app
 
+if "gcp_service_account" in st.secrets:
+    gcp_service_account_info = st.secrets["gcp_service_account"]
+    with tempfile.NamedTemporaryFile(
+        mode="w", delete=False, suffix=".json"
+    ) as temp_key_file:
+        json.dump(dict(gcp_service_account_info), temp_key_file)
+        temp_key_file_path = temp_key_file.name
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_key_file_path
 
-TOKEN_PATH = os.path.join(os.path.dirname(__file__), '../.streamlit/token.pickle')
-REDIRECT_URI = "http://localhost:8501"
 
 def get_drive_service():
-    """Returns a Google Drive service using the web flow."""
-    creds = None
-    if os.path.exists(TOKEN_PATH):
-        with open(TOKEN_PATH, 'rb') as token:
-            creds = pickle.load(token)
-
-    if creds and creds.valid:
-        return build('drive', 'v3', credentials=creds)
-
-    if creds and creds.expired and creds.refresh_token:
-        try:
-            creds.refresh(Request())
-            with open(TOKEN_PATH, 'wb') as token:
-                pickle.dump(creds, token)
-            return build('drive', 'v3', credentials=creds)
-        except RefreshError:
-            os.remove(TOKEN_PATH)
-            # Fall through to re-authenticate
-    
-    # If there are no (valid) credentials available, let the user log in.
-    client_secrets = {
-        "web": {
-            "client_id": st.secrets["google_drive_oauth"]["client_id"],
-            "client_secret": st.secrets["google_drive_oauth"]["client_secret"],
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-            "redirect_uris": [REDIRECT_URI]
-        }
-    }
-
-    flow = Flow.from_client_config(
-        client_config=client_secrets,
-        scopes=SCOPES,
-        redirect_uri=REDIRECT_URI
+    """Returns a Google Drive service using service account credentials from st.secrets."""
+    service_account_info = dict(st.secrets["gcp_service_account"])
+    credentials = service_account.Credentials.from_service_account_info(
+        service_account_info, scopes=SCOPES
     )
-
-    # Check if we are in the middle of an OAuth flow
-    query_params = st.query_params
-    if 'code' in query_params:
-        code = query_params['code']
-        
-        try:
-            flow.fetch_token(code=code)
-            creds = flow.credentials
-            with open(TOKEN_PATH, 'wb') as token:
-                pickle.dump(creds, token)
-            
-            # Rerun the script to reflect the authenticated state, and clear the query params
-            st.query_params.clear()
-            st.rerun()
-
-        except Exception as e:
-            st.error(f"An error occurred during token fetch: {e}")
-            st.stop()
-            
-    else:
-        auth_url, _ = flow.authorization_url(prompt='consent')
-        st.markdown(f'Please click this link to authorize the application: <a href="{auth_url}" target="_blank">Google Drive Authentication</a>', unsafe_allow_html=True)
-        st.stop()
-
-    return build('drive', 'v3', credentials=creds)
+    return build("drive", "v3", credentials=credentials)
 
 
 def get_or_create_folder(folder_name: str, parent_folder_id: str = "root") -> str:
