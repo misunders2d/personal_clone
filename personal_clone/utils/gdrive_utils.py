@@ -7,39 +7,49 @@ from google.auth.exceptions import RefreshError
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 from io import BytesIO
-from dotenv import load_dotenv
-from google.oauth2 import service_account
-import json
-import tempfile
 
-# load_dotenv(os.path.join(os.path.dirname(__file__), '../.env'))
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = [
     "https://www.googleapis.com/auth/drive"
 ]  # Allows access to files created or opened by the app
 
-# GOOGLE_DRIVE_CLIENT_ID = os.environ.get("GOOGLE_DRIVE_CLIENT_ID", st.secrets["GOOGLE_DRIVE_CLIENT_ID"])
-# GOOGLE_DRIVE_CLIENT_SECRET = os.environ.get("GOOGLE_DRIVE_CLIENT_SECRET", st.secrets["GOOGLE_DRIVE_CLIENT_SECRET"])
-# TOKEN_PATH = os.path.join(os.path.dirname(__file__), '../.streamlit/token.pickle')
 
-if "gcp_service_account" in st.secrets:
-    gcp_service_account_info = st.secrets["gcp_service_account"]
-    with tempfile.NamedTemporaryFile(
-        mode="w", delete=False, suffix=".json"
-    ) as temp_key_file:
-        json.dump(dict(gcp_service_account_info), temp_key_file)
-        temp_key_file_path = temp_key_file.name
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_key_file_path
-
+TOKEN_PATH = os.path.join(os.path.dirname(__file__), '../.streamlit/token.pickle')
 
 def get_drive_service():
-    """Returns a Google Drive service using service account credentials from st.secrets."""
-    service_account_info = dict(st.secrets["gcp_service_account"])
-    credentials = service_account.Credentials.from_service_account_info(
-        service_account_info, scopes=SCOPES
-    )
-    return build("drive", "v3", credentials=credentials)
+    """Returns a Google Drive service using OAuth2 flow."""
+    creds = None
+    if os.path.exists(TOKEN_PATH):
+        with open(TOKEN_PATH, 'rb') as token:
+            creds = pickle.load(token)
+    # If there are no (valid) credentials available, let the user log in.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            try:
+                creds.refresh(Request())
+            except RefreshError:
+                os.remove(TOKEN_PATH)
+                # Rerun to trigger the flow again
+                st.rerun()
+        else:
+            # Create a dictionary for the client secrets from st.secrets
+            client_secrets = {
+                "installed": {
+                    "client_id": st.secrets["google_oauth"]["client_id"],
+                    "client_secret": st.secrets["google_oauth"]["client_secret"],
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                    "redirect_uris": ["http://localhost:8501"]
+                }
+            }
+            flow = InstalledAppFlow.from_client_config(client_secrets, SCOPES)
+            creds = flow.run_local_server(port=0)
+        # Save the credentials for the next run
+        with open(TOKEN_PATH, 'wb') as token:
+            pickle.dump(creds, token)
+    return build('drive', 'v3', credentials=creds)
 
 
 def get_or_create_folder(folder_name: str, parent_folder_id: str = "root") -> str:
