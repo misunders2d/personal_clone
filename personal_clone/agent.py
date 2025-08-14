@@ -9,21 +9,10 @@ from .sub_agents.search_agent import create_search_agent_tool
 from .sub_agents.financial_analyst import create_financial_analyst_agent
 from .sub_agents.developer_agent import create_developer_agent
 
-from .utils.search import (
-    write_to_rag,
-    read_from_rag,
-    update_in_rag,
-    delete_from_rag,
-    find_experiences,
-)
-
+from .sub_agents.rag_agent import create_rag_agent_tool
+from .sub_agents.clickup_agent import create_clickup_agent_tool
 from .utils.datetime_utils import get_current_date
-
 from .instructions import MASTER_AGENT_INSTRUCTION
-
-from .utils.clickup_utils import ClickUpAPI
-
-clickup_api = ClickUpAPI()
 
 
 def create_master_agent():
@@ -36,17 +25,10 @@ def create_master_agent():
             create_search_agent_tool("master_search_agent"),
             load_web_page,
             get_current_date,
-            write_to_rag,
-            read_from_rag,
-            update_in_rag,
-            delete_from_rag,
-            find_experiences,
-            create_search_agent_tool(),
-            clickup_api.get_tasks,
-            clickup_api.create_task,
-            clickup_api.close_task,
+            create_rag_agent_tool(),
+            create_clickup_agent_tool(),
             AgentTool(agent=create_developer_agent()),
-            AgentTool(agent=create_financial_analyst_agent()),  # Add this line
+            AgentTool(agent=create_financial_analyst_agent()),
         ],
     )
     return master_agent

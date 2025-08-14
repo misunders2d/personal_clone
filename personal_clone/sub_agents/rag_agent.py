@@ -4,7 +4,10 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 from typing import Optional
 
-from .gdrive_utils import (
+from google.adk.agents import Agent
+from google.adk.tools import AgentTool
+
+from ..utils.gdrive_utils import (
     upload_file_to_drive,
     download_file_from_drive,
     update_file_in_drive,
@@ -12,14 +15,14 @@ from .gdrive_utils import (
     list_files_in_folder,
     get_or_create_folder,
 )
-from .pinecone_utils import (
+from ..utils.pinecone_utils import (
     generate_embedding,
     upsert_vectors,
     query_vectors,
     delete_vectors,
 )
 
-load_dotenv(os.path.join(os.path.dirname(__file__), "../.env"))
+load_dotenv(os.path.join(os.path.dirname(__file__), "../../.env"))
 
 # --- Configuration ---
 
@@ -47,7 +50,8 @@ def _create_content_with_metadata(
     # Handle default access_type inside the function
     effective_access_type = access_type if access_type is not None else "private"
     clickup_task_id_str = (
-        f"\nclickup_task_id: {clickup_task_id}" if clickup_task_id else ""
+        f"""
+clickup_task_id: {clickup_task_id}" if clickup_task_id else """
     )
 
     metadata = f"""---
@@ -78,6 +82,7 @@ def write_to_rag(
         tags: An optional list of tags to categorize the experience.
         access_type: 'private' or 'public' to control access. If None, defaults to 'private'.
         folder_id: The ID of the Google Drive folder. If None, it defaults to 'experiences' folder in My Drive.
+        clickup_task_id: Optional ClickUp task ID to link.
 
     Returns:
         The file ID of the newly created experience in Google Drive.
@@ -90,7 +95,7 @@ def write_to_rag(
 
     file_name = _generate_file_name()
     full_content = _create_content_with_metadata(
-        description, content, tags, effective_access_type
+        description, content, tags, effective_access_type, clickup_task_id
     )
 
     print(f"Attempting to upload '{file_name}' to Google Drive...")
@@ -135,6 +140,7 @@ def update_in_rag(
         new_tags: An optional new list of tags to overwrite the old ones.
         new_access_type: An optional new access type ('private' or 'public') to overwrite the old one. If None, keeps the old access type.
         folder_id: The ID of the Google Drive folder. If None, it defaults to 'experiences' folder in My Drive.
+        clickup_task_id: Optional ClickUp task ID to link.
 
     Returns:
         A confirmation message.
@@ -209,19 +215,21 @@ def update_in_rag(
             else:
                 access_type = "private"  # Default if not found
 
-        # Extract clickup_task_id
-        clickup_task_id = next(
-            (
-                line.split(":", 1)[1].strip()
-                for line in metadata_part.splitlines()
-                if line.strip().startswith("clickup_task_id:")
-            ),
-            None,
-        )
+        # Extract or update clickup_task_id
+        if clickup_task_id is None:
+            clickup_task_id = next(
+                (
+                    line.split(":", 1)[1].strip()
+                    for line in metadata_part.splitlines()
+                    if line.strip().startswith("clickup_task_id:")
+                ),
+                None,
+            )
 
         now_iso = datetime.now(timezone.utc).isoformat()
         clickup_task_id_str = (
-            f"\nclickup_task_id: {clickup_task_id}" if clickup_task_id else ""
+            f"""
+clickup_task_id: {clickup_task_id}" if clickup_task_id else """
         )
         metadata = f"""---
 created: {created_date}
@@ -238,13 +246,15 @@ access_type: {access_type}{clickup_task_id_str}
 
         # Update embedding in Pinecone
         embedding = generate_embedding(new_content)
-        metadata = {
+        pinecone_metadata = {
             "file_name": file_id,  # Using file_id as file_name for Pinecone metadata consistency
             "description": description,
             "tags": [tag.strip() for tag in tags_str.split(",") if tag.strip()],
             "access_type": access_type,
         }
-        upsert_vectors(vectors=[(file_id, embedding, metadata)])
+        if clickup_task_id:
+            pinecone_metadata["clickup_task_id"] = clickup_task_id
+        upsert_vectors(vectors=[(file_id, embedding, pinecone_metadata)])
         print(f"Successfully updated embedding for '{file_id}' in Pinecone.")
 
         return f"Successfully updated {file_id}."
@@ -465,3 +475,19 @@ def read_from_rag(
                 "content": f"Error: Could not query Pinecone. Details: {e}",
             }
         ]
+
+def create_rag_agent_tool(name="rag_agent"):
+    rag_agent = Agent(
+        name=name,
+        description="An agent that manages experiences in the RAG system (Google Drive + Pinecone).",
+        instruction="You are a RAG agent. Use the provided tools to manage experiences.",
+        model=os.environ["MODEL_NAME"],
+        tools=[
+            write_to_rag,
+            read_from_rag,
+            update_in_rag,
+            delete_from_rag,
+            find_experiences,
+        ],
+    )
+    return AgentTool(agent=rag_agent, skip_summarization=True)
