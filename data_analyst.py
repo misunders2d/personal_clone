@@ -17,40 +17,35 @@ def create_visualization_from_data(data: str, chart_type: str, title: str) -> by
     Returns:
         bytes: The image of the chart as bytes.
     """
-    try:
-        # Use a string IO object to read the CSV data
-        data_io = io.StringIO(data)
-        df = pd.read_csv(data_io)
+    # Use a string IO object to read the CSV data
+    data_io = io.StringIO(data)
+    df = pd.read_csv(data_io)
 
-        plt.figure(figsize=(10, 6))
-        
-        if chart_type == 'bar':
-            sns.barplot(data=df, x=df.columns[0], y=df.columns[1])
-        elif chart_type == 'line':
-            sns.lineplot(data=df, x=df.columns[0], y=df.columns[1])
-        elif chart_type == 'pie':
-            df.set_index(df.columns[0])[df.columns[1]].plot.pie(autopct='%1.1f%%')
-            plt.ylabel('') # Hide the y-label for pie charts
-        else:
-            raise ValueError(f"Unsupported chart type: {chart_type}")
+    plt.figure(figsize=(10, 6))
+    
+    if chart_type == 'bar':
+        sns.barplot(data=df, x=df.columns[0], y=df.columns[1])
+    elif chart_type == 'line':
+        sns.lineplot(data=df, x=df.columns[0], y=df.columns[1])
+    elif chart_type == 'pie':
+        df.set_index(df.columns[0])[df.columns[1]].plot.pie(autopct='%1.1f%%')
+        plt.ylabel('') # Hide the y-label for pie charts
+    else:
+        raise ValueError(f"Unsupported chart type: {chart_type}")
 
-        plt.title(title)
-        plt.xticks(rotation=45)
-        plt.tight_layout()
+    plt.title(title)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
 
-        # Save the plot to an in-memory buffer
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png')
-        buf.seek(0)
-        
-        # Clear the current figure
-        plt.clf()
-        
-        return buf.getvalue()
-
-    except Exception as e:
-        # Return the error message as bytes, so the agent can handle it
-        return str(e).encode('utf-8')
+    # Save the plot to an in-memory buffer
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    
+    # Clear the current figure
+    plt.clf()
+    
+    return buf.getvalue()
 
 def create_data_analyst_agent():
     """
