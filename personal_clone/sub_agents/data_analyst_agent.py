@@ -5,7 +5,7 @@ import seaborn as sns
 from google.adk.agents import Agent
 import os
 
-def create_visualization_from_data(data: str, chart_type: str, title: str) -> bytes:
+def create_visualization_from_data(data: str, chart_type: str, title: str):
     """
     Creates a visualization from data and returns the image as bytes.
 
