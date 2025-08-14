@@ -7,7 +7,7 @@ import os
 
 from .sub_agents.search_agent import create_search_agent_tool
 from .sub_agents.financial_analyst import create_financial_analyst_agent
-from .sub_agents.developer_agent import create_developer_agent
+from .coding_agents.developer_agent import create_developer_agent
 
 from .sub_agents.rag_agent import create_rag_agent_tool
 from .sub_agents.clickup_agent import create_clickup_agent_tool
