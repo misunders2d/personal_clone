@@ -61,7 +61,7 @@ def create_data_analyst_agent():
     """
     Creates the data analyst agent.
     """
-    return Agent(
+    data_analyst =  Agent(
         name="data_analyst_agent",
         description="An agent that can create visualizations from data.",
         model=os.environ["MODEL_NAME"],
@@ -71,3 +71,4 @@ def create_data_analyst_agent():
         """,
         tools=[create_visualization_from_data],
     )
+    return data_analyst
