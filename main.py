@@ -14,6 +14,7 @@ from google.adk.sessions import InMemorySessionService
 from google.adk.artifacts import InMemoryArtifactService
 from google.genai import types
 from google.adk.runners import Runner
+from google.adk.artifacts import Artifact
 
 # Import master_agent after dotenv.load_dotenv() to ensure env vars are loaded
 from personal_clone.agent import create_master_agent
@@ -116,7 +117,14 @@ async def run_agent(user_input: str, session_id: str, user_id: str):
                 ):
                     new_msg += event.content.parts[0].text
                     yield event.content.parts[0].text
-
+        elif event.content and event.content.parts and event.content.parts[0].artifact:
+            artifact_part = event.content.parts[0].artifact
+            artifact_id = artifact_part.id
+            artifact_name = artifact_part.name
+            if artifact_part.mime_type.startswith('image/'):
+                loaded_artifact = await runner.artifact_service.load_artifact(artifact_id=artifact_id)
+                if loaded_artifact and loaded_artifact.data:
+                    st.image(loaded_artifact.data, caption=artifact_name)
         else:
             yield event
 
