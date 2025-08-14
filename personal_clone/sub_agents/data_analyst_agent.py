@@ -1,3 +1,4 @@
+from google.adk.tools import ToolContext
 import io
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -6,7 +7,7 @@ from google.adk.agents import Agent
 import os
 
 
-def create_visualization_from_data(data: str, chart_type: str, title: str) -> dict:
+def create_visualization_from_data(tool_context: ToolContext, data: str, chart_type: str, title: str) -> dict:
     """
     Creates a visualization from data and returns the image as bytes.
 
@@ -46,7 +47,9 @@ def create_visualization_from_data(data: str, chart_type: str, title: str) -> di
 
         # Clear the current figure
         plt.clf()
-        return {"image_bytes": buf.getvalue(), "chart_type": chart_type, "title": title}
+        artifact_name = f'{title.replace(' ', '_')}.png'
+        artifact_id = tool_context.save_artifact(name=artifact_name, content=buf, artifact_type='image', mime_type='image/png')
+        return {'status': 'success', 'artifact_id': artifact_id, 'message': f'Chart saved as artifact: {artifact_name}'}
 
     except Exception as e:
         # Return the error message as bytes, so the agent can handle it
@@ -66,7 +69,7 @@ def create_data_analyst_agent():
         description="An agent that can create visualizations from data.",
         model=os.environ["MODEL_NAME"],
         instruction="""
-        You are a data analyst agent capable of plotting data. 
+        You are a data analyst agent capable of plotting data.
         You DO NOT modify or summarize the output of the create `create_visualization_from_data`, but return it intact.
         """,
         tools=[create_visualization_from_data],
