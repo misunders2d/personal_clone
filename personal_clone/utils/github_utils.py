@@ -167,6 +167,23 @@ def list_repo_files(branch: Optional[str] = None):
         return f"An unexpected error occurred while listing files: {e}"
     return all_files
 
+def list_branches():
+    """
+    Lists all branches in the repository.
+
+    Returns:
+        list: A list of branch names, or an empty list if an error occurs.
+    """
+    if repo is None:
+        return "Error: GitHub repository not initialized. Cannot list branches."
+    try:
+        branches = repo.get_branches()
+        return [branch.name for branch in branches]
+    except GithubException as e:
+        return f"GitHub API error listing branches: {e}"
+    except Exception as e:
+        return f"An unexpected error occurred while listing branches: {e}"
+
 
 def create_branch(base_branch: str, new_branch_name: str) -> Optional[str]:
     """
