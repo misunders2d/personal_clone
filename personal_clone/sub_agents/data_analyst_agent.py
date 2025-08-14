@@ -2,7 +2,7 @@ import io
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from google_adk.agents import Agent
+from google.adk.agents import Agent
 
 def create_visualization_from_data(data: str, chart_type: str, title: str) -> bytes:
     """
