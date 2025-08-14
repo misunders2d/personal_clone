@@ -51,10 +51,12 @@ def create_visualization_from_data(data: str, chart_type: str, title: str) -> by
         # Return the error message as bytes, so the agent can handle it
         return str(e).encode('utf-8')
 
-# Instantiate the agent.
-# Note: The way the agent is instantiated and its tools are registered might need to be adjusted
-# depending on the specific mechanism used in the existing codebase, which will be determined
-# in the next phase (Agent Registration).
-data_analyst_agent = Agent(
-    tools=[create_visualization_from_data]
-)
+def create_data_analyst_agent():
+    """
+    Creates the data analyst agent.
+    """
+    return Agent(
+        name="data_analyst_agent",
+        description="An agent that can create visualizations from data.",
+        tools=[create_visualization_from_data]
+    )
