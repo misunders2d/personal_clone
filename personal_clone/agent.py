@@ -16,6 +16,7 @@ from .sub_agents.clickup_agent import create_clickup_agent_tool
 from .utils.datetime_utils import get_current_date
 from .instructions import MASTER_AGENT_INSTRUCTION
 
+from tool_config.my_toolset import my_tool_set
 
 def create_master_agent():
     master_agent = Agent(
@@ -33,6 +34,7 @@ def create_master_agent():
             AgentTool(agent=create_financial_analyst_agent()),
             AgentTool(agent=create_bigquery_agent()),
             AgentTool(agent=create_data_analyst_agent()),
+            my_tool_set,
         ],
     )
     return master_agent
