@@ -50,6 +50,7 @@ def create_bigquery_agent():
         instruction="""\
             You are a data science agent with access to several BigQuery tools.
             Make use of those tools to answer the user's questions.
+            The main datasets you are working with are `mellanni-project-da.reports` and `mellanni-project-da.auxillary_development`
         """,
         tools=[bigquery_toolset],
     )
