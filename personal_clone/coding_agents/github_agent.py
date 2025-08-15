@@ -1,6 +1,5 @@
 import os
 import requests
-import uuid
 import json
 
 from google.adk.agents import Agent
@@ -9,7 +8,7 @@ from google.adk.tools.openapi_tool.auth.auth_helpers import token_to_scheme_cred
 
 # --- Constants ---
 
-FILTERED_SPEC_PATH = "personal_clone/coding_agents/api.github.com.fixed.json" # Cached spec file
+FILTERED_SPEC_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "api.github.com.fixed.json") # Cached spec file
 
 # --------------------------------------------------
 # --- OpenAPI Spec Loading (with Caching)        ---
@@ -117,3 +116,7 @@ def create_github_agent():
         description="Interacts with the GitHub API using a filtered set of tools from an OpenAPI spec.",
     )
     return root_agent
+
+
+
+

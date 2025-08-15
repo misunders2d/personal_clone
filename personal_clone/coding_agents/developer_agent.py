@@ -11,7 +11,6 @@ import os
 
 from ..sub_agents.search_agent import create_search_agent_tool
 
-# from .openapi_agent import create_openapi_agent
 
 from ..utils.github_utils import (
     get_file_content,
@@ -21,6 +20,7 @@ from ..utils.github_utils import (
     create_pull_request,
 )
 
+from .github_agent import create_github_toolset
 
 from .. import instructions
 
@@ -142,13 +142,13 @@ def create_developer_agent():
         instruction=instructions.DEVELOPER_AGENT_INSTRUCTION,
         model=MODEL_NAME,
         sub_agents=[plan_and_review_agent()],
-        tools=[
-            inspect_google_adk,
-            create_branch,
-            create_or_update_file,
-            create_pull_request,
-            list_repo_files,
-            get_file_content,
+        tools=[create_github_toolset
+            # inspect_google_adk,
+            # create_branch,
+            # create_or_update_file,
+            # create_pull_request,
+            # list_repo_files,
+            # get_file_content,
         ],
     )
     return developer_agent
