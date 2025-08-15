@@ -49,10 +49,8 @@ def _create_content_with_metadata(
 
     # Handle default access_type inside the function
     effective_access_type = access_type if access_type is not None else "private"
-    clickup_task_id_str = (
-        f"""
+    clickup_task_id_str = f"""
 clickup_task_id: {clickup_task_id}" if clickup_task_id else """
-    )
 
     metadata = f"""---
 created: {now_iso}
@@ -227,10 +225,8 @@ def update_in_rag(
             )
 
         now_iso = datetime.now(timezone.utc).isoformat()
-        clickup_task_id_str = (
-            f"""
+        clickup_task_id_str = f"""
 clickup_task_id: {clickup_task_id}" if clickup_task_id else """
-        )
         metadata = f"""---
 created: {created_date}
 modified: {now_iso}
@@ -475,6 +471,7 @@ def read_from_rag(
                 "content": f"Error: Could not query Pinecone. Details: {e}",
             }
         ]
+
 
 def create_rag_agent_tool(name="rag_agent"):
     rag_agent = Agent(

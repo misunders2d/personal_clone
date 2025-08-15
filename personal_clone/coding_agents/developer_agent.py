@@ -6,7 +6,11 @@ from google.adk.code_executors import BuiltInCodeExecutor
 from google.adk.planners import BuiltInPlanner
 from google.genai import types
 
+import json
+import os
+
 from ..sub_agents.search_agent import create_search_agent_tool
+
 # from .openapi_agent import create_openapi_agent
 
 from ..utils.github_utils import (
@@ -24,7 +28,15 @@ import os
 
 MODEL_NAME = os.environ["MODEL_NAME"]
 
-# sub-agents creation
+
+# helper function to inspect own modules
+def inspect_google_adk():
+    """A helper function that lists all available classes, functions and modules in Google ADK"""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    json_path = os.path.join(script_dir, "..", "..", "adk_metadata.json")
+    with open(os.path.normpath(json_path)) as f:
+        data = json.load(f)
+    return data
 
 
 def create_code_inspector_agent(name="code_inspector_agent"):
@@ -131,11 +143,12 @@ def create_developer_agent():
         model=MODEL_NAME,
         sub_agents=[plan_and_review_agent()],
         tools=[
+            inspect_google_adk,
             create_branch,
             create_or_update_file,
             create_pull_request,
             list_repo_files,
-            get_file_content
+            get_file_content,
         ],
     )
     return developer_agent

@@ -10,8 +10,9 @@ ADK_MODULES = [
     "google.adk.artifacts",
     "google.adk.sessions",
     "google.adk.tools.openapi_tool",
-    "google.adk.errors"
+    "google.adk.errors",
 ]
+
 
 def find_all_modules(base_packages):
     """
@@ -22,49 +23,67 @@ def find_all_modules(base_packages):
         try:
             pkg = importlib.import_module(pkg_name)
             # A package must have a __path__ attribute
-            if hasattr(pkg, '__path__'):
+            if hasattr(pkg, "__path__"):
                 # Use walk_packages to find all submodules
-                for _, module_name, _ in pkgutil.walk_packages(pkg.__path__, prefix=pkg.__name__ + '.'):
+                for _, module_name, _ in pkgutil.walk_packages(
+                    pkg.__path__, prefix=pkg.__name__ + "."
+                ):
                     all_modules.add(module_name)
         except ImportError:
             continue
     return sorted(list(all_modules))
 
+
 def collect_adk_metadata():
     """
-    Discovers all ADK modules and collects metadata on their classes and functions.
+    Discovers all ADK modules and collects metadata in a hierarchical structure.
     """
-    metadata = {}
-    
-    # 1. First, discover all modules and submodules
+    hierarchical_metadata = {}
+
+    # The module list is already sorted, ensuring parent packages are processed before subpackages
     all_adk_modules_to_inspect = find_all_modules(ADK_MODULES)
-    
-    # 2. Then, iterate over the complete list to inspect them
+
     for module_name in all_adk_modules_to_inspect:
         try:
             module = importlib.import_module(module_name)
-            metadata[module_name] = {}
+
+            # 1. First, collect all members defined in the current module
+            module_members = {}
             for name, obj in inspect.getmembers(module):
-                # We only want classes or functions defined *in this specific module*
-                if (inspect.isclass(obj) or inspect.isfunction(obj)) and obj.__module__ == module_name:
+                if (
+                    inspect.isclass(obj) or inspect.isfunction(obj)
+                ) and obj.__module__ == module_name:
                     sig = None
                     try:
                         sig = str(inspect.signature(obj))
                     except (ValueError, TypeError):
-                        pass  # Happens for some built-ins or C extensions
-                    
-                    metadata[module_name][name] = {
+                        pass
+
+                    module_members[name] = {
                         "type": "class" if inspect.isclass(obj) else "function",
                         "signature": sig,
                         "doc": inspect.getdoc(obj) or "",
                     }
+
+            # 2. If the module has members, place them in the hierarchy
+            if not module_members:
+                continue
+
+            # 3. Navigate or create the nested structure based on the module name
+            parts = module_name.split(".")
+            current_level = hierarchical_metadata
+            for part in parts:
+                # setdefault gets the key if it exists, or creates it if it doesn't
+                current_level = current_level.setdefault(part, {})
+
+            # 4. Store the actual functions/classes under a special "__members__" key
+            current_level["__members__"] = module_members
+
         except ImportError:
             continue
-            
-    final_metadata = {k: v for k, v in metadata.items() if v}
-    
-    # Sort the final dictionary alphabetically by module name (the key)
-    return dict(sorted(final_metadata.items())) # <-- MODIFIED LINE
+
+    return hierarchical_metadata
+
 
 if __name__ == "__main__":
     meta = collect_adk_metadata()

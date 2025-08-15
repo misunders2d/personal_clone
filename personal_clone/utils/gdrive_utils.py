@@ -158,6 +158,7 @@ def list_files_in_folder(folder_id: str = "root") -> list[dict]:
     items = results.get("files", [])
     return items
 
+
 def transfer_ownership(file_id: str, new_owner_email: str) -> bool:
     """Transfers ownership of a Google Drive file to a new user.
 
@@ -174,9 +175,9 @@ def transfer_ownership(file_id: str, new_owner_email: str) -> bool:
     try:
         # Create a new permission for the new owner with 'owner' role
         new_permission = {
-            'type': 'user',
-            'role': 'owner',
-            'emailAddress': new_owner_email
+            "type": "user",
+            "role": "owner",
+            "emailAddress": new_owner_email,
         }
         # Use transferOwnership=True to explicitly trigger the ownership transfer.
         # sendNotificationEmail=True (default behavior) ensures the new owner is notified.
@@ -184,16 +185,23 @@ def transfer_ownership(file_id: str, new_owner_email: str) -> bool:
             fileId=file_id,
             body=new_permission,
             transferOwnership=True,
-            fields='id' # Request only the ID field in the response
+            fields="id",  # Request only the ID field in the response
         ).execute()
 
-        print(f"Ownership of file {file_id} successfully transferred to {new_owner_email}")
+        print(
+            f"Ownership of file {file_id} successfully transferred to {new_owner_email}"
+        )
         return True
     except Exception as e:
-        print(f"Error transferring ownership for file {file_id} to {new_owner_email}: {e}")
+        print(
+            f"Error transferring ownership for file {file_id} to {new_owner_email}: {e}"
+        )
         return False
 
-def create_and_transfer_file_ownership(file_name: str, content: str, folder_id: str, new_owner_email: str) -> str | None:
+
+def create_and_transfer_file_ownership(
+    file_name: str, content: str, folder_id: str, new_owner_email: str
+) -> str | None:
     """Uploads a file to Google Drive using the service account and then transfers its ownership.
 
     Args:
@@ -212,6 +220,8 @@ def create_and_transfer_file_ownership(file_name: str, content: str, folder_id: 
             return file_id
         else:
             # Log or handle the scenario where the file was uploaded but ownership transfer failed.
-            print(f"Warning: File {file_id} was uploaded, but ownership transfer to {new_owner_email} failed.")
+            print(
+                f"Warning: File {file_id} was uploaded, but ownership transfer to {new_owner_email} failed."
+            )
             return None
     return None

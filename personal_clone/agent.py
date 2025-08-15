@@ -32,7 +32,7 @@ def create_master_agent():
             AgentTool(agent=create_developer_agent()),
             AgentTool(agent=create_financial_analyst_agent()),
             AgentTool(agent=create_bigquery_agent()),
-            AgentTool(agent=create_data_analyst_agent())
+            AgentTool(agent=create_data_analyst_agent()),
         ],
     )
     return master_agent

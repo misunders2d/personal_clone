@@ -1,6 +1,7 @@
 from datetime import datetime
 import pytz
 
+
 def get_current_date():
     """
     Returns the current date and time in YYYY-MM-DD HH:MM:SS format

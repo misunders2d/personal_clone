@@ -1,11 +1,17 @@
 import streamlit as st
 
-PREAUTHORIZED_EMAILS = st.secrets['preauthorized_emails']
+PREAUTHORIZED_EMAILS = st.secrets["preauthorized_emails"]
+
 
 def login_screen():
     st.header("This app requires authorization.")
     st.subheader("Please log in.")
-    st.button("Log in with Google", on_click=st.login, use_container_width=True, type="primary")
+    st.button(
+        "Log in with Google",
+        on_click=st.login,
+        use_container_width=True,
+        type="primary",
+    )
 
 
 def require_login():
