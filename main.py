@@ -41,7 +41,7 @@ for message in st.session_state.messages:
     with st.chat_message(
         message["role"],
         avatar=(
-            user_picture if message["role"] == "user" else "media/jeff_avatar.jpeg"
+            user_picture if message["role"] == "user" else "media/haken.jpg"
         ),
     ):  #
         st.markdown(message["content"])
@@ -127,7 +127,7 @@ if prompt := st.chat_input("Ask me what I can do ;)", accept_file=True):
     st.chat_message("user", avatar=user_picture).markdown(prompt.text)
     st.session_state.messages.append({"role": "user", "content": prompt.text})
 
-    with st.chat_message("Jeff", avatar="media/jeff_avatar.jpeg"):
+    with st.chat_message("Jeff", avatar="media/haken.jpg"):
         try:
             st.write_stream(
                 run_agent(

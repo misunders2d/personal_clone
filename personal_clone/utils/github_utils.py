@@ -1,221 +1,104 @@
 import os
-import base64
-import streamlit as st
-from typing import Optional
-from github import Github
-from github.GithubException import GithubException
+import requests
+import json
 
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", st.secrets["GITHUB_TOKEN"])
-REPO_NAME = os.environ.get("GITHUB_DEFAULT_REPO", st.secrets["GITHUB_DEFAULT_REPO"])
-BRANCH_NAME = os.environ.get(
-    "GITHUB_DEFAULT_REPO_BRANCH", st.secrets["GITHUB_DEFAULT_REPO_BRANCH"]
-)
+from google.adk.tools.openapi_tool.openapi_spec_parser.openapi_toolset import OpenAPIToolset
+from google.adk.tools.openapi_tool.auth.auth_helpers import token_to_scheme_credential
 
-# Initialize GitHub API
-try:
-    g = Github(GITHUB_TOKEN)
-    repo = g.get_repo(REPO_NAME)
-    print("GitHub repository initialized successfully.")
-except GithubException as e:
-    print(f"Error initializing GitHub API or getting repository: {e}")
-    # Handle the error appropriately, e.g., exit or set a flag
-    repo = None  # Indicate that the repository is not accessible
-except Exception as e:
-    print(f"An unexpected error occurred during GitHub initialization: {e}")
-    repo = None
+# --- Constants ---
 
+FILTERED_SPEC_PATH = "api.github.com.fixed.json" # Cached spec file
 
-def get_file_content(file_path: str, branch: Optional[str] = None):
-    """
-    Gets the content of a file from the GitHub repository.
+# --------------------------------------------------
+# --- OpenAPI Spec Loading (with Caching)        ---
+# --------------------------------------------------
 
-    Args:
-        file_path (str): The path to the file in the repository.
-        branch (str, optional): The name of the branch to get the file from. Defaults to the default branch.
+def get_filtered_spec():
+    """Loads the filtered spec from cache, or fetches and creates it if it doesn't exist."""
+    if os.path.exists(FILTERED_SPEC_PATH):
+        print(f"Loading filtered spec from local cache: {FILTERED_SPEC_PATH}")
+        with open(FILTERED_SPEC_PATH, 'r') as f:
+            return json.load(f)
 
-    Returns:
-        str: The content of the file, or None if an error occurs.
-    """
-    if repo is None:
-        return "Error: GitHub repository not initialized. Cannot get file content."
-    try:
-        contents = repo.get_contents(
-            file_path, ref=branch or BRANCH_NAME
-        )  # Specify the branch
-        if isinstance(contents, list):
-            return f"Error: The path '{file_path}' refers to a directory, not a file."
-        decoded_content = base64.b64decode(contents.content).decode("utf-8")
-        return decoded_content
-    except GithubException as e:
-        # Catch specific GitHub API errors, e.g., file not found (404)
-        return f"GitHub API error getting file content for '{file_path}': {e}"
-    except Exception as e:
-        # Catch any other unexpected errors
-        return f"An unexpected error occurred while getting file content for '{file_path}': {e}"
+    print(f"Local spec cache not found at '{FILTERED_SPEC_PATH}'. Fetching and filtering from source...")
+    # 1. Define the exact operationIds we want to keep.
+    github_operation_filters = {
+        # Existing
+        "repos/get",
+        "repos/get-content",
+        "repos/list-for-authenticated-user",
+        "repos/create-for-authenticated-user",
+        "pulls/list",
+        "issues/create",
+        "git/get-tree",
+        # Added for workflow
+        "git/get-ref",
+        "git/create-ref",
+        "repos/create-or-update-file-contents",
+        "pulls/create",
+    }
 
+    # 2. Fetch the full OpenAPI spec from GitHub.
+    GITHUB_SPEC_URL = (
+        "https://raw.githubusercontent.com/github/rest-api-description/main/"
+        "descriptions/api.github.com/api.github.com.json"
+    )
+    # print("Fetching latest GitHub API spec...")
+    github_spec_response = requests.get(GITHUB_SPEC_URL)
+    github_spec_response.raise_for_status()
+    full_spec_dict = github_spec_response.json()
+    # print(f"Full spec loaded. Found {len(full_spec_dict.get('paths', {}))} paths.")
 
-def _create_file_in_repo(
-    file_path: str, content: str, commit_message: str, branch: Optional[str] = None
-):
-    """
-    Creates a new file in the GitHub repository.
+    # 3. Filter the spec to only include the desired operations.
+    filtered_paths = {}
+    for path, path_item in full_spec_dict.get('paths', {}).items():
+        filtered_methods = {}
+        for method, operation in path_item.items():
+            if isinstance(operation, dict) and operation.get('operationId') in github_operation_filters:
+                filtered_methods[method] = operation
+        if filtered_methods:
+            filtered_paths[path] = filtered_methods
 
-    Args:
-        file_path (str): The path for the new file in the repository.
-        content (str): The content of the new file.
-        commit_message (str): The commit message for the creation.
-        branch (str, optional): The name of the branch to create the file in. Defaults to the default branch.
+    # 4. Create a new, lightweight spec dictionary with the filtered paths.
+    filtered_spec_dict = {
+        "openapi": full_spec_dict.get("openapi"),
+        "info": full_spec_dict.get("info"),
+        "servers": full_spec_dict.get("servers"),
+        "paths": filtered_paths,
+        "components": full_spec_dict.get("components"),
+    }
+    # print(f"Spec filtered. Kept {len(filtered_paths)} paths.")
 
-    Returns:
-        bool: True if the file was created successfully, False otherwise.
-    """
-    if repo is None:
-        return "Error: GitHub repository not initialized. Cannot create file."
-    try:
-        repo.create_file(
-            file_path,
-            commit_message,
-            content,
-            branch=branch or BRANCH_NAME,  # Specify the branch
-        )
-        return f"File '{file_path}' created successfully."
-    except GithubException as e:
-        # Catch specific GitHub API errors, e.g., file already exists (422)
-        return f"GitHub API error creating file '{file_path}': {e}"
-    except Exception as e:
-        # Catch any other unexpected errors
-        return f"An unexpected error occurred while creating file '{file_path}': {e}"
+    # 5. Save the filtered spec to the cache file.
+    # print(f"Saving filtered spec to local cache: {FILTERED_SPEC_PATH}")
+    with open(FILTERED_SPEC_PATH, 'w') as f:
+        json.dump(filtered_spec_dict, f, indent=2)
+    
+    return filtered_spec_dict
 
+# --------------------------------------------------
+# --- Toolset and Agent Definition               ---
+# --------------------------------------------------
 
-def create_or_update_file(
-    file_path: str, content: str, commit_message: str, branch: Optional[str] = None
-):
-    """
-    Creates a new file or updates an existing file in the GitHub repository.
-    For updates, it uses the file's SHA for a safe, atomic update.
+def create_github_toolset():
+    # Load the spec using the caching function
+    filtered_spec_dict = get_filtered_spec()
 
-    Args:
-        file_path (str): The path to the file in the repository.
-        content (str): The content of the file.
-        commit_message (str): The commit message for the changes.
-        branch (str, optional): The name of the branch to create or update the file in. Defaults to the default branch.
+    # Create the toolset from the filtered spec dictionary.
+    github_token = os.environ.get("GITHUB_TOKEN")
+    if not github_token:
+        print("Warning: GITHUB_TOKEN environment variable not set. Some API calls may fail.")
 
-    Returns:
-        bool: True if the file was created or updated successfully, False otherwise.
-    """
-    if repo is None:
-        return "Error: GitHub repository not initialized. Cannot create or update file."
+    auth_scheme, auth_credential = token_to_scheme_credential(
+        token_type="oauth2Token",
+        location="header",
+        name="Authorization",
+        credential_value=github_token # Let the ADK handle the "Bearer" prefix
+    )
 
-    try:
-        # Check if the file exists to get its SHA for updating
-        contents = repo.get_contents(file_path, ref=branch or BRANCH_NAME)
-        # If get_contents returns a list, the path is a directory, which is not supported for file updates
-        if isinstance(contents, list):
-            return f"Error: The path '{file_path}' refers to a directory, not a file."
-
-        # If it exists, update it using its SHA
-        repo.update_file(
-            contents.path,
-            commit_message,
-            content,
-            contents.sha,
-            branch=branch or BRANCH_NAME,
-        )
-        return f"File '{file_path}' updated successfully."
-    except GithubException as e:
-        if e.status == 404:
-            # If the file does not exist, create it.
-            return _create_file_in_repo(file_path, content, commit_message, branch)
-        else:
-            # Catch other GitHub API errors during the get_contents or update_file call
-            return f"GitHub API error handling file '{file_path}': {e}"
-            return False
-    except Exception as e:
-        # Catch any other unexpected errors
-        return f"An unexpected error occurred while creating or updating file '{file_path}': {e}"
-
-
-def list_repo_files(branch: Optional[str] = None):
-    """
-    Lists all files in the repository recursively.
-
-    Args:
-        branch (str, optional): The name of the branch to list files from. Defaults to the default branch.
-
-    Returns:
-        list: A list of file paths, or an empty list if an error occurs.
-    """
-    if repo is None:
-        return "Error: GitHub repository not initialized. Cannot list files."
-
-    all_files = []
-    dirs_to_visit = [""]  # Start with the root directory
-    try:
-        while dirs_to_visit:
-            path = dirs_to_visit.pop()
-            contents = repo.get_contents(path, ref=branch or BRANCH_NAME)
-            if isinstance(contents, list):
-                for file_content in contents:
-                    if file_content.type == "dir":
-                        dirs_to_visit.append(file_content.path)
-                    else:
-                        all_files.append(file_content.path)
-            else:
-                # It's a single file, not a directory
-                all_files.append(contents.path)
-    except Exception as e:
-        return f"An unexpected error occurred while listing files: {e}"
-    return all_files
-
-
-def create_branch(base_branch: str, new_branch_name: str) -> Optional[str]:
-    """
-    Creates a new branch from a specified base branch.
-
-    Args:
-        base_branch (str): The name of the branch to create the new branch from.
-        new_branch_name (str): The name of the new branch to create.
-
-    Returns:
-        str: The name of the new branch if successful, None otherwise.
-    """
-    if repo is None:
-        return "Error: GitHub repository not initialized. Cannot create branch."
-    try:
-        # Get the base branch reference
-        base_ref = repo.get_git_ref(f"heads/{base_branch}")
-        # Create the new branch
-        repo.create_git_ref(f"refs/heads/{new_branch_name}", base_ref.object.sha)
-        return f"Branch '{new_branch_name}' created successfully from '{base_branch}'."
-    except GithubException as e:
-        return f"GitHub API error creating branch '{new_branch_name}': {e}"
-    except Exception as e:
-        return f"An unexpected error occurred while creating branch '{new_branch_name}': {e}"
-
-
-def create_pull_request(
-    title: str, body: str, head_branch: str, base_branch: str
-) -> Optional[str]:
-    """
-    Creates a pull request.
-
-    Args:
-        title (str): The title of the pull request.
-        body (str): The body/description of the pull request.
-        head_branch (str): The name of the branch where the changes are (feature branch).
-        base_branch (str): The name of the branch to merge the changes into (e.g., 'development').
-
-    Returns:
-        str: The URL of the created pull request if successful, None otherwise.
-    """
-    if repo is None:
-        return "Error: GitHub repository not initialized. Cannot create pull request."
-    try:
-        pull = repo.create_pull(
-            title=title, body=body, head=head_branch, base=base_branch
-        )
-        return f"Pull request '{title}' created successfully: {pull.html_url}"
-    except GithubException as e:
-        return f"GitHub API error creating pull request: {e}"
-    except Exception as e:
-        return f"An unexpected error occurred while creating pull request: {e}"
+    github_toolset = OpenAPIToolset(
+        spec_dict=filtered_spec_dict, # Use the filtered dictionary
+        auth_scheme=auth_scheme,
+        auth_credential=auth_credential,
+    )
+    return github_toolset

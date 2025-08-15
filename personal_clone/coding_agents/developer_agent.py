@@ -4,6 +4,8 @@ from google.adk.tools.load_web_page import load_web_page
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.code_executors import BuiltInCodeExecutor
 from google.adk.planners import BuiltInPlanner
+from google.adk.agents.callback_context import CallbackContext
+
 from google.genai import types
 
 import json
@@ -12,15 +14,7 @@ import os
 from ..sub_agents.search_agent import create_search_agent_tool
 
 
-from ..utils.github_utils import (
-    get_file_content,
-    list_repo_files,
-    create_or_update_file,
-    create_branch,
-    create_pull_request,
-)
-
-from .github_agent import create_github_toolset
+from ..utils.github_utils import create_github_toolset
 
 from .. import instructions
 
@@ -29,14 +23,29 @@ import os
 MODEL_NAME = os.environ["MODEL_NAME"]
 
 
-# helper function to inspect own modules
-def inspect_google_adk():
-    """A helper function that lists all available classes, functions and modules in Google ADK"""
+# Callback to load ADK documentation into the session state.
+def load_adk_docs_to_session(callback_context: CallbackContext):
+    """Loads ADK documentation into the session state for easy reference."""
+    if "official_adk_references" in callback_context.state:
+        return  # Docs are already loaded
+
     script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Load API reference
     json_path = os.path.join(script_dir, "..", "..", "adk_metadata.json")
     with open(os.path.normpath(json_path)) as f:
-        data = json.load(f)
-    return data
+        api_reference = json.load(f)
+
+    # Load conceptual docs
+    txt_path = os.path.join(script_dir, "..", "..", "llms-full.txt")
+    with open(os.path.normpath(txt_path)) as f:
+        conceptual_docs = f.read()
+
+    callback_context.state["official_adk_references"] = {
+        "api_reference": api_reference,
+        "conceptual_docs": conceptual_docs,
+    }
+
 
 
 def create_code_inspector_agent(name="code_inspector_agent"):
@@ -59,8 +68,7 @@ def create_planner_agent():
         tools=[
             create_search_agent_tool(),
             AgentTool(agent=create_code_inspector_agent()),
-            list_repo_files,
-            get_file_content,
+            create_github_toolset(),
             exit_loop,
             load_web_page,
         ],
@@ -81,8 +89,7 @@ def create_code_reviewer_agent():
         instruction=instructions.CODE_REVIEWER_AGENT_INSTRUCTION,
         model=LiteLlm(os.environ["DEVELOPER_AGENT_MODEL"]),
         tools=[
-            get_file_content,
-            list_repo_files,
+            create_github_toolset(),
             create_search_agent_tool(),
             AgentTool(
                 agent=create_code_inspector_agent(
@@ -142,13 +149,7 @@ def create_developer_agent():
         instruction=instructions.DEVELOPER_AGENT_INSTRUCTION,
         model=MODEL_NAME,
         sub_agents=[plan_and_review_agent()],
-        tools=[create_github_toolset()
-            # inspect_google_adk,
-            # create_branch,
-            # create_or_update_file,
-            # create_pull_request,
-            # list_repo_files,
-            # get_file_content,
-        ],
+        tools=[create_github_toolset()],
+        before_agent_callback=[load_adk_docs_to_session],
     )
     return developer_agent
