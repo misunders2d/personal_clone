@@ -18,7 +18,7 @@ ADK_MODULES = [
     "google.adk.runners",
     "google.adk.sessions",
     "google.adk.tools",
-    "google.adk.tools.utils",
+    "google.adk.utils",
 ]
 
 
