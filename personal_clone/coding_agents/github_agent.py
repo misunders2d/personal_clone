@@ -1,14 +1,23 @@
+import asyncio
 import os
 import requests
+import uuid
 import json
 
 from google.adk.agents import Agent
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.genai import types
 from google.adk.tools.openapi_tool.openapi_spec_parser.openapi_toolset import OpenAPIToolset
 from google.adk.tools.openapi_tool.auth.auth_helpers import token_to_scheme_credential
 
 # --- Constants ---
-
-FILTERED_SPEC_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "api.github.com.fixed.json") # Cached spec file
+APP_NAME_GITHUB = "github_api_app"
+USER_ID_GITHUB = "user_github_1"
+SESSION_ID_GITHUB = f"session_github_{uuid.uuid4()}"
+AGENT_NAME_GITHUB = "github_interaction_agent"
+GEMINI_MODEL = "gemini-2.5-flash"
+FILTERED_SPEC_PATH = "api.github.com.fixed.json" # Cached spec file
 
 # --------------------------------------------------
 # --- OpenAPI Spec Loading (with Caching)        ---
@@ -97,26 +106,3 @@ def create_github_toolset():
         auth_credential=auth_credential,
     )
     return github_toolset
-
-# Define the agent with the filtered toolset.
-def create_github_agent():
-    root_agent = Agent(
-        name="github_agent",
-        model=os.environ['MODEL_NAME'],
-        tools=[create_github_toolset],
-        instruction="""You are a helpful GitHub assistant.
-        You have a set of tools to interact with the GitHub API based on user requests.
-        Your available tools allow you to:
-        - Get repository info and content.
-        - Create or update files.
-        - List repositories and pull requests.
-        - Create issues, pull requests, and new branches.
-        Use the tools provided to fulfill the user's request.
-        """,
-        description="Interacts with the GitHub API using a filtered set of tools from an OpenAPI spec.",
-    )
-    return root_agent
-
-
-
-

@@ -142,7 +142,7 @@ def create_developer_agent():
         instruction=instructions.DEVELOPER_AGENT_INSTRUCTION,
         model=MODEL_NAME,
         sub_agents=[plan_and_review_agent()],
-        tools=[create_github_toolset
+        tools=[create_github_toolset()
             # inspect_google_adk,
             # create_branch,
             # create_or_update_file,
