@@ -3,16 +3,23 @@ import json
 import importlib
 import pkgutil
 
+
 ADK_MODULES = [
-    'google.adk']
-#     "google.adk.agents",
-#     "google.adk.artifacts",
-#     "google.adk.errors",
-#     "google.adk.runners",
-#     "google.adk.sessions",
-#     "google.adk.tools",
-#     "google.adk.tools.openapi_tool",
-# ]
+    "google.adk.agents",
+    "google.adk.artifacts",
+    "google.adk.auth",
+    "google.adk.code_executors",
+    "google.adk.events",
+    "google.adk.errors",
+    "google.adk.examples",
+    "google.adk.memory",
+    "google.adk.models",
+    "google.adk.planners",
+    "google.adk.runners",
+    "google.adk.sessions",
+    "google.adk.tools",
+    "google.adk.tools.utils",
+]
 
 
 def find_all_modules(base_packages):
