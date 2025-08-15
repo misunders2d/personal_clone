@@ -1,6 +1,29 @@
 {
   "google": {
     "adk": {
+      "a2a": {
+        "converters": {
+          "utils": {
+            "__members__": {
+              "_from_a2a_context_id": {
+                "type": "function",
+                "signature": "(context_id: 'str') -> 'tuple[str, str, str]'",
+                "doc": "Converts an A2A context id to app name, user id and session id.\nif context_id is None, return None, None, None\nif context_id is not None, but not in the format of\nADK$app_name$user_id$session_id, return None, None, None\n\nArgs:\n  context_id: The A2A context id.\n\nReturns:\n  The app name, user id and session id."
+              },
+              "_get_adk_metadata_key": {
+                "type": "function",
+                "signature": "(key: 'str') -> 'str'",
+                "doc": "Gets the A2A event metadata key for the given key.\n\nArgs:\n  key: The metadata key to prefix.\n\nReturns:\n  The prefixed metadata key.\n\nRaises:\n  ValueError: If key is empty or None."
+              },
+              "_to_a2a_context_id": {
+                "type": "function",
+                "signature": "(app_name: 'str', user_id: 'str', session_id: 'str') -> 'str'",
+                "doc": "Converts app name, user id and session id to an A2A context id.\n\nArgs:\n  app_name: The app name.\n  user_id: The user id.\n  session_id: The session id.\n\nReturns:\n  The A2A context id.\n\nRaises:\n  ValueError: If any of the input parameters are empty or None."
+              }
+            }
+          }
+        }
+      },
       "agents": {
         "active_streaming_tool": {
           "__members__": {
@@ -307,6 +330,690 @@
           }
         }
       },
+      "auth": {
+        "auth_credential": {
+          "__members__": {
+            "AuthCredential": {
+              "type": "class",
+              "signature": "(*, authType: google.adk.auth.auth_credential.AuthCredentialTypes, resourceRef: Optional[str] = None, apiKey: Optional[str] = None, http: Optional[google.adk.auth.auth_credential.HttpAuth] = None, serviceAccount: Optional[google.adk.auth.auth_credential.ServiceAccount] = None, oauth2: Optional[google.adk.auth.auth_credential.OAuth2Auth] = None, **extra_data: Any) -> None",
+              "doc": "Data class representing an authentication credential.\n\nTo exchange for the actual credential, please use\nCredentialExchanger.exchange_credential().\n\nExamples: API Key Auth\nAuthCredential(\n    auth_type=AuthCredentialTypes.API_KEY,\n    api_key=\"1234\",\n)\n\nExample: HTTP Auth\nAuthCredential(\n    auth_type=AuthCredentialTypes.HTTP,\n    http=HttpAuth(\n        scheme=\"basic\",\n        credentials=HttpCredentials(username=\"user\", password=\"password\"),\n    ),\n)\n\nExample: OAuth2 Bearer Token in HTTP Header\nAuthCredential(\n    auth_type=AuthCredentialTypes.HTTP,\n    http=HttpAuth(\n        scheme=\"bearer\",\n        credentials=HttpCredentials(token=\"eyAkaknabna....\"),\n    ),\n)\n\nExample: OAuth2 Auth with Authorization Code Flow\nAuthCredential(\n    auth_type=AuthCredentialTypes.OAUTH2,\n    oauth2=OAuth2Auth(\n        client_id=\"1234\",\n        client_secret=\"secret\",\n    ),\n)\n\nExample: OpenID Connect Auth\nAuthCredential(\n    auth_type=AuthCredentialTypes.OPEN_ID_CONNECT,\n    oauth2=OAuth2Auth(\n        client_id=\"1234\",\n        client_secret=\"secret\",\n        redirect_uri=\"https://example.com\",\n        scopes=[\"scope1\", \"scope2\"],\n    ),\n)\n\nExample: Auth with resource reference\nAuthCredential(\n    auth_type=AuthCredentialTypes.API_KEY,\n    resource_ref=\"projects/1234/locations/us-central1/resources/resource1\",\n)"
+            },
+            "AuthCredentialTypes": {
+              "type": "class",
+              "signature": "(*values)",
+              "doc": "Represents the type of authentication credential."
+            },
+            "BaseModelWithConfig": {
+              "type": "class",
+              "signature": "(**extra_data: Any) -> None",
+              "doc": "!!! abstract \"Usage Documentation\"\n    [Models](../concepts/models.md)\n\nA base class for creating Pydantic models.\n\nAttributes:\n    __class_vars__: The names of the class variables defined on the model.\n    __private_attributes__: Metadata about the private attributes of the model.\n    __signature__: The synthesized `__init__` [`Signature`][inspect.Signature] of the model.\n\n    __pydantic_complete__: Whether model building is completed, or if there are still undefined fields.\n    __pydantic_core_schema__: The core schema of the model.\n    __pydantic_custom_init__: Whether the model has a custom `__init__` function.\n    __pydantic_decorators__: Metadata containing the decorators defined on the model.\n        This replaces `Model.__validators__` and `Model.__root_validators__` from Pydantic V1.\n    __pydantic_generic_metadata__: Metadata for generic models; contains data used for a similar purpose to\n        __args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.\n    __pydantic_parent_namespace__: Parent namespace of the model, used for automatic rebuilding of models.\n    __pydantic_post_init__: The name of the post-init method for the model, if defined.\n    __pydantic_root_model__: Whether the model is a [`RootModel`][pydantic.root_model.RootModel].\n    __pydantic_serializer__: The `pydantic-core` `SchemaSerializer` used to dump instances of the model.\n    __pydantic_validator__: The `pydantic-core` `SchemaValidator` used to validate instances of the model.\n\n    __pydantic_fields__: A dictionary of field names and their corresponding [`FieldInfo`][pydantic.fields.FieldInfo] objects.\n    __pydantic_computed_fields__: A dictionary of computed field names and their corresponding [`ComputedFieldInfo`][pydantic.fields.ComputedFieldInfo] objects.\n\n    __pydantic_extra__: A dictionary containing extra values, if [`extra`][pydantic.config.ConfigDict.extra]\n        is set to `'allow'`.\n    __pydantic_fields_set__: The names of fields explicitly set during instantiation.\n    __pydantic_private__: Values of private attributes set on the model instance."
+            },
+            "HttpAuth": {
+              "type": "class",
+              "signature": "(*, scheme: str, credentials: google.adk.auth.auth_credential.HttpCredentials, **extra_data: Any) -> None",
+              "doc": "The credentials and metadata for HTTP authentication."
+            },
+            "HttpCredentials": {
+              "type": "class",
+              "signature": "(*, username: Optional[str] = None, password: Optional[str] = None, token: Optional[str] = None, **extra_data: Any) -> None",
+              "doc": "Represents the secret token value for HTTP authentication, like user name, password, oauth token, etc."
+            },
+            "OAuth2Auth": {
+              "type": "class",
+              "signature": "(*, clientId: Optional[str] = None, clientSecret: Optional[str] = None, authUri: Optional[str] = None, state: Optional[str] = None, redirectUri: Optional[str] = None, authResponseUri: Optional[str] = None, authCode: Optional[str] = None, accessToken: Optional[str] = None, refreshToken: Optional[str] = None, expiresAt: Optional[int] = None, expiresIn: Optional[int] = None, **extra_data: Any) -> None",
+              "doc": "Represents credential value and its metadata for a OAuth2 credential."
+            },
+            "ServiceAccount": {
+              "type": "class",
+              "signature": "(*, serviceAccountCredential: Optional[google.adk.auth.auth_credential.ServiceAccountCredential] = None, scopes: List[str], useDefaultCredential: Optional[bool] = False, **extra_data: Any) -> None",
+              "doc": "Represents Google Service Account configuration."
+            },
+            "ServiceAccountCredential": {
+              "type": "class",
+              "signature": "(*, type: str = '', projectId: str, privateKeyId: str, privateKey: str, clientEmail: str, clientId: str, authUri: str, tokenUri: str, authProviderX509CertUrl: str, clientX509CertUrl: str, universeDomain: str, **extra_data: Any) -> None",
+              "doc": "Represents Google Service Account configuration.\n\nAttributes:\n  type: The type should be \"service_account\".\n  project_id: The project ID.\n  private_key_id: The ID of the private key.\n  private_key: The private key.\n  client_email: The client email.\n  client_id: The client ID.\n  auth_uri: The authorization URI.\n  token_uri: The token URI.\n  auth_provider_x509_cert_url: URL for auth provider's X.509 cert.\n  client_x509_cert_url: URL for the client's X.509 cert.\n  universe_domain: The universe domain.\n\nExample:\n\n    config = ServiceAccountCredential(\n        type_=\"service_account\",\n        project_id=\"your_project_id\",\n        private_key_id=\"your_private_key_id\",\n        private_key=\"-----BEGIN PRIVATE KEY-----...\",\n        client_email=\"...@....iam.gserviceaccount.com\",\n        client_id=\"your_client_id\",\n        auth_uri=\"https://accounts.google.com/o/oauth2/auth\",\n        token_uri=\"https://oauth2.googleapis.com/token\",\n        auth_provider_x509_cert_url=\"https://www.googleapis.com/oauth2/v1/certs\",\n        client_x509_cert_url=\"https://www.googleapis.com/robot/v1/metadata/x509/...\",\n        universe_domain=\"googleapis.com\"\n    )\n\n\n    config = ServiceAccountConfig.model_construct(**{\n        ...service account config dict\n    })"
+            }
+          }
+        },
+        "auth_handler": {
+          "__members__": {
+            "AuthHandler": {
+              "type": "class",
+              "signature": "(auth_config: 'AuthConfig')",
+              "doc": "A handler that handles the auth flow in Agent Development Kit to help\norchestrate the credential request and response flow (e.g. OAuth flow)\nThis class should only be used by Agent Development Kit."
+            }
+          }
+        },
+        "auth_preprocessor": {
+          "__members__": {
+            "_AuthLlmRequestProcessor": {
+              "type": "class",
+              "signature": "()",
+              "doc": "Handles auth information to build the LLM request."
+            }
+          }
+        },
+        "auth_schemes": {
+          "__members__": {
+            "OAuthGrantType": {
+              "type": "class",
+              "signature": "(*values)",
+              "doc": "Represents the OAuth2 flow (or grant type)."
+            },
+            "OpenIdConnectWithConfig": {
+              "type": "class",
+              "signature": "(*, type: fastapi.openapi.models.SecuritySchemeType = <SecuritySchemeType.openIdConnect: 'openIdConnect'>, description: Optional[str] = None, authorization_endpoint: str, token_endpoint: str, userinfo_endpoint: Optional[str] = None, revocation_endpoint: Optional[str] = None, token_endpoint_auth_methods_supported: Optional[List[str]] = None, grant_types_supported: Optional[List[str]] = None, scopes: Optional[List[str]] = None, **extra_data: Any) -> None",
+              "doc": "!!! abstract \"Usage Documentation\"\n    [Models](../concepts/models.md)\n\nA base class for creating Pydantic models.\n\nAttributes:\n    __class_vars__: The names of the class variables defined on the model.\n    __private_attributes__: Metadata about the private attributes of the model.\n    __signature__: The synthesized `__init__` [`Signature`][inspect.Signature] of the model.\n\n    __pydantic_complete__: Whether model building is completed, or if there are still undefined fields.\n    __pydantic_core_schema__: The core schema of the model.\n    __pydantic_custom_init__: Whether the model has a custom `__init__` function.\n    __pydantic_decorators__: Metadata containing the decorators defined on the model.\n        This replaces `Model.__validators__` and `Model.__root_validators__` from Pydantic V1.\n    __pydantic_generic_metadata__: Metadata for generic models; contains data used for a similar purpose to\n        __args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.\n    __pydantic_parent_namespace__: Parent namespace of the model, used for automatic rebuilding of models.\n    __pydantic_post_init__: The name of the post-init method for the model, if defined.\n    __pydantic_root_model__: Whether the model is a [`RootModel`][pydantic.root_model.RootModel].\n    __pydantic_serializer__: The `pydantic-core` `SchemaSerializer` used to dump instances of the model.\n    __pydantic_validator__: The `pydantic-core` `SchemaValidator` used to validate instances of the model.\n\n    __pydantic_fields__: A dictionary of field names and their corresponding [`FieldInfo`][pydantic.fields.FieldInfo] objects.\n    __pydantic_computed_fields__: A dictionary of computed field names and their corresponding [`ComputedFieldInfo`][pydantic.fields.ComputedFieldInfo] objects.\n\n    __pydantic_extra__: A dictionary containing extra values, if [`extra`][pydantic.config.ConfigDict.extra]\n        is set to `'allow'`.\n    __pydantic_fields_set__: The names of fields explicitly set during instantiation.\n    __pydantic_private__: Values of private attributes set on the model instance."
+            }
+          }
+        },
+        "auth_tool": {
+          "__members__": {
+            "AuthConfig": {
+              "type": "class",
+              "signature": "(*, authScheme: Union[fastapi.openapi.models.APIKey, fastapi.openapi.models.HTTPBase, fastapi.openapi.models.OAuth2, fastapi.openapi.models.OpenIdConnect, fastapi.openapi.models.HTTPBearer, google.adk.auth.auth_schemes.OpenIdConnectWithConfig], rawAuthCredential: Optional[google.adk.auth.auth_credential.AuthCredential] = None, exchangedAuthCredential: Optional[google.adk.auth.auth_credential.AuthCredential] = None, credentialKey: Optional[str] = None, **data) -> None",
+              "doc": "The auth config sent by tool asking client to collect auth credentials and\n\nadk and client will help to fill in the response"
+            },
+            "AuthToolArguments": {
+              "type": "class",
+              "signature": "(*, functionCallId: str, authConfig: google.adk.auth.auth_tool.AuthConfig, **extra_data: Any) -> None",
+              "doc": "the arguments for the special long running function tool that is used to\n\nrequest end user credentials."
+            }
+          }
+        },
+        "credential_manager": {
+          "__members__": {
+            "CredentialManager": {
+              "type": "class",
+              "signature": "(auth_config: 'AuthConfig')",
+              "doc": "Manages authentication credentials through a structured workflow.\n\nThe CredentialManager orchestrates the complete lifecycle of authentication\ncredentials, from initial loading to final preparation for use. It provides\na centralized interface for handling various credential types and authentication\nschemes while maintaining proper credential hygiene (refresh, exchange, caching).\n\nThis class is only for use by Agent Development Kit.\n\nArgs:\n    auth_config: Configuration containing authentication scheme and credentials\n\nExample:\n    ```python\n    auth_config = AuthConfig(\n        auth_scheme=oauth2_scheme,\n        raw_auth_credential=service_account_credential\n    )\n    manager = CredentialManager(auth_config)\n\n    # Register custom exchanger if needed\n    manager.register_credential_exchanger(\n        AuthCredentialTypes.CUSTOM_TYPE,\n        CustomCredentialExchanger()\n    )\n\n    # Register custom refresher if needed\n    manager.register_credential_refresher(\n        AuthCredentialTypes.CUSTOM_TYPE,\n        CustomCredentialRefresher()\n    )\n\n    # Load and prepare credential\n    credential = await manager.load_auth_credential(callback_context)\n    ```"
+            }
+          }
+        },
+        "credential_service": {
+          "base_credential_service": {
+            "__members__": {
+              "BaseCredentialService": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Abstract class for Service that loads / saves tool credentials from / to\nthe backend credential store."
+              }
+            }
+          },
+          "in_memory_credential_service": {
+            "__members__": {
+              "InMemoryCredentialService": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Class for in memory implementation of credential service(Experimental)"
+              }
+            }
+          },
+          "session_state_credential_service": {
+            "__members__": {
+              "SessionStateCredentialService": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Class for implementation of credential service using session state as the\nstore.\nNote: store credential in session may not be secure, use at your own risk."
+              }
+            }
+          }
+        },
+        "exchanger": {
+          "base_credential_exchanger": {
+            "__members__": {
+              "BaseCredentialExchanger": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Base interface for credential exchangers.\n\nCredential exchangers are responsible for exchanging credentials from\none format or scheme to another."
+              },
+              "CredentialExchangError": {
+                "type": "class",
+                "signature": null,
+                "doc": "Base exception for credential exchange errors."
+              }
+            }
+          },
+          "credential_exchanger_registry": {
+            "__members__": {
+              "CredentialExchangerRegistry": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Registry for credential exchanger instances."
+              }
+            }
+          },
+          "oauth2_credential_exchanger": {
+            "__members__": {
+              "OAuth2CredentialExchanger": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Exchanges OAuth2 credentials from authorization responses."
+              }
+            }
+          }
+        },
+        "oauth2_credential_util": {
+          "__members__": {
+            "create_oauth2_session": {
+              "type": "function",
+              "signature": "(auth_scheme: 'AuthScheme', auth_credential: 'AuthCredential') -> 'Tuple[Optional[OAuth2Session], Optional[str]]'",
+              "doc": "Create an OAuth2 session for token operations.\n\nArgs:\n    auth_scheme: The authentication scheme configuration.\n    auth_credential: The authentication credential.\n\nReturns:\n    Tuple of (OAuth2Session, token_endpoint) or (None, None) if cannot create session."
+            },
+            "update_credential_with_tokens": {
+              "type": "function",
+              "signature": "(auth_credential: 'AuthCredential', tokens: 'OAuth2Token') -> 'None'",
+              "doc": "Update the credential with new tokens.\n\nArgs:\n    auth_credential: The authentication credential to update.\n    tokens: The OAuth2Token object containing new token information."
+            }
+          }
+        },
+        "refresher": {
+          "base_credential_refresher": {
+            "__members__": {
+              "BaseCredentialRefresher": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Base interface for credential refreshers.\n\nCredential refreshers are responsible for checking if a credential is expired\nor needs to be refreshed, and for refreshing it if necessary."
+              },
+              "CredentialRefresherError": {
+                "type": "class",
+                "signature": null,
+                "doc": "Base exception for credential refresh errors."
+              }
+            }
+          },
+          "credential_refresher_registry": {
+            "__members__": {
+              "CredentialRefresherRegistry": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Registry for credential refresher instances."
+              }
+            }
+          },
+          "oauth2_credential_refresher": {
+            "__members__": {
+              "OAuth2CredentialRefresher": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Refreshes OAuth2 credentials including Google OAuth2 JSON credentials."
+              }
+            }
+          }
+        }
+      },
+      "cli": {
+        "adk_web_server": {
+          "__members__": {
+            "AddSessionToEvalSetRequest": {
+              "type": "class",
+              "signature": "(*, evalId: str, sessionId: str, userId: str) -> None",
+              "doc": "!!! abstract \"Usage Documentation\"\n    [Models](../concepts/models.md)\n\nA base class for creating Pydantic models.\n\nAttributes:\n    __class_vars__: The names of the class variables defined on the model.\n    __private_attributes__: Metadata about the private attributes of the model.\n    __signature__: The synthesized `__init__` [`Signature`][inspect.Signature] of the model.\n\n    __pydantic_complete__: Whether model building is completed, or if there are still undefined fields.\n    __pydantic_core_schema__: The core schema of the model.\n    __pydantic_custom_init__: Whether the model has a custom `__init__` function.\n    __pydantic_decorators__: Metadata containing the decorators defined on the model.\n        This replaces `Model.__validators__` and `Model.__root_validators__` from Pydantic V1.\n    __pydantic_generic_metadata__: Metadata for generic models; contains data used for a similar purpose to\n        __args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.\n    __pydantic_parent_namespace__: Parent namespace of the model, used for automatic rebuilding of models.\n    __pydantic_post_init__: The name of the post-init method for the model, if defined.\n    __pydantic_root_model__: Whether the model is a [`RootModel`][pydantic.root_model.RootModel].\n    __pydantic_serializer__: The `pydantic-core` `SchemaSerializer` used to dump instances of the model.\n    __pydantic_validator__: The `pydantic-core` `SchemaValidator` used to validate instances of the model.\n\n    __pydantic_fields__: A dictionary of field names and their corresponding [`FieldInfo`][pydantic.fields.FieldInfo] objects.\n    __pydantic_computed_fields__: A dictionary of computed field names and their corresponding [`ComputedFieldInfo`][pydantic.fields.ComputedFieldInfo] objects.\n\n    __pydantic_extra__: A dictionary containing extra values, if [`extra`][pydantic.config.ConfigDict.extra]\n        is set to `'allow'`.\n    __pydantic_fields_set__: The names of fields explicitly set during instantiation.\n    __pydantic_private__: Values of private attributes set on the model instance."
+            },
+            "AdkWebServer": {
+              "type": "class",
+              "signature": "(*, agent_loader: 'BaseAgentLoader', session_service: 'BaseSessionService', memory_service: 'BaseMemoryService', artifact_service: 'BaseArtifactService', credential_service: 'BaseCredentialService', eval_sets_manager: 'EvalSetsManager', eval_set_results_manager: 'EvalSetResultsManager', agents_dir: 'str')",
+              "doc": "Helper class for setting up and running the ADK web server on FastAPI.\n\nYou construct this class with all the Services required to run ADK agents and\ncan then call the get_fast_api_app method to get a FastAPI app instance that\ncan will use your provided service instances, static assets, and agent loader.\nIf you pass in a web_assets_dir, the static assets will be served under\n/dev-ui in addition to the API endpoints created by default.\n\nYou can add add additional API endpoints by modifying the FastAPI app\ninstance returned by get_fast_api_app as this class exposes the agent runners\nand most other bits of state retained during the lifetime of the server.\n\nAttributes:\n    agent_loader: An instance of BaseAgentLoader for loading agents.\n    session_service: An instance of BaseSessionService for managing sessions.\n    memory_service: An instance of BaseMemoryService for managing memory.\n    artifact_service: An instance of BaseArtifactService for managing\n      artifacts.\n    credential_service: An instance of BaseCredentialService for managing\n      credentials.\n    eval_sets_manager: An instance of EvalSetsManager for managing evaluation\n      sets.\n    eval_set_results_manager: An instance of EvalSetResultsManager for\n      managing evaluation set results.\n    agents_dir: Root directory containing subdirs for agents with those\n      containing resources (e.g. .env files, eval sets, etc.) for the agents.\n    runners_to_clean: Set of runner names marked for cleanup.\n    current_app_name_ref: A shared reference to the latest ran app name.\n    runner_dict: A dict of instantiated runners for each app."
+            },
+            "AgentRunRequest": {
+              "type": "class",
+              "signature": "(*, appName: str, userId: str, sessionId: str, newMessage: google.genai.types.Content, streaming: bool = False, stateDelta: Optional[dict[str, Any]] = None) -> None",
+              "doc": "!!! abstract \"Usage Documentation\"\n    [Models](../concepts/models.md)\n\nA base class for creating Pydantic models.\n\nAttributes:\n    __class_vars__: The names of the class variables defined on the model.\n    __private_attributes__: Metadata about the private attributes of the model.\n    __signature__: The synthesized `__init__` [`Signature`][inspect.Signature] of the model.\n\n    __pydantic_complete__: Whether model building is completed, or if there are still undefined fields.\n    __pydantic_core_schema__: The core schema of the model.\n    __pydantic_custom_init__: Whether the model has a custom `__init__` function.\n    __pydantic_decorators__: Metadata containing the decorators defined on the model.\n        This replaces `Model.__validators__` and `Model.__root_validators__` from Pydantic V1.\n    __pydantic_generic_metadata__: Metadata for generic models; contains data used for a similar purpose to\n        __args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.\n    __pydantic_parent_namespace__: Parent namespace of the model, used for automatic rebuilding of models.\n    __pydantic_post_init__: The name of the post-init method for the model, if defined.\n    __pydantic_root_model__: Whether the model is a [`RootModel`][pydantic.root_model.RootModel].\n    __pydantic_serializer__: The `pydantic-core` `SchemaSerializer` used to dump instances of the model.\n    __pydantic_validator__: The `pydantic-core` `SchemaValidator` used to validate instances of the model.\n\n    __pydantic_fields__: A dictionary of field names and their corresponding [`FieldInfo`][pydantic.fields.FieldInfo] objects.\n    __pydantic_computed_fields__: A dictionary of computed field names and their corresponding [`ComputedFieldInfo`][pydantic.fields.ComputedFieldInfo] objects.\n\n    __pydantic_extra__: A dictionary containing extra values, if [`extra`][pydantic.config.ConfigDict.extra]\n        is set to `'allow'`.\n    __pydantic_fields_set__: The names of fields explicitly set during instantiation.\n    __pydantic_private__: Values of private attributes set on the model instance."
+            },
+            "ApiServerSpanExporter": {
+              "type": "class",
+              "signature": "(trace_dict)",
+              "doc": "Interface for exporting spans.\n\nInterface to be implemented by services that want to export spans recorded\nin their own format.\n\nTo export data this MUST be registered to the :class`opentelemetry.sdk.trace.Tracer` using a\n`SimpleSpanProcessor` or a `BatchSpanProcessor`."
+            },
+            "GetEventGraphResult": {
+              "type": "class",
+              "signature": "(*, dotSrc: str) -> None",
+              "doc": "!!! abstract \"Usage Documentation\"\n    [Models](../concepts/models.md)\n\nA base class for creating Pydantic models.\n\nAttributes:\n    __class_vars__: The names of the class variables defined on the model.\n    __private_attributes__: Metadata about the private attributes of the model.\n    __signature__: The synthesized `__init__` [`Signature`][inspect.Signature] of the model.\n\n    __pydantic_complete__: Whether model building is completed, or if there are still undefined fields.\n    __pydantic_core_schema__: The core schema of the model.\n    __pydantic_custom_init__: Whether the model has a custom `__init__` function.\n    __pydantic_decorators__: Metadata containing the decorators defined on the model.\n        This replaces `Model.__validators__` and `Model.__root_validators__` from Pydantic V1.\n    __pydantic_generic_metadata__: Metadata for generic models; contains data used for a similar purpose to\n        __args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.\n    __pydantic_parent_namespace__: Parent namespace of the model, used for automatic rebuilding of models.\n    __pydantic_post_init__: The name of the post-init method for the model, if defined.\n    __pydantic_root_model__: Whether the model is a [`RootModel`][pydantic.root_model.RootModel].\n    __pydantic_serializer__: The `pydantic-core` `SchemaSerializer` used to dump instances of the model.\n    __pydantic_validator__: The `pydantic-core` `SchemaValidator` used to validate instances of the model.\n\n    __pydantic_fields__: A dictionary of field names and their corresponding [`FieldInfo`][pydantic.fields.FieldInfo] objects.\n    __pydantic_computed_fields__: A dictionary of computed field names and their corresponding [`ComputedFieldInfo`][pydantic.fields.ComputedFieldInfo] objects.\n\n    __pydantic_extra__: A dictionary containing extra values, if [`extra`][pydantic.config.ConfigDict.extra]\n        is set to `'allow'`.\n    __pydantic_fields_set__: The names of fields explicitly set during instantiation.\n    __pydantic_private__: Values of private attributes set on the model instance."
+            },
+            "InMemoryExporter": {
+              "type": "class",
+              "signature": "(trace_dict)",
+              "doc": "Interface for exporting spans.\n\nInterface to be implemented by services that want to export spans recorded\nin their own format.\n\nTo export data this MUST be registered to the :class`opentelemetry.sdk.trace.Tracer` using a\n`SimpleSpanProcessor` or a `BatchSpanProcessor`."
+            },
+            "RunEvalRequest": {
+              "type": "class",
+              "signature": "(*, evalIds: list[str], evalMetrics: list[google.adk.evaluation.eval_metrics.EvalMetric]) -> None",
+              "doc": "!!! abstract \"Usage Documentation\"\n    [Models](../concepts/models.md)\n\nA base class for creating Pydantic models.\n\nAttributes:\n    __class_vars__: The names of the class variables defined on the model.\n    __private_attributes__: Metadata about the private attributes of the model.\n    __signature__: The synthesized `__init__` [`Signature`][inspect.Signature] of the model.\n\n    __pydantic_complete__: Whether model building is completed, or if there are still undefined fields.\n    __pydantic_core_schema__: The core schema of the model.\n    __pydantic_custom_init__: Whether the model has a custom `__init__` function.\n    __pydantic_decorators__: Metadata containing the decorators defined on the model.\n        This replaces `Model.__validators__` and `Model.__root_validators__` from Pydantic V1.\n    __pydantic_generic_metadata__: Metadata for generic models; contains data used for a similar purpose to\n        __args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.\n    __pydantic_parent_namespace__: Parent namespace of the model, used for automatic rebuilding of models.\n    __pydantic_post_init__: The name of the post-init method for the model, if defined.\n    __pydantic_root_model__: Whether the model is a [`RootModel`][pydantic.root_model.RootModel].\n    __pydantic_serializer__: The `pydantic-core` `SchemaSerializer` used to dump instances of the model.\n    __pydantic_validator__: The `pydantic-core` `SchemaValidator` used to validate instances of the model.\n\n    __pydantic_fields__: A dictionary of field names and their corresponding [`FieldInfo`][pydantic.fields.FieldInfo] objects.\n    __pydantic_computed_fields__: A dictionary of computed field names and their corresponding [`ComputedFieldInfo`][pydantic.fields.ComputedFieldInfo] objects.\n\n    __pydantic_extra__: A dictionary containing extra values, if [`extra`][pydantic.config.ConfigDict.extra]\n        is set to `'allow'`.\n    __pydantic_fields_set__: The names of fields explicitly set during instantiation.\n    __pydantic_private__: Values of private attributes set on the model instance."
+            },
+            "RunEvalResult": {
+              "type": "class",
+              "signature": "(*, evalSetFile: str, evalSetId: str, evalId: str, finalEvalStatus: google.adk.evaluation.evaluator.EvalStatus, evalMetricResults: list[tuple[google.adk.evaluation.eval_metrics.EvalMetric, google.adk.evaluation.eval_metrics.EvalMetricResult]] = [], overallEvalMetricResults: list[google.adk.evaluation.eval_metrics.EvalMetricResult], evalMetricResultPerInvocation: list[google.adk.evaluation.eval_metrics.EvalMetricResultPerInvocation], userId: str, sessionId: str) -> None",
+              "doc": "!!! abstract \"Usage Documentation\"\n    [Models](../concepts/models.md)\n\nA base class for creating Pydantic models.\n\nAttributes:\n    __class_vars__: The names of the class variables defined on the model.\n    __private_attributes__: Metadata about the private attributes of the model.\n    __signature__: The synthesized `__init__` [`Signature`][inspect.Signature] of the model.\n\n    __pydantic_complete__: Whether model building is completed, or if there are still undefined fields.\n    __pydantic_core_schema__: The core schema of the model.\n    __pydantic_custom_init__: Whether the model has a custom `__init__` function.\n    __pydantic_decorators__: Metadata containing the decorators defined on the model.\n        This replaces `Model.__validators__` and `Model.__root_validators__` from Pydantic V1.\n    __pydantic_generic_metadata__: Metadata for generic models; contains data used for a similar purpose to\n        __args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.\n    __pydantic_parent_namespace__: Parent namespace of the model, used for automatic rebuilding of models.\n    __pydantic_post_init__: The name of the post-init method for the model, if defined.\n    __pydantic_root_model__: Whether the model is a [`RootModel`][pydantic.root_model.RootModel].\n    __pydantic_serializer__: The `pydantic-core` `SchemaSerializer` used to dump instances of the model.\n    __pydantic_validator__: The `pydantic-core` `SchemaValidator` used to validate instances of the model.\n\n    __pydantic_fields__: A dictionary of field names and their corresponding [`FieldInfo`][pydantic.fields.FieldInfo] objects.\n    __pydantic_computed_fields__: A dictionary of computed field names and their corresponding [`ComputedFieldInfo`][pydantic.fields.ComputedFieldInfo] objects.\n\n    __pydantic_extra__: A dictionary containing extra values, if [`extra`][pydantic.config.ConfigDict.extra]\n        is set to `'allow'`.\n    __pydantic_fields_set__: The names of fields explicitly set during instantiation.\n    __pydantic_private__: Values of private attributes set on the model instance."
+            }
+          }
+        },
+        "agent_graph": {
+          "__members__": {
+            "build_graph": {
+              "type": "function",
+              "signature": "(graph: 'graphviz.Digraph', agent: 'BaseAgent', highlight_pairs, parent_agent=None)",
+              "doc": "Build a graph of the agent and its sub-agents.\nArgs:\n  graph: The graph to build on.\n  agent: The agent to build the graph for.\n  highlight_pairs: A list of pairs of nodes to highlight.\n  parent_agent: The parent agent of the current agent. This is specifically used when building Workflow Agents to directly connect a node to nodes inside a Workflow Agent.\n\nReturns:\n  None"
+            },
+            "get_agent_graph": {
+              "type": "function",
+              "signature": "(root_agent, highlights_pairs, image=False)",
+              "doc": ""
+            }
+          }
+        },
+        "cli": {
+          "__members__": {
+            "InputFile": {
+              "type": "class",
+              "signature": "(*, state: dict[str, object], queries: list[str]) -> None",
+              "doc": "!!! abstract \"Usage Documentation\"\n    [Models](../concepts/models.md)\n\nA base class for creating Pydantic models.\n\nAttributes:\n    __class_vars__: The names of the class variables defined on the model.\n    __private_attributes__: Metadata about the private attributes of the model.\n    __signature__: The synthesized `__init__` [`Signature`][inspect.Signature] of the model.\n\n    __pydantic_complete__: Whether model building is completed, or if there are still undefined fields.\n    __pydantic_core_schema__: The core schema of the model.\n    __pydantic_custom_init__: Whether the model has a custom `__init__` function.\n    __pydantic_decorators__: Metadata containing the decorators defined on the model.\n        This replaces `Model.__validators__` and `Model.__root_validators__` from Pydantic V1.\n    __pydantic_generic_metadata__: Metadata for generic models; contains data used for a similar purpose to\n        __args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.\n    __pydantic_parent_namespace__: Parent namespace of the model, used for automatic rebuilding of models.\n    __pydantic_post_init__: The name of the post-init method for the model, if defined.\n    __pydantic_root_model__: Whether the model is a [`RootModel`][pydantic.root_model.RootModel].\n    __pydantic_serializer__: The `pydantic-core` `SchemaSerializer` used to dump instances of the model.\n    __pydantic_validator__: The `pydantic-core` `SchemaValidator` used to validate instances of the model.\n\n    __pydantic_fields__: A dictionary of field names and their corresponding [`FieldInfo`][pydantic.fields.FieldInfo] objects.\n    __pydantic_computed_fields__: A dictionary of computed field names and their corresponding [`ComputedFieldInfo`][pydantic.fields.ComputedFieldInfo] objects.\n\n    __pydantic_extra__: A dictionary containing extra values, if [`extra`][pydantic.config.ConfigDict.extra]\n        is set to `'allow'`.\n    __pydantic_fields_set__: The names of fields explicitly set during instantiation.\n    __pydantic_private__: Values of private attributes set on the model instance."
+            },
+            "run_cli": {
+              "type": "function",
+              "signature": "(*, agent_parent_dir: 'str', agent_folder_name: 'str', input_file: 'Optional[str]' = None, saved_session_file: 'Optional[str]' = None, save_session: 'bool', session_id: 'Optional[str]' = None) -> 'None'",
+              "doc": "Runs an interactive CLI for a certain agent.\n\nArgs:\n  agent_parent_dir: str, the absolute path of the parent folder of the agent\n    folder.\n  agent_folder_name: str, the name of the agent folder.\n  input_file: Optional[str], the absolute path to the json file that contains\n    the initial session state and user queries, exclusive with\n    saved_session_file.\n  saved_session_file: Optional[str], the absolute path to the json file that\n    contains a previously saved session, exclusive with input_file.\n  save_session: bool, whether to save the session on exit.\n  session_id: Optional[str], the session ID to save the session to on exit."
+            },
+            "run_input_file": {
+              "type": "function",
+              "signature": "(app_name: 'str', user_id: 'str', root_agent: 'LlmAgent', artifact_service: 'BaseArtifactService', session_service: 'BaseSessionService', credential_service: 'BaseCredentialService', input_path: 'str') -> 'Session'",
+              "doc": ""
+            },
+            "run_interactively": {
+              "type": "function",
+              "signature": "(root_agent: 'LlmAgent', artifact_service: 'BaseArtifactService', session: 'Session', session_service: 'BaseSessionService', credential_service: 'BaseCredentialService') -> 'None'",
+              "doc": ""
+            }
+          }
+        },
+        "cli_create": {
+          "__members__": {
+            "Type": {
+              "type": "class",
+              "signature": "(*values)",
+              "doc": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
+            },
+            "_generate_files": {
+              "type": "function",
+              "signature": "(agent_folder: 'str', *, google_api_key: 'Optional[str]' = None, google_cloud_project: 'Optional[str]' = None, google_cloud_region: 'Optional[str]' = None, model: 'Optional[str]' = None, type: 'Optional[Type]' = None)",
+              "doc": "Generates a folder name for the agent."
+            },
+            "_get_gcp_project_from_gcloud": {
+              "type": "function",
+              "signature": "() -> 'str'",
+              "doc": "Uses gcloud to get default project."
+            },
+            "_get_gcp_region_from_gcloud": {
+              "type": "function",
+              "signature": "() -> 'str'",
+              "doc": "Uses gcloud to get default region."
+            },
+            "_prompt_for_google_api_key": {
+              "type": "function",
+              "signature": "(google_api_key: 'Optional[str]') -> 'str'",
+              "doc": "Prompts user for Google API key."
+            },
+            "_prompt_for_google_cloud": {
+              "type": "function",
+              "signature": "(google_cloud_project: 'Optional[str]') -> 'str'",
+              "doc": "Prompts user for Google Cloud project ID."
+            },
+            "_prompt_for_google_cloud_region": {
+              "type": "function",
+              "signature": "(google_cloud_region: 'Optional[str]') -> 'str'",
+              "doc": "Prompts user for Google Cloud region."
+            },
+            "_prompt_for_model": {
+              "type": "function",
+              "signature": "() -> 'str'",
+              "doc": ""
+            },
+            "_prompt_str": {
+              "type": "function",
+              "signature": "(prompt_prefix: 'str', *, prior_msg: 'Optional[str]' = None, default_value: 'Optional[str]' = None) -> 'str'",
+              "doc": ""
+            },
+            "_prompt_to_choose_backend": {
+              "type": "function",
+              "signature": "(google_api_key: 'Optional[str]', google_cloud_project: 'Optional[str]', google_cloud_region: 'Optional[str]') -> 'Tuple[Optional[str], Optional[str], Optional[str]]'",
+              "doc": "Prompts user to choose backend.\n\nReturns:\n  A tuple of (google_api_key, google_cloud_project, google_cloud_region)."
+            },
+            "_prompt_to_choose_type": {
+              "type": "function",
+              "signature": "() -> 'Type'",
+              "doc": "Prompts user to choose type of agent to create."
+            },
+            "run_cmd": {
+              "type": "function",
+              "signature": "(agent_name: 'str', *, model: 'Optional[str]', google_api_key: 'Optional[str]', google_cloud_project: 'Optional[str]', google_cloud_region: 'Optional[str]', type: 'Optional[Type]')",
+              "doc": "Runs `adk create` command to create agent template.\n\nArgs:\n  agent_name: str, The name of the agent.\n  google_api_key: Optional[str], The Google API key for using Google AI as\n    backend.\n  google_cloud_project: Optional[str], The Google Cloud project for using\n    VertexAI as backend.\n  google_cloud_region: Optional[str], The Google Cloud region for using\n    VertexAI as backend.\n  type: Optional[Type], Whether to define agent with config file or code."
+            }
+          }
+        },
+        "cli_deploy": {
+          "__members__": {
+            "_get_service_option_by_adk_version": {
+              "type": "function",
+              "signature": "(adk_version: 'str', session_uri: 'Optional[str]', artifact_uri: 'Optional[str]', memory_uri: 'Optional[str]') -> 'str'",
+              "doc": "Returns service option string based on adk_version."
+            },
+            "_resolve_project": {
+              "type": "function",
+              "signature": "(project_in_option: 'Optional[str]') -> 'str'",
+              "doc": ""
+            },
+            "to_agent_engine": {
+              "type": "function",
+              "signature": "(*, agent_folder: 'str', temp_folder: 'str', adk_app: 'str', staging_bucket: 'str', trace_to_cloud: 'bool', agent_engine_id: 'Optional[str]' = None, absolutize_imports: 'bool' = True, project: 'Optional[str]' = None, region: 'Optional[str]' = None, display_name: 'Optional[str]' = None, description: 'Optional[str]' = None, requirements_file: 'Optional[str]' = None, env_file: 'Optional[str]' = None)",
+              "doc": "Deploys an agent to Vertex AI Agent Engine.\n\n`agent_folder` should contain the following files:\n\n- __init__.py\n- agent.py\n- <adk_app>.py (optional, for customization; will be autogenerated otherwise)\n- requirements.txt (optional, for additional dependencies)\n- .env (optional, for environment variables)\n- ... (other required source files)\n\nThe contents of `adk_app` should look something like:\n\n```\nfrom agent import root_agent\nfrom vertexai.preview.reasoning_engines import AdkApp\n\nadk_app = AdkApp(\n  agent=root_agent,\n  enable_tracing=True,\n)\n```\n\nArgs:\n  agent_folder (str): The folder (absolute path) containing the agent source\n    code.\n  temp_folder (str): The temp folder for the generated Agent Engine source\n    files. It will be replaced with the generated files if it already exists.\n  project (str): Google Cloud project id.\n  region (str): Google Cloud region.\n  staging_bucket (str): The GCS bucket for staging the deployment artifacts.\n  trace_to_cloud (bool): Whether to enable Cloud Trace.\n  agent_engine_id (str): The ID of the Agent Engine instance to update. If not\n    specified, a new Agent Engine instance will be created.\n  absolutize_imports (bool): Whether to absolutize imports. If True, all relative\n    imports will be converted to absolute import statements. Default is True.\n  requirements_file (str): The filepath to the `requirements.txt` file to use.\n    If not specified, the `requirements.txt` file in the `agent_folder` will\n    be used.\n  env_file (str): The filepath to the `.env` file for environment variables.\n    If not specified, the `.env` file in the `agent_folder` will be used. The\n    values of `GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION` will be\n    overridden by `project` and `region` if they are specified."
+            },
+            "to_cloud_run": {
+              "type": "function",
+              "signature": "(*, agent_folder: 'str', project: 'Optional[str]', region: 'Optional[str]', service_name: 'str', app_name: 'str', temp_folder: 'str', port: 'int', trace_to_cloud: 'bool', with_ui: 'bool', log_level: 'str', verbosity: 'str', adk_version: 'str', allow_origins: 'Optional[list[str]]' = None, session_service_uri: 'Optional[str]' = None, artifact_service_uri: 'Optional[str]' = None, memory_service_uri: 'Optional[str]' = None, a2a: 'bool' = False)",
+              "doc": "Deploys an agent to Google Cloud Run.\n\n`agent_folder` should contain the following files:\n\n- __init__.py\n- agent.py\n- requirements.txt (optional, for additional dependencies)\n- ... (other required source files)\n\nThe folder structure of temp_folder will be\n\n* dist/[google_adk wheel file]\n* agents/[app_name]/\n  * agent source code from `agent_folder`\n\nArgs:\n  agent_folder: The folder (absolute path) containing the agent source code.\n  project: Google Cloud project id.\n  region: Google Cloud region.\n  service_name: The service name in Cloud Run.\n  app_name: The name of the app, by default, it's basename of `agent_folder`.\n  temp_folder: The temp folder for the generated Cloud Run source files.\n  port: The port of the ADK api server.\n  trace_to_cloud: Whether to enable Cloud Trace.\n  with_ui: Whether to deploy with UI.\n  verbosity: The verbosity level of the CLI.\n  adk_version: The ADK version to use in Cloud Run.\n  allow_origins: The list of allowed origins for the ADK api server.\n  session_service_uri: The URI of the session service.\n  artifact_service_uri: The URI of the artifact service.\n  memory_service_uri: The URI of the memory service."
+            },
+            "to_gke": {
+              "type": "function",
+              "signature": "(*, agent_folder: 'str', project: 'Optional[str]', region: 'Optional[str]', cluster_name: 'str', service_name: 'str', app_name: 'str', temp_folder: 'str', port: 'int', trace_to_cloud: 'bool', with_ui: 'bool', log_level: 'str', adk_version: 'str', allow_origins: 'Optional[list[str]]' = None, session_service_uri: 'Optional[str]' = None, artifact_service_uri: 'Optional[str]' = None, memory_service_uri: 'Optional[str]' = None, a2a: 'bool' = False)",
+              "doc": "Deploys an agent to Google Kubernetes Engine(GKE).\n\nArgs:\n  agent_folder: The folder (absolute path) containing the agent source code.\n  project: Google Cloud project id.\n  region: Google Cloud region.\n  cluster_name: The name of the GKE cluster.\n  service_name: The service name in GKE.\n  app_name: The name of the app, by default, it's basename of `agent_folder`.\n  temp_folder: The local directory to use as a temporary workspace for preparing deployment artifacts. The tool populates this folder with a copy of the agent's source code and auto-generates necessary files like a Dockerfile and deployment.yaml.\n  port: The port of the ADK api server.\n  trace_to_cloud: Whether to enable Cloud Trace.\n  with_ui: Whether to deploy with UI.\n  log_level: The logging level.\n  adk_version: The ADK version to use in GKE.\n  allow_origins: The list of allowed origins for the ADK api server.\n  session_service_uri: The URI of the session service.\n  artifact_service_uri: The URI of the artifact service.\n  memory_service_uri: The URI of the memory service."
+            }
+          }
+        },
+        "cli_eval": {
+          "__members__": {
+            "_collect_eval_results": {
+              "type": "function",
+              "signature": "(inference_results: 'list[InferenceResult]', eval_service: 'BaseEvalService', eval_metrics: 'list[EvalMetric]') -> 'list[EvalCaseResult]'",
+              "doc": "Simple utility methods to collect eval results from an eval service.\n\nThe method is intentionally kept private to prevent general usage."
+            },
+            "_collect_inferences": {
+              "type": "function",
+              "signature": "(inference_requests: 'list[InferenceRequest]', eval_service: 'BaseEvalService') -> 'list[InferenceResult]'",
+              "doc": "Simple utility methods to collect inferences from an eval service.\n\nThe method is intentionally kept private to prevent general usage."
+            },
+            "_get_agent_module": {
+              "type": "function",
+              "signature": "(agent_module_file_path: 'str')",
+              "doc": ""
+            },
+            "_get_evaluator": {
+              "type": "function",
+              "signature": "(eval_metric: 'EvalMetric') -> 'Evaluator'",
+              "doc": ""
+            },
+            "_import_from_path": {
+              "type": "function",
+              "signature": "(module_name, file_path)",
+              "doc": ""
+            },
+            "get_evaluation_criteria_or_default": {
+              "type": "function",
+              "signature": "(eval_config_file_path: 'str') -> 'dict[str, float]'",
+              "doc": "Returns evaluation criteria from the config file, if present.\n\nOtherwise a default one is returned."
+            },
+            "get_root_agent": {
+              "type": "function",
+              "signature": "(agent_module_file_path: 'str') -> 'Agent'",
+              "doc": "Returns root agent given the agent module."
+            },
+            "parse_and_get_evals_to_run": {
+              "type": "function",
+              "signature": "(evals_to_run_info: 'list[str]') -> 'dict[str, list[str]]'",
+              "doc": "Returns a dictionary of eval set info to evals that should be run.\n\nArgs:\n  evals_to_run_info: While the structure is quite simple, a list of string,\n    each string actually is formatted with the following convention:\n    <eval_set_file_path | eval_set_id>:[comma separated eval case ids]"
+            },
+            "run_evals": {
+              "type": "function",
+              "signature": "(eval_cases_by_eval_set_id: 'dict[str, list[EvalCase]]', root_agent: 'Agent', reset_func: 'Optional[Any]', eval_metrics: 'list[EvalMetric]', session_service: 'Optional[BaseSessionService]' = None, artifact_service: 'Optional[BaseArtifactService]' = None) -> 'AsyncGenerator[EvalCaseResult, None]'",
+              "doc": "Returns a stream of EvalCaseResult for each eval case that was evaluated.\n\nArgs:\n  eval_cases_by_eval_set_id: Eval cases categorized by eval set id to which\n    they belong.\n  root_agent: Agent to use for inferencing.\n  reset_func: If present, this will be called before invoking the agent before\n    every inferencing step.\n  eval_metrics: A list of metrics that should be used during evaluation.\n  session_service: The session service to use during inferencing.\n  artifact_service: The artifact service to use during inferencing."
+            },
+            "try_get_reset_func": {
+              "type": "function",
+              "signature": "(agent_module_file_path: 'str') -> 'Any'",
+              "doc": "Returns reset function for the agent, if present, given the agent module."
+            }
+          }
+        },
+        "cli_tools_click": {
+          "__members__": {
+            "HelpfulCommand": {
+              "type": "class",
+              "signature": "(*args, **kwargs)",
+              "doc": "Command that shows full help on error instead of just the error message.\n\nA custom Click Command class that overrides the default error handling\nbehavior to display the full help text when a required argument is missing,\nfollowed by the error message. This provides users with better context\nabout command usage without needing to run a separate --help command.\n\nArgs:\n  *args: Variable length argument list to pass to the parent class.\n  **kwargs: Arbitrary keyword arguments to pass to the parent class.\n\nReturns:\n  None. Inherits behavior from the parent Click Command class.\n\nReturns:"
+            },
+            "adk_services_options": {
+              "type": "function",
+              "signature": "()",
+              "doc": "Decorator to add ADK services options to click commands."
+            },
+            "deprecated_adk_services_options": {
+              "type": "function",
+              "signature": "()",
+              "doc": "Depracated ADK services options."
+            },
+            "fast_api_common_options": {
+              "type": "function",
+              "signature": "()",
+              "doc": "Decorator to add common fast api options to click commands."
+            },
+            "validate_exclusive": {
+              "type": "function",
+              "signature": "(ctx, param, value)",
+              "doc": ""
+            }
+          }
+        },
+        "fast_api": {
+          "__members__": {
+            "get_fast_api_app": {
+              "type": "function",
+              "signature": "(*, agents_dir: 'str', session_service_uri: 'Optional[str]' = None, session_db_kwargs: 'Optional[Mapping[str, Any]]' = None, artifact_service_uri: 'Optional[str]' = None, memory_service_uri: 'Optional[str]' = None, eval_storage_uri: 'Optional[str]' = None, allow_origins: 'Optional[list[str]]' = None, web: 'bool', a2a: 'bool' = False, host: 'str' = '127.0.0.1', port: 'int' = 8000, trace_to_cloud: 'bool' = False, reload_agents: 'bool' = False, lifespan: 'Optional[Lifespan[FastAPI]]' = None) -> 'FastAPI'",
+              "doc": ""
+            }
+          }
+        },
+        "utils": {
+          "agent_change_handler": {
+            "__members__": {
+              "AgentChangeEventHandler": {
+                "type": "class",
+                "signature": "(agent_loader: 'AgentLoader', runners_to_clean: 'set[str]', current_app_name_ref: 'SharedValue[str]')",
+                "doc": "Base file system event handler that you can override methods from."
+              }
+            }
+          },
+          "agent_loader": {
+            "__members__": {
+              "AgentLoader": {
+                "type": "class",
+                "signature": "(agents_dir: 'str')",
+                "doc": "Centralized agent loading with proper isolation, caching, and .env loading.\nSupport loading agents from below folder/file structures:\na)  {agent_name}.agent as a module name:\n    agents_dir/{agent_name}/agent.py (with root_agent defined in the module)\nb)  {agent_name} as a module name\n    agents_dir/{agent_name}.py (with root_agent defined in the module)\nc)  {agent_name} as a package name\n    agents_dir/{agent_name}/__init__.py (with root_agent in the package)\nd)  {agent_name} as a YAML config folder:\n    agents_dir/{agent_name}/root_agent.yaml defines the root agent"
+              }
+            }
+          },
+          "base_agent_loader": {
+            "__members__": {
+              "BaseAgentLoader": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Abstract base class for agent loaders."
+              }
+            }
+          },
+          "cleanup": {
+            "__members__": {
+              "close_runners": {
+                "type": "function",
+                "signature": "(runners: List[google.adk.runners.Runner]) -> None",
+                "doc": ""
+              }
+            }
+          },
+          "common": {
+            "__members__": {
+              "BaseModel": {
+                "type": "class",
+                "signature": "() -> None",
+                "doc": "!!! abstract \"Usage Documentation\"\n    [Models](../concepts/models.md)\n\nA base class for creating Pydantic models.\n\nAttributes:\n    __class_vars__: The names of the class variables defined on the model.\n    __private_attributes__: Metadata about the private attributes of the model.\n    __signature__: The synthesized `__init__` [`Signature`][inspect.Signature] of the model.\n\n    __pydantic_complete__: Whether model building is completed, or if there are still undefined fields.\n    __pydantic_core_schema__: The core schema of the model.\n    __pydantic_custom_init__: Whether the model has a custom `__init__` function.\n    __pydantic_decorators__: Metadata containing the decorators defined on the model.\n        This replaces `Model.__validators__` and `Model.__root_validators__` from Pydantic V1.\n    __pydantic_generic_metadata__: Metadata for generic models; contains data used for a similar purpose to\n        __args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.\n    __pydantic_parent_namespace__: Parent namespace of the model, used for automatic rebuilding of models.\n    __pydantic_post_init__: The name of the post-init method for the model, if defined.\n    __pydantic_root_model__: Whether the model is a [`RootModel`][pydantic.root_model.RootModel].\n    __pydantic_serializer__: The `pydantic-core` `SchemaSerializer` used to dump instances of the model.\n    __pydantic_validator__: The `pydantic-core` `SchemaValidator` used to validate instances of the model.\n\n    __pydantic_fields__: A dictionary of field names and their corresponding [`FieldInfo`][pydantic.fields.FieldInfo] objects.\n    __pydantic_computed_fields__: A dictionary of computed field names and their corresponding [`ComputedFieldInfo`][pydantic.fields.ComputedFieldInfo] objects.\n\n    __pydantic_extra__: A dictionary containing extra values, if [`extra`][pydantic.config.ConfigDict.extra]\n        is set to `'allow'`.\n    __pydantic_fields_set__: The names of fields explicitly set during instantiation.\n    __pydantic_private__: Values of private attributes set on the model instance."
+              }
+            }
+          },
+          "envs": {
+            "__members__": {
+              "_walk_to_root_until_found": {
+                "type": "function",
+                "signature": "(folder, filename) -> str",
+                "doc": ""
+              },
+              "load_dotenv_for_agent": {
+                "type": "function",
+                "signature": "(agent_name: str, agent_parent_folder: str, filename: str = '.env')",
+                "doc": "Loads the .env file for the agent module."
+              }
+            }
+          },
+          "evals": {
+            "__members__": {
+              "GcsEvalManagers": {
+                "type": "class",
+                "signature": "(*, evalSetsManager: google.adk.evaluation.gcs_eval_sets_manager.GcsEvalSetsManager, evalSetResultsManager: google.adk.evaluation.gcs_eval_set_results_manager.GcsEvalSetResultsManager) -> None",
+                "doc": "!!! abstract \"Usage Documentation\"\n    [Models](../concepts/models.md)\n\nA base class for creating Pydantic models.\n\nAttributes:\n    __class_vars__: The names of the class variables defined on the model.\n    __private_attributes__: Metadata about the private attributes of the model.\n    __signature__: The synthesized `__init__` [`Signature`][inspect.Signature] of the model.\n\n    __pydantic_complete__: Whether model building is completed, or if there are still undefined fields.\n    __pydantic_core_schema__: The core schema of the model.\n    __pydantic_custom_init__: Whether the model has a custom `__init__` function.\n    __pydantic_decorators__: Metadata containing the decorators defined on the model.\n        This replaces `Model.__validators__` and `Model.__root_validators__` from Pydantic V1.\n    __pydantic_generic_metadata__: Metadata for generic models; contains data used for a similar purpose to\n        __args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.\n    __pydantic_parent_namespace__: Parent namespace of the model, used for automatic rebuilding of models.\n    __pydantic_post_init__: The name of the post-init method for the model, if defined.\n    __pydantic_root_model__: Whether the model is a [`RootModel`][pydantic.root_model.RootModel].\n    __pydantic_serializer__: The `pydantic-core` `SchemaSerializer` used to dump instances of the model.\n    __pydantic_validator__: The `pydantic-core` `SchemaValidator` used to validate instances of the model.\n\n    __pydantic_fields__: A dictionary of field names and their corresponding [`FieldInfo`][pydantic.fields.FieldInfo] objects.\n    __pydantic_computed_fields__: A dictionary of computed field names and their corresponding [`ComputedFieldInfo`][pydantic.fields.ComputedFieldInfo] objects.\n\n    __pydantic_extra__: A dictionary containing extra values, if [`extra`][pydantic.config.ConfigDict.extra]\n        is set to `'allow'`.\n    __pydantic_fields_set__: The names of fields explicitly set during instantiation.\n    __pydantic_private__: Values of private attributes set on the model instance."
+              },
+              "convert_session_to_eval_format": {
+                "type": "function",
+                "signature": "(session: 'Session') -> 'list[dict[str, Any]]'",
+                "doc": "Converts a session data into eval format.\n\nArgs:\n    session: The session that should be converted.\n\nReturns:\n    list: A single evaluation dataset in the required format."
+              },
+              "convert_session_to_eval_invocations": {
+                "type": "function",
+                "signature": "(session: 'Session') -> 'list[Invocation]'",
+                "doc": "Converts a session data into a list of Invocation.\n\nArgs:\n    session: The session that should be converted.\n\nReturns:\n    list: A list of invocation."
+              },
+              "create_gcs_eval_managers_from_uri": {
+                "type": "function",
+                "signature": "(eval_storage_uri: 'str') -> 'GcsEvalManagers'",
+                "doc": "Creates GcsEvalManagers from eval_storage_uri.\n\nArgs:\n    eval_storage_uri: The evals storage URI to use. Supported URIs:\n      gs://<bucket name>. If a path is provided, the bucket will be extracted.\n\nReturns:\n    GcsEvalManagers: The GcsEvalManagers object.\n\nRaises:\n    ValueError: If the eval_storage_uri is not supported."
+              }
+            }
+          },
+          "logs": {
+            "__members__": {
+              "log_to_tmp_folder": {
+                "type": "function",
+                "signature": "(level=20, *, sub_folder: 'str' = 'agents_log', log_file_prefix: 'str' = 'agent', log_file_timestamp: 'str' = '20250815_134137')",
+                "doc": "Logs to system temp folder, instead of logging to stderr.\n\nArgs\n  sub_folder: str = 'agents_log',\n  log_file_prefix: str = 'agent',\n  log_file_timestamp: str = time.strftime('%Y%m%d_%H%M%S'),\n\nReturns\n  the log file path."
+              },
+              "setup_adk_logger": {
+                "type": "function",
+                "signature": "(level=20)",
+                "doc": ""
+              }
+            }
+          },
+          "shared_value": {
+            "__members__": {
+              "SharedValue": {
+                "type": "class",
+                "signature": "(*, value: ~T) -> None",
+                "doc": "Simple wrapper around a value to allow modifying it from callbacks."
+              }
+            }
+          },
+          "state": {
+            "__members__": {
+              "_create_empty_state": {
+                "type": "function",
+                "signature": "(agent: 'BaseAgent', all_state: 'dict[str, Any]')",
+                "doc": ""
+              },
+              "create_empty_state": {
+                "type": "function",
+                "signature": "(agent: 'BaseAgent', initialized_states: 'Optional[dict[str, Any]]' = None) -> 'dict[str, Any]'",
+                "doc": "Creates empty str for non-initialized states."
+              }
+            }
+          }
+        }
+      },
+      "code_executors": {
+        "base_code_executor": {
+          "__members__": {
+            "BaseCodeExecutor": {
+              "type": "class",
+              "signature": "(*, optimize_data_file: bool = False, stateful: bool = False, error_retry_attempts: int = 2, code_block_delimiters: List[tuple[str, str]] = [('```tool_code\\n', '\\n```'), ('```python\\n', '\\n```')], execution_result_delimiters: tuple[str, str] = ('```tool_output\\n', '\\n```')) -> None",
+              "doc": "Abstract base class for all code executors.\n\nThe code executor allows the agent to execute code blocks from model responses\nand incorporate the execution results into the final response.\n\nAttributes:\n  optimize_data_file: If true, extract and process data files from the model\n    request and attach them to the code executor. Supported data file\n    MimeTypes are [text/csv]. Default to False.\n  stateful: Whether the code executor is stateful. Default to False.\n  error_retry_attempts: The number of attempts to retry on consecutive code\n    execution errors. Default to 2.\n  code_block_delimiters: The list of the enclosing delimiters to identify the\n    code blocks.\n  execution_result_delimiters: The delimiters to format the code execution\n    result."
+            }
+          }
+        },
+        "built_in_code_executor": {
+          "__members__": {
+            "BuiltInCodeExecutor": {
+              "type": "class",
+              "signature": "(*, optimize_data_file: bool = False, stateful: bool = False, error_retry_attempts: int = 2, code_block_delimiters: List[tuple[str, str]] = [('```tool_code\\n', '\\n```'), ('```python\\n', '\\n```')], execution_result_delimiters: tuple[str, str] = ('```tool_output\\n', '\\n```')) -> None",
+              "doc": "A code executor that uses the Model's built-in code executor.\n\nCurrently only supports Gemini 2.0+ models, but will be expanded to\nother models."
+            }
+          }
+        },
+        "code_execution_utils": {
+          "__members__": {
+            "CodeExecutionInput": {
+              "type": "class",
+              "signature": "(code: str, input_files: list[google.adk.code_executors.code_execution_utils.File] = <factory>, execution_id: Optional[str] = None) -> None",
+              "doc": "A structure that contains the input of code execution."
+            },
+            "CodeExecutionResult": {
+              "type": "class",
+              "signature": "(stdout: str = '', stderr: str = '', output_files: list[google.adk.code_executors.code_execution_utils.File] = <factory>) -> None",
+              "doc": "A structure that contains the result of code execution."
+            },
+            "CodeExecutionUtils": {
+              "type": "class",
+              "signature": "()",
+              "doc": "Utility functions for code execution."
+            },
+            "File": {
+              "type": "class",
+              "signature": "(name: str, content: str, mime_type: str = 'text/plain') -> None",
+              "doc": "A structure that contains a file name and its content."
+            }
+          }
+        },
+        "code_executor_context": {
+          "__members__": {
+            "CodeExecutorContext": {
+              "type": "class",
+              "signature": "(session_state: google.adk.sessions.state.State)",
+              "doc": "The persistent context used to configure the code executor."
+            }
+          }
+        },
+        "unsafe_local_code_executor": {
+          "__members__": {
+            "UnsafeLocalCodeExecutor": {
+              "type": "class",
+              "signature": "(*, optimize_data_file: bool = False, stateful: bool = False, error_retry_attempts: int = 2, code_block_delimiters: List[tuple[str, str]] = [('```tool_code\\n', '\\n```'), ('```python\\n', '\\n```')], execution_result_delimiters: tuple[str, str] = ('```tool_output\\n', '\\n```')) -> None",
+              "doc": "A code executor that unsafely execute code in the current local context."
+            },
+            "_prepare_globals": {
+              "type": "function",
+              "signature": "(code: 'str', globals_: 'dict[str, Any]') -> 'None'",
+              "doc": "Prepare globals for code execution, injecting __name__ if needed."
+            }
+          }
+        },
+        "vertex_ai_code_executor": {
+          "__members__": {
+            "VertexAiCodeExecutor": {
+              "type": "class",
+              "signature": "(resource_name: 'str' = None, *, optimize_data_file: bool = False, stateful: bool = False, error_retry_attempts: int = 2, code_block_delimiters: List[tuple[str, str]] = [('```tool_code\\n', '\\n```'), ('```python\\n', '\\n```')], execution_result_delimiters: tuple[str, str] = ('```tool_output\\n', '\\n```')) -> None",
+              "doc": "A code executor that uses Vertex Code Interpreter Extension to execute code.\n\nAttributes:\n  resource_name: If set, load the existing resource name of the code\n    interpreter extension instead of creating a new one. Format:\n    projects/123/locations/us-central1/extensions/456"
+            },
+            "_get_code_interpreter_extension": {
+              "type": "function",
+              "signature": "(resource_name: 'str' = None)",
+              "doc": "Returns: Load or create the code interpreter extension."
+            }
+          }
+        }
+      },
       "errors": {
         "not_found_error": {
           "__members__": {
@@ -314,6 +1021,1108 @@
               "type": "class",
               "signature": "(message='The requested item was not found.')",
               "doc": "Represents an error that occurs when an entity is not found."
+            }
+          }
+        }
+      },
+      "evaluation": {
+        "_eval_set_results_manager_utils": {
+          "__members__": {
+            "_sanitize_eval_set_result_name": {
+              "type": "function",
+              "signature": "(eval_set_result_name: 'str') -> 'str'",
+              "doc": "Sanitizes the eval set result name."
+            },
+            "create_eval_set_result": {
+              "type": "function",
+              "signature": "(app_name: 'str', eval_set_id: 'str', eval_case_results: 'list[EvalCaseResult]') -> 'EvalSetResult'",
+              "doc": "Creates a new EvalSetResult given eval_case_results."
+            }
+          }
+        },
+        "_eval_sets_manager_utils": {
+          "__members__": {
+            "add_eval_case_to_eval_set": {
+              "type": "function",
+              "signature": "(eval_set: 'EvalSet', eval_case: 'EvalCase') -> 'EvalSet'",
+              "doc": "Adds an eval case to an eval set and returns the updated eval set."
+            },
+            "delete_eval_case_from_eval_set": {
+              "type": "function",
+              "signature": "(eval_set: 'EvalSet', eval_case_id: 'str') -> 'EvalSet'",
+              "doc": "Deletes an eval case from an eval set and returns the updated eval set."
+            },
+            "get_eval_case_from_eval_set": {
+              "type": "function",
+              "signature": "(eval_set: 'EvalSet', eval_case_id: 'str') -> 'Optional[EvalCase]'",
+              "doc": "Returns an EvalCase if found, otherwise None."
+            },
+            "get_eval_set_from_app_and_id": {
+              "type": "function",
+              "signature": "(eval_sets_manager: 'EvalSetsManager', app_name: 'str', eval_set_id: 'str') -> 'EvalSet'",
+              "doc": "Returns an EvalSet if found, otherwise raises NotFoundError."
+            },
+            "update_eval_case_in_eval_set": {
+              "type": "function",
+              "signature": "(eval_set: 'EvalSet', updated_eval_case: 'EvalCase') -> 'EvalSet'",
+              "doc": "Updates an eval case in an eval set and returns the updated eval set."
+            }
+          }
+        },
+        "agent_evaluator": {
+          "__members__": {
+            "AgentEvaluator": {
+              "type": "class",
+              "signature": "()",
+              "doc": "An evaluator for Agents, mainly intended for helping with test cases."
+            },
+            "_EvalMetricResultWithInvocation": {
+              "type": "class",
+              "signature": "(*, actual_invocation: google.adk.evaluation.eval_case.Invocation, expected_invocation: google.adk.evaluation.eval_case.Invocation, eval_metric_result: google.adk.evaluation.eval_metrics.EvalMetricResult) -> None",
+              "doc": "EvalMetricResult along with both actual and expected invocation.\n\nThis is class is intentionally marked as private and is created for\nconvenience."
+            },
+            "load_json": {
+              "type": "function",
+              "signature": "(file_path: 'str') -> 'Union[Dict, List]'",
+              "doc": ""
+            }
+          }
+        },
+        "base_eval_service": {
+          "__members__": {
+            "BaseEvalService": {
+              "type": "class",
+              "signature": "()",
+              "doc": "A service to run Evals for an ADK agent."
+            },
+            "EvaluateConfig": {
+              "type": "class",
+              "signature": "(*, evalMetrics: list[google.adk.evaluation.eval_metrics.EvalMetric], parallelism: int = 4) -> None",
+              "doc": "Contains configurations need to run an evaluations."
+            },
+            "EvaluateRequest": {
+              "type": "class",
+              "signature": "(*, inferenceResults: list[google.adk.evaluation.base_eval_service.InferenceResult], evaluateConfig: google.adk.evaluation.base_eval_service.EvaluateConfig) -> None",
+              "doc": "!!! abstract \"Usage Documentation\"\n    [Models](../concepts/models.md)\n\nA base class for creating Pydantic models.\n\nAttributes:\n    __class_vars__: The names of the class variables defined on the model.\n    __private_attributes__: Metadata about the private attributes of the model.\n    __signature__: The synthesized `__init__` [`Signature`][inspect.Signature] of the model.\n\n    __pydantic_complete__: Whether model building is completed, or if there are still undefined fields.\n    __pydantic_core_schema__: The core schema of the model.\n    __pydantic_custom_init__: Whether the model has a custom `__init__` function.\n    __pydantic_decorators__: Metadata containing the decorators defined on the model.\n        This replaces `Model.__validators__` and `Model.__root_validators__` from Pydantic V1.\n    __pydantic_generic_metadata__: Metadata for generic models; contains data used for a similar purpose to\n        __args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.\n    __pydantic_parent_namespace__: Parent namespace of the model, used for automatic rebuilding of models.\n    __pydantic_post_init__: The name of the post-init method for the model, if defined.\n    __pydantic_root_model__: Whether the model is a [`RootModel`][pydantic.root_model.RootModel].\n    __pydantic_serializer__: The `pydantic-core` `SchemaSerializer` used to dump instances of the model.\n    __pydantic_validator__: The `pydantic-core` `SchemaValidator` used to validate instances of the model.\n\n    __pydantic_fields__: A dictionary of field names and their corresponding [`FieldInfo`][pydantic.fields.FieldInfo] objects.\n    __pydantic_computed_fields__: A dictionary of computed field names and their corresponding [`ComputedFieldInfo`][pydantic.fields.ComputedFieldInfo] objects.\n\n    __pydantic_extra__: A dictionary containing extra values, if [`extra`][pydantic.config.ConfigDict.extra]\n        is set to `'allow'`.\n    __pydantic_fields_set__: The names of fields explicitly set during instantiation.\n    __pydantic_private__: Values of private attributes set on the model instance."
+            },
+            "InferenceConfig": {
+              "type": "class",
+              "signature": "(*, labels: Optional[dict[str, str]] = None, parallelism: int = 4) -> None",
+              "doc": "Contains configurations need to run inferences."
+            },
+            "InferenceRequest": {
+              "type": "class",
+              "signature": "(*, appName: str, evalSetId: str, evalCaseIds: Optional[list[str]] = None, inferenceConfig: google.adk.evaluation.base_eval_service.InferenceConfig) -> None",
+              "doc": "Represent a request to perform inferences for the eval cases in an eval set."
+            },
+            "InferenceResult": {
+              "type": "class",
+              "signature": "(*, appName: str, evalSetId: str, evalCaseId: str, inferences: Optional[list[google.adk.evaluation.eval_case.Invocation]] = None, sessionId: Optional[str], status: google.adk.evaluation.base_eval_service.InferenceStatus = <InferenceStatus.UNKNOWN: 0>, errorMessage: Optional[str] = None) -> None",
+              "doc": "Contains inference results for a single eval case."
+            },
+            "InferenceStatus": {
+              "type": "class",
+              "signature": "(*values)",
+              "doc": "Status of the inference."
+            }
+          }
+        },
+        "eval_case": {
+          "__members__": {
+            "EvalBaseModel": {
+              "type": "class",
+              "signature": "() -> None",
+              "doc": "!!! abstract \"Usage Documentation\"\n    [Models](../concepts/models.md)\n\nA base class for creating Pydantic models.\n\nAttributes:\n    __class_vars__: The names of the class variables defined on the model.\n    __private_attributes__: Metadata about the private attributes of the model.\n    __signature__: The synthesized `__init__` [`Signature`][inspect.Signature] of the model.\n\n    __pydantic_complete__: Whether model building is completed, or if there are still undefined fields.\n    __pydantic_core_schema__: The core schema of the model.\n    __pydantic_custom_init__: Whether the model has a custom `__init__` function.\n    __pydantic_decorators__: Metadata containing the decorators defined on the model.\n        This replaces `Model.__validators__` and `Model.__root_validators__` from Pydantic V1.\n    __pydantic_generic_metadata__: Metadata for generic models; contains data used for a similar purpose to\n        __args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.\n    __pydantic_parent_namespace__: Parent namespace of the model, used for automatic rebuilding of models.\n    __pydantic_post_init__: The name of the post-init method for the model, if defined.\n    __pydantic_root_model__: Whether the model is a [`RootModel`][pydantic.root_model.RootModel].\n    __pydantic_serializer__: The `pydantic-core` `SchemaSerializer` used to dump instances of the model.\n    __pydantic_validator__: The `pydantic-core` `SchemaValidator` used to validate instances of the model.\n\n    __pydantic_fields__: A dictionary of field names and their corresponding [`FieldInfo`][pydantic.fields.FieldInfo] objects.\n    __pydantic_computed_fields__: A dictionary of computed field names and their corresponding [`ComputedFieldInfo`][pydantic.fields.ComputedFieldInfo] objects.\n\n    __pydantic_extra__: A dictionary containing extra values, if [`extra`][pydantic.config.ConfigDict.extra]\n        is set to `'allow'`.\n    __pydantic_fields_set__: The names of fields explicitly set during instantiation.\n    __pydantic_private__: Values of private attributes set on the model instance."
+            },
+            "EvalCase": {
+              "type": "class",
+              "signature": "(*, evalId: str, conversation: list[google.adk.evaluation.eval_case.Invocation], sessionInput: Optional[google.adk.evaluation.eval_case.SessionInput] = None, creationTimestamp: float = 0.0) -> None",
+              "doc": "An eval case."
+            },
+            "IntermediateData": {
+              "type": "class",
+              "signature": "(*, toolUses: list[google.genai.types.FunctionCall] = [], intermediateResponses: list[tuple[str, list[google.genai.types.Part]]] = []) -> None",
+              "doc": "Container for intermediate data that an agent would generate as it responds with a final answer."
+            },
+            "Invocation": {
+              "type": "class",
+              "signature": "(*, invocationId: str = '', userContent: google.genai.types.Content, finalResponse: Optional[google.genai.types.Content] = None, intermediateData: Optional[google.adk.evaluation.eval_case.IntermediateData] = None, creationTimestamp: float = 0.0) -> None",
+              "doc": "Represents a single invocation."
+            },
+            "SessionInput": {
+              "type": "class",
+              "signature": "(*, appName: str, userId: str, state: dict[str, typing.Any] = <factory>) -> None",
+              "doc": "Values that help initialize a Session."
+            }
+          }
+        },
+        "eval_metrics": {
+          "__members__": {
+            "EvalMetric": {
+              "type": "class",
+              "signature": "(*, metricName: str, threshold: float, judgeModelOptions: Optional[google.adk.evaluation.eval_metrics.JudgeModelOptions] = None) -> None",
+              "doc": "A metric used to evaluate a particular aspect of an eval case."
+            },
+            "EvalMetricResult": {
+              "type": "class",
+              "signature": "(*, metricName: str, threshold: float, judgeModelOptions: Optional[google.adk.evaluation.eval_metrics.JudgeModelOptions] = None, score: Optional[float] = None, evalStatus: google.adk.evaluation.evaluator.EvalStatus) -> None",
+              "doc": "The actual computed score/value of a particular EvalMetric."
+            },
+            "EvalMetricResultPerInvocation": {
+              "type": "class",
+              "signature": "(*, actualInvocation: google.adk.evaluation.eval_case.Invocation, expectedInvocation: google.adk.evaluation.eval_case.Invocation, evalMetricResults: list[google.adk.evaluation.eval_metrics.EvalMetricResult] = []) -> None",
+              "doc": "Eval metric results per invocation."
+            },
+            "Interval": {
+              "type": "class",
+              "signature": "(*, min_value: float, open_at_min: bool = False, max_value: float, open_at_max: bool = False) -> None",
+              "doc": "Represents a range of numeric values, e.g. [0 ,1] or (2,3) or [-1, 6)."
+            },
+            "JudgeModelOptions": {
+              "type": "class",
+              "signature": "(*, judge_model: str = 'gemini-2.5-flash', judge_model_config: Optional[google.genai.types.GenerateContentConfig] = None, num_samples: Optional[int] = None) -> None",
+              "doc": "Options for an eval metric's judge model."
+            },
+            "MetricInfo": {
+              "type": "class",
+              "signature": "(*, metricName: str, description: str = None, metricValueInfo: google.adk.evaluation.eval_metrics.MetricValueInfo) -> None",
+              "doc": "Information about the metric that are used for Evals."
+            },
+            "MetricValueInfo": {
+              "type": "class",
+              "signature": "(*, interval: Optional[google.adk.evaluation.eval_metrics.Interval] = None) -> None",
+              "doc": "Information about the type of metric value."
+            },
+            "PrebuiltMetrics": {
+              "type": "class",
+              "signature": "(*values)",
+              "doc": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
+            }
+          }
+        },
+        "eval_result": {
+          "__members__": {
+            "EvalCaseResult": {
+              "type": "class",
+              "signature": "(*, evalSetFile: Optional[str] = None, evalSetId: str = '', evalId: str = '', finalEvalStatus: google.adk.evaluation.evaluator.EvalStatus, evalMetricResults: Optional[list[tuple[google.adk.evaluation.eval_metrics.EvalMetric, google.adk.evaluation.eval_metrics.EvalMetricResult]]] = None, overallEvalMetricResults: list[google.adk.evaluation.eval_metrics.EvalMetricResult], evalMetricResultPerInvocation: list[google.adk.evaluation.eval_metrics.EvalMetricResultPerInvocation], sessionId: str, sessionDetails: Optional[google.adk.sessions.session.Session] = None, userId: Optional[str] = None) -> None",
+              "doc": "Case level evaluation results."
+            },
+            "EvalSetResult": {
+              "type": "class",
+              "signature": "(*, evalSetResultId: str, evalSetResultName: Optional[str] = None, evalSetId: str, evalCaseResults: list[google.adk.evaluation.eval_result.EvalCaseResult] = <factory>, creationTimestamp: float = 0.0) -> None",
+              "doc": "Eval set level evaluation results."
+            }
+          }
+        },
+        "eval_set": {
+          "__members__": {
+            "EvalSet": {
+              "type": "class",
+              "signature": "(*, eval_set_id: str, name: Optional[str] = None, description: Optional[str] = None, eval_cases: list[google.adk.evaluation.eval_case.EvalCase], creation_timestamp: float = 0.0) -> None",
+              "doc": "A set of eval cases."
+            }
+          }
+        },
+        "eval_set_results_manager": {
+          "__members__": {
+            "EvalSetResultsManager": {
+              "type": "class",
+              "signature": "()",
+              "doc": "An interface to manage Eval Set Results."
+            }
+          }
+        },
+        "eval_sets_manager": {
+          "__members__": {
+            "EvalSetsManager": {
+              "type": "class",
+              "signature": "()",
+              "doc": "An interface to manage an Eval Sets."
+            }
+          }
+        },
+        "evaluation_constants": {
+          "__members__": {
+            "EvalConstants": {
+              "type": "class",
+              "signature": "()",
+              "doc": "Holds constants for evaluation file constants."
+            }
+          }
+        },
+        "evaluation_generator": {
+          "__members__": {
+            "EvalCaseResponses": {
+              "type": "class",
+              "signature": "(*, eval_case: google.adk.evaluation.eval_case.EvalCase, responses: list[list[google.adk.evaluation.eval_case.Invocation]]) -> None",
+              "doc": "Contains multiple responses associated with an EvalCase.\n\nMultiple responses are a result of repeated requests to genereate inferences."
+            },
+            "EvaluationGenerator": {
+              "type": "class",
+              "signature": "()",
+              "doc": "Generates evaluation responses for agents."
+            }
+          }
+        },
+        "evaluator": {
+          "__members__": {
+            "EvalStatus": {
+              "type": "class",
+              "signature": "(*values)",
+              "doc": "Create a collection of name/value pairs.\n\nExample enumeration:\n\n>>> class Color(Enum):\n...     RED = 1\n...     BLUE = 2\n...     GREEN = 3\n\nAccess them by:\n\n- attribute access:\n\n  >>> Color.RED\n  <Color.RED: 1>\n\n- value lookup:\n\n  >>> Color(1)\n  <Color.RED: 1>\n\n- name lookup:\n\n  >>> Color['RED']\n  <Color.RED: 1>\n\nEnumerations can be iterated over, and know how many members they have:\n\n>>> len(Color)\n3\n\n>>> list(Color)\n[<Color.RED: 1>, <Color.BLUE: 2>, <Color.GREEN: 3>]\n\nMethods can be added to enumerations, and members can have their own\nattributes -- see the documentation for details."
+            },
+            "EvaluationResult": {
+              "type": "class",
+              "signature": "(*, overall_score: Optional[float] = None, overall_eval_status: google.adk.evaluation.evaluator.EvalStatus = <EvalStatus.NOT_EVALUATED: 3>, per_invocation_results: list[google.adk.evaluation.evaluator.PerInvocationResult] = []) -> None",
+              "doc": "!!! abstract \"Usage Documentation\"\n    [Models](../concepts/models.md)\n\nA base class for creating Pydantic models.\n\nAttributes:\n    __class_vars__: The names of the class variables defined on the model.\n    __private_attributes__: Metadata about the private attributes of the model.\n    __signature__: The synthesized `__init__` [`Signature`][inspect.Signature] of the model.\n\n    __pydantic_complete__: Whether model building is completed, or if there are still undefined fields.\n    __pydantic_core_schema__: The core schema of the model.\n    __pydantic_custom_init__: Whether the model has a custom `__init__` function.\n    __pydantic_decorators__: Metadata containing the decorators defined on the model.\n        This replaces `Model.__validators__` and `Model.__root_validators__` from Pydantic V1.\n    __pydantic_generic_metadata__: Metadata for generic models; contains data used for a similar purpose to\n        __args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.\n    __pydantic_parent_namespace__: Parent namespace of the model, used for automatic rebuilding of models.\n    __pydantic_post_init__: The name of the post-init method for the model, if defined.\n    __pydantic_root_model__: Whether the model is a [`RootModel`][pydantic.root_model.RootModel].\n    __pydantic_serializer__: The `pydantic-core` `SchemaSerializer` used to dump instances of the model.\n    __pydantic_validator__: The `pydantic-core` `SchemaValidator` used to validate instances of the model.\n\n    __pydantic_fields__: A dictionary of field names and their corresponding [`FieldInfo`][pydantic.fields.FieldInfo] objects.\n    __pydantic_computed_fields__: A dictionary of computed field names and their corresponding [`ComputedFieldInfo`][pydantic.fields.ComputedFieldInfo] objects.\n\n    __pydantic_extra__: A dictionary containing extra values, if [`extra`][pydantic.config.ConfigDict.extra]\n        is set to `'allow'`.\n    __pydantic_fields_set__: The names of fields explicitly set during instantiation.\n    __pydantic_private__: Values of private attributes set on the model instance."
+            },
+            "Evaluator": {
+              "type": "class",
+              "signature": "()",
+              "doc": "A merics evaluator interface."
+            },
+            "PerInvocationResult": {
+              "type": "class",
+              "signature": "(*, actual_invocation: google.adk.evaluation.eval_case.Invocation, expected_invocation: google.adk.evaluation.eval_case.Invocation, score: Optional[float] = None, eval_status: google.adk.evaluation.evaluator.EvalStatus = <EvalStatus.NOT_EVALUATED: 3>) -> None",
+              "doc": "Metric evaluation score per invocation."
+            }
+          }
+        },
+        "final_response_match_v2": {
+          "__members__": {
+            "FinalResponseMatchV2Evaluator": {
+              "type": "class",
+              "signature": "(eval_metric: 'EvalMetric')",
+              "doc": "V2 final response match evaluator which uses an LLM to judge responses.\n\nThe evaluator prompts the LLM to output whether the agent final response is\nvalid or invalid, hence outputs a score of 0 or 1. Repeated invocation samples\nare aggregated by taking majority vote, and then the overall score is the\nfraction, ranging from 0 to 1, of valid samples. Higher values of overall\nscore indicate better final response performance of the agent."
+            },
+            "_parse_critique": {
+              "type": "function",
+              "signature": "(response: 'str') -> 'Label'",
+              "doc": "Parses the judge model critique and extracts the final label.\n\nArgs:\n  response: model response\n\nReturns:\n  The extracted label, either VALID, INVALID, or NOT_FOUND."
+            }
+          }
+        },
+        "gcs_eval_set_results_manager": {
+          "__members__": {
+            "GcsEvalSetResultsManager": {
+              "type": "class",
+              "signature": "(bucket_name: 'str', **kwargs)",
+              "doc": "An EvalSetResultsManager that stores eval results in a GCS bucket."
+            }
+          }
+        },
+        "gcs_eval_sets_manager": {
+          "__members__": {
+            "GcsEvalSetsManager": {
+              "type": "class",
+              "signature": "(bucket_name: 'str', **kwargs)",
+              "doc": "An EvalSetsManager that stores eval sets in a GCS bucket."
+            }
+          }
+        },
+        "in_memory_eval_sets_manager": {
+          "__members__": {
+            "InMemoryEvalSetsManager": {
+              "type": "class",
+              "signature": "()",
+              "doc": "An in-memory implementation of EvalSetsManager using dictionaries.\n\nYou can use this class:\n1) As a part of your testcase.\n2) For cases where other implementations of EvalSetsManager are too expensive\nto use."
+            }
+          }
+        },
+        "llm_as_judge": {
+          "__members__": {
+            "LlmAsJudge": {
+              "type": "class",
+              "signature": "(eval_metric: 'EvalMetric')",
+              "doc": "Evaluator based on a LLM.\n\nIt is meant to be extended by specific auto-raters for different evaluation\ntasks:\n  - Provide the prompt template, and implement format_auto_rater_prompt to\n    format the auto-rater prompt for a given invocation.\n  - Implement convert_auto_rater_response_to_score to parse the auto-rater\n    response and return the corresponding score.\n  - Implement aggregate_invocation_results to aggregate the per-invocation\n    results to get the overall score.\n  - (Optional) Override aggregate_per_invocation_result_samples to aggregate\n    multiple auto-rater samples of the same invocation."
+            }
+          }
+        },
+        "llm_as_judge_utils": {
+          "__members__": {
+            "Label": {
+              "type": "class",
+              "signature": "(*values)",
+              "doc": "Labels for auto rater response."
+            },
+            "get_eval_status": {
+              "type": "function",
+              "signature": "(score: 'Optional[float]', threshold: 'float') -> 'EvalStatus'",
+              "doc": ""
+            },
+            "get_text_from_content": {
+              "type": "function",
+              "signature": "(content: 'Optional[genai_types.Content]') -> 'Optional[str]'",
+              "doc": ""
+            }
+          }
+        },
+        "local_eval_set_results_manager": {
+          "__members__": {
+            "LocalEvalSetResultsManager": {
+              "type": "class",
+              "signature": "(agents_dir: 'str')",
+              "doc": "An EvalSetResult manager that stores eval set results locally on disk."
+            }
+          }
+        },
+        "local_eval_sets_manager": {
+          "__members__": {
+            "LocalEvalSetsManager": {
+              "type": "class",
+              "signature": "(agents_dir: 'str')",
+              "doc": "An EvalSets manager that stores eval sets locally on disk."
+            },
+            "_convert_invocation_to_pydantic_schema": {
+              "type": "function",
+              "signature": "(invocation_in_json_format: 'dict[str, Any]') -> 'Invocation'",
+              "doc": "Converts an invocation from old json format to new Pydantic Schema."
+            },
+            "convert_eval_set_to_pydanctic_schema": {
+              "type": "function",
+              "signature": "(eval_set_id: 'str', eval_set_in_json_format: 'list[dict[str, Any]]') -> 'EvalSet'",
+              "doc": "Returns an pydantic EvalSet generated from the json representation.\n\n  Args:\n    eval_set_id: Eval set id.\n    eval_set_in_json_format: Eval set specified in JSON format.\n\n  Here is a sample eval set in JSON format:\n[\n  {\n    \"name\": \"roll_17_sided_dice_twice\",\n    \"data\": [\n      {\n        \"query\": \"What can you do?\",\n        \"expected_tool_use\": [],\n        \"expected_intermediate_agent_responses\": [],\n        \"reference\": \"I can roll dice of different sizes and check if a number\n          is prime. I can also use multiple tools in parallel.\\n\"\n      },\n      {\n        \"query\": \"Roll a 17 sided dice twice for me\",\n        \"expected_tool_use\": [\n          {\n            \"tool_name\": \"roll_die\",\n            \"tool_input\": {\n              \"sides\": 17\n            }\n          },\n          {\n            \"tool_name\": \"roll_die\",\n            \"tool_input\": {\n              \"sides\": 17\n            }\n          }\n        ],\n        \"expected_intermediate_agent_responses\": [],\n        \"reference\": \"I have rolled a 17 sided die twice. The first roll was\n          13 and the second roll was 4.\\n\"\n      }\n    ],\n    \"initial_session\": {\n      \"state\": {},\n      \"app_name\": \"hello_world\",\n      \"user_id\": \"user\"\n    }\n  }\n]"
+            },
+            "load_eval_set_from_file": {
+              "type": "function",
+              "signature": "(eval_set_file_path: 'str', eval_set_id: 'str') -> 'EvalSet'",
+              "doc": "Returns an EvalSet that is read from the given file."
+            }
+          }
+        },
+        "safety_evaluator": {
+          "__members__": {
+            "SafetyEvaluatorV1": {
+              "type": "class",
+              "signature": "(eval_metric: 'EvalMetric')",
+              "doc": "Evaluates safety (harmlessness) of an Agent's Response.\n\nThe class delegates the responsibility to Vertex Gen AI Eval SDK. The V1\nsuffix in the class name is added to convey that there could be other versions\nof the safety metric as well, and those metrics could use a different strategy\nto evaluate safety.\n\nUsing this class requires a GCP project. Please set GOOGLE_CLOUD_PROJECT and\nGOOGLE_CLOUD_LOCATION in your .env file.\n\nValue range of the metric is [0, 1], with values closer to 1 to be more\ndesirable (safe)."
+            }
+          }
+        },
+        "vertex_ai_eval_facade": {
+          "__members__": {
+            "_VertexAiEvalFacade": {
+              "type": "class",
+              "signature": "(threshold: 'float', metric_name: 'vertexai_types.PrebuiltMetric')",
+              "doc": "Simple facade for Vertex Gen AI Eval SDK.\n\nVertex Gen AI Eval SDK exposes quite a few metrics that are valuable for\nagentic evals. This class helps us to access those metrics.\n\nUsing this class requires a GCP project. Please set GOOGLE_CLOUD_PROJECT and\nGOOGLE_CLOUD_LOCATION in your .env file."
+            }
+          }
+        }
+      },
+      "events": {
+        "event": {
+          "__members__": {
+            "Event": {
+              "type": "class",
+              "signature": "(*, content: Optional[google.genai.types.Content] = None, groundingMetadata: Optional[google.genai.types.GroundingMetadata] = None, partial: Optional[bool] = None, turnComplete: Optional[bool] = None, errorCode: Optional[str] = None, errorMessage: Optional[str] = None, interrupted: Optional[bool] = None, customMetadata: Optional[dict[str, Any]] = None, usageMetadata: Optional[google.genai.types.GenerateContentResponseUsageMetadata] = None, liveSessionResumptionUpdate: Optional[google.genai.types.LiveServerSessionResumptionUpdate] = None, invocationId: str = '', author: str, actions: google.adk.events.event_actions.EventActions = <factory>, longRunningToolIds: Optional[set[str]] = None, branch: Optional[str] = None, id: str = '', timestamp: float = <factory>) -> None",
+              "doc": "Represents an event in a conversation between agents and users.\n\nIt is used to store the content of the conversation, as well as the actions\ntaken by the agents like function calls, etc.\n\nAttributes:\n  invocation_id: Required. The invocation ID of the event. Should be non-empty\n    before appending to a session.\n  author: Required. \"user\" or the name of the agent, indicating who appended\n    the event to the session.\n  actions: The actions taken by the agent.\n  long_running_tool_ids: The ids of the long running function calls.\n  branch: The branch of the event.\n  id: The unique identifier of the event.\n  timestamp: The timestamp of the event.\n  get_function_calls: Returns the function calls in the event."
+            }
+          }
+        },
+        "event_actions": {
+          "__members__": {
+            "EventActions": {
+              "type": "class",
+              "signature": "(*, skipSummarization: Optional[bool] = None, stateDelta: dict[str, object] = <factory>, artifactDelta: dict[str, int] = <factory>, transferToAgent: Optional[str] = None, escalate: Optional[bool] = None, requestedAuthConfigs: dict[str, google.adk.auth.auth_tool.AuthConfig] = <factory>) -> None",
+              "doc": "Represents the actions attached to an event."
+            }
+          }
+        }
+      },
+      "examples": {
+        "base_example_provider": {
+          "__members__": {
+            "BaseExampleProvider": {
+              "type": "class",
+              "signature": "()",
+              "doc": "Base class for example providers.\n\nThis class defines the interface for providing examples for a given query."
+            }
+          }
+        },
+        "example": {
+          "__members__": {
+            "Example": {
+              "type": "class",
+              "signature": "(*, input: google.genai.types.Content, output: list[google.genai.types.Content]) -> None",
+              "doc": "A few-shot example.\n\nAttributes:\n  input: The input content for the example.\n  output: The expected output content for the example."
+            }
+          }
+        },
+        "example_util": {
+          "__members__": {
+            "_get_latest_message_from_user": {
+              "type": "function",
+              "signature": "(session: 'Session') -> str",
+              "doc": "Gets the latest message from the user.\n\nReturns:\n  The latest message from the user. If not found, returns an empty string."
+            },
+            "build_example_si": {
+              "type": "function",
+              "signature": "(examples: Union[list[google.adk.examples.example.Example], google.adk.examples.base_example_provider.BaseExampleProvider], query: str, model: Optional[str]) -> str",
+              "doc": ""
+            },
+            "convert_examples_to_text": {
+              "type": "function",
+              "signature": "(examples: list[google.adk.examples.example.Example], model: Optional[str]) -> str",
+              "doc": "Converts a list of examples to a string that can be used in a system instruction."
+            }
+          }
+        },
+        "vertex_ai_example_store": {
+          "__members__": {
+            "VertexAiExampleStore": {
+              "type": "class",
+              "signature": "(examples_store_name: str)",
+              "doc": "Provides examples from Vertex example store."
+            }
+          }
+        }
+      },
+      "flows": {
+        "llm_flows": {
+          "_base_llm_processor": {
+            "__members__": {
+              "BaseLlmRequestProcessor": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Base class for LLM request processor."
+              },
+              "BaseLlmResponseProcessor": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Base class for LLM response processor."
+              }
+            }
+          },
+          "_code_execution": {
+            "__members__": {
+              "DataFileUtil": {
+                "type": "class",
+                "signature": "(extension: 'str', loader_code_template: 'str') -> None",
+                "doc": "A structure that contains a data file name and its content."
+              },
+              "_CodeExecutionRequestProcessor": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Processes code execution requests."
+              },
+              "_CodeExecutionResponseProcessor": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Processes code execution responses."
+              },
+              "_extrac_and_replace_inline_files": {
+                "type": "function",
+                "signature": "(code_executor_context: 'CodeExecutorContext', llm_request: 'LlmRequest') -> 'list[File]'",
+                "doc": "Extracts and replaces inline files with file names in the LLM request."
+              },
+              "_get_data_file_preprocessing_code": {
+                "type": "function",
+                "signature": "(file: 'File') -> 'Optional[str]'",
+                "doc": "Returns the code to explore the data file."
+              },
+              "_get_or_set_execution_id": {
+                "type": "function",
+                "signature": "(invocation_context: 'InvocationContext', code_executor_context: 'CodeExecutorContext') -> 'Optional[str]'",
+                "doc": "Returns the ID for stateful code execution or None if not stateful."
+              },
+              "_post_process_code_execution_result": {
+                "type": "function",
+                "signature": "(invocation_context: 'InvocationContext', code_executor_context: 'CodeExecutorContext', code_execution_result: 'CodeExecutionResult') -> 'Event'",
+                "doc": "Post-process the code execution result and emit an Event."
+              },
+              "_run_post_processor": {
+                "type": "function",
+                "signature": "(invocation_context: 'InvocationContext', llm_response) -> 'AsyncGenerator[Event, None]'",
+                "doc": "Post-process the model response by extracting and executing the first code block."
+              },
+              "_run_pre_processor": {
+                "type": "function",
+                "signature": "(invocation_context: 'InvocationContext', llm_request: 'LlmRequest') -> 'AsyncGenerator[Event, None]'",
+                "doc": "Pre-process the user message by adding the user message to the Colab notebook."
+              }
+            }
+          },
+          "_nl_planning": {
+            "__members__": {
+              "_NlPlanningRequestProcessor": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Processor for NL planning."
+              },
+              "_NlPlanningResponse": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Base class for LLM response processor."
+              },
+              "_get_planner": {
+                "type": "function",
+                "signature": "(invocation_context: 'InvocationContext') -> 'Optional[BasePlanner]'",
+                "doc": ""
+              },
+              "_remove_thought_from_request": {
+                "type": "function",
+                "signature": "(llm_request: 'LlmRequest')",
+                "doc": ""
+              }
+            }
+          },
+          "agent_transfer": {
+            "__members__": {
+              "_AgentTransferLlmRequestProcessor": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Agent transfer request processor."
+              },
+              "_build_target_agents_info": {
+                "type": "function",
+                "signature": "(target_agent: 'BaseAgent') -> 'str'",
+                "doc": ""
+              },
+              "_build_target_agents_instructions": {
+                "type": "function",
+                "signature": "(agent: 'LlmAgent', target_agents: 'list[BaseAgent]') -> 'str'",
+                "doc": ""
+              },
+              "_get_transfer_targets": {
+                "type": "function",
+                "signature": "(agent: 'LlmAgent') -> 'list[BaseAgent]'",
+                "doc": ""
+              }
+            }
+          },
+          "audio_transcriber": {
+            "__members__": {
+              "AudioTranscriber": {
+                "type": "class",
+                "signature": "(init_client=False)",
+                "doc": "Transcribes audio using Google Cloud Speech-to-Text."
+              }
+            }
+          },
+          "auto_flow": {
+            "__members__": {
+              "AutoFlow": {
+                "type": "class",
+                "signature": "()",
+                "doc": "AutoFlow is SingleFlow with agent transfer capability.\n\nAgent transfer is allowed in the following direction:\n\n1. from parent to sub-agent;\n2. from sub-agent to parent;\n3. from sub-agent to its peer agents;\n\nFor peer-agent transfers, it's only enabled when all below conditions are met:\n\n- The parent agent is also an LlmAgent.\n- `disallow_transfer_to_peer` option of this agent is False (default).\n\nDepending on the target agent type, the transfer may be automatically\nreversed. (see Runner._find_agent_to_run method for which agent will remain\nactive to handle next user message.)"
+              }
+            }
+          },
+          "base_llm_flow": {
+            "__members__": {
+              "BaseLlmFlow": {
+                "type": "class",
+                "signature": "()",
+                "doc": "A basic flow that calls the LLM in a loop until a final response is generated.\n\nThis flow ends when it transfer to another agent."
+              }
+            }
+          },
+          "basic": {
+            "__members__": {
+              "_BasicLlmRequestProcessor": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Base class for LLM request processor."
+              }
+            }
+          },
+          "contents": {
+            "__members__": {
+              "_ContentLlmRequestProcessor": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Builds the contents for the LLM request."
+              },
+              "_convert_foreign_event": {
+                "type": "function",
+                "signature": "(event: 'Event') -> 'Event'",
+                "doc": "Converts an event authored by another agent as a user-content event.\n\nThis is to provide another agent's output as context to the current agent, so\nthat current agent can continue to respond, such as summarizing previous\nagent's reply, etc.\n\nArgs:\n  event: The event to convert.\n\nReturns:\n  The converted event."
+              },
+              "_get_contents": {
+                "type": "function",
+                "signature": "(current_branch: 'Optional[str]', events: 'list[Event]', agent_name: 'str' = '') -> 'list[types.Content]'",
+                "doc": "Get the contents for the LLM request.\n\nApplies filtering, rearrangement, and content processing to events.\n\nArgs:\n  current_branch: The current branch of the agent.\n  events: Events to process.\n  agent_name: The name of the agent.\n\nReturns:\n  A list of processed contents."
+              },
+              "_get_current_turn_contents": {
+                "type": "function",
+                "signature": "(current_branch: 'Optional[str]', events: 'list[Event]', agent_name: 'str' = '') -> 'list[types.Content]'",
+                "doc": "Get contents for the current turn only (no conversation history).\n\nWhen include_contents='none', we want to include:\n- The current user input\n- Tool calls and responses from the current turn\nBut exclude conversation history from previous turns.\n\nIn multi-agent scenarios, the \"current turn\" for an agent starts from an\nactual user or from another agent.\n\nArgs:\n  current_branch: The current branch of the agent.\n  events: A list of all session events.\n  agent_name: The name of the agent.\n\nReturns:\n  A list of contents for the current turn only, preserving context needed\n  for proper tool execution while excluding conversation history."
+              },
+              "_is_auth_event": {
+                "type": "function",
+                "signature": "(event: 'Event') -> 'bool'",
+                "doc": ""
+              },
+              "_is_event_belongs_to_branch": {
+                "type": "function",
+                "signature": "(invocation_branch: 'Optional[str]', event: 'Event') -> 'bool'",
+                "doc": "Event belongs to a branch, when event.branch is prefix of the invocation branch."
+              },
+              "_is_other_agent_reply": {
+                "type": "function",
+                "signature": "(current_agent_name: 'str', event: 'Event') -> 'bool'",
+                "doc": "Whether the event is a reply from another agent."
+              },
+              "_merge_function_response_events": {
+                "type": "function",
+                "signature": "(function_response_events: 'list[Event]') -> 'Event'",
+                "doc": "Merges a list of function_response events into one event.\n\nThe key goal is to ensure:\n1. function_call and function_response are always of the same number.\n2. The function_call and function_response are consecutively in the content.\n\nArgs:\n  function_response_events: A list of function_response events.\n    NOTE: function_response_events must fulfill these requirements: 1. The\n      list is in increasing order of timestamp; 2. the first event is the\n      initial function_response event; 3. all later events should contain at\n      least one function_response part that related to the function_call\n      event.\n    Caveat: This implementation doesn't support when a parallel function_call\n      event contains async function_call of the same name.\n\nReturns:\n  A merged event, that is\n    1. All later function_response will replace function_response part in\n        the initial function_response event.\n    2. All non-function_response parts will be appended to the part list of\n        the initial function_response event."
+              },
+              "_rearrange_events_for_async_function_responses_in_history": {
+                "type": "function",
+                "signature": "(events: 'list[Event]') -> 'list[Event]'",
+                "doc": "Rearrange the async function_response events in the history."
+              },
+              "_rearrange_events_for_latest_function_response": {
+                "type": "function",
+                "signature": "(events: 'list[Event]') -> 'list[Event]'",
+                "doc": "Rearrange the events for the latest function_response.\n\nIf the latest function_response is for an async function_call, all events\nbetween the initial function_call and the latest function_response will be\nremoved.\n\nArgs:\n  events: A list of events.\n\nReturns:\n  A list of events with the latest function_response rearranged."
+              }
+            }
+          },
+          "functions": {
+            "__members__": {
+              "__build_response_event": {
+                "type": "function",
+                "signature": "(tool: 'BaseTool', function_result: 'dict[str, object]', tool_context: 'ToolContext', invocation_context: 'InvocationContext') -> 'Event'",
+                "doc": ""
+              },
+              "__call_tool_async": {
+                "type": "function",
+                "signature": "(tool: 'BaseTool', args: 'dict[str, Any]', tool_context: 'ToolContext') -> 'Any'",
+                "doc": "Calls the tool."
+              },
+              "__call_tool_live": {
+                "type": "function",
+                "signature": "(tool: 'BaseTool', args: 'dict[str, object]', tool_context: 'ToolContext', invocation_context: 'InvocationContext') -> 'AsyncGenerator[Event, None]'",
+                "doc": "Calls the tool asynchronously (awaiting the coroutine)."
+              },
+              "_execute_single_function_call_async": {
+                "type": "function",
+                "signature": "(invocation_context: 'InvocationContext', function_call: 'types.FunctionCall', tools_dict: 'dict[str, BaseTool]', agent: 'LlmAgent') -> 'Optional[Event]'",
+                "doc": "Execute a single function call with thread safety for state modifications."
+              },
+              "_execute_single_function_call_live": {
+                "type": "function",
+                "signature": "(invocation_context: 'InvocationContext', function_call: 'types.FunctionCall', tools_dict: 'dict[str, BaseTool]', agent: 'LlmAgent', streaming_lock: 'asyncio.Lock') -> 'Optional[Event]'",
+                "doc": "Execute a single function call for live mode with thread safety."
+              },
+              "_get_tool_and_context": {
+                "type": "function",
+                "signature": "(invocation_context: 'InvocationContext', function_call: 'types.FunctionCall', tools_dict: 'dict[str, BaseTool]')",
+                "doc": ""
+              },
+              "_process_function_live_helper": {
+                "type": "function",
+                "signature": "(tool, tool_context, function_call, function_args, invocation_context, streaming_lock: 'asyncio.Lock')",
+                "doc": ""
+              },
+              "deep_merge_dicts": {
+                "type": "function",
+                "signature": "(d1: 'dict', d2: 'dict') -> 'dict'",
+                "doc": "Recursively merges d2 into d1."
+              },
+              "find_matching_function_call": {
+                "type": "function",
+                "signature": "(events: 'list[Event]') -> 'Optional[Event]'",
+                "doc": "Finds the function call event that matches the function response id of the last event."
+              },
+              "generate_auth_event": {
+                "type": "function",
+                "signature": "(invocation_context: 'InvocationContext', function_response_event: 'Event') -> 'Optional[Event]'",
+                "doc": ""
+              },
+              "generate_client_function_call_id": {
+                "type": "function",
+                "signature": "() -> 'str'",
+                "doc": ""
+              },
+              "get_long_running_function_calls": {
+                "type": "function",
+                "signature": "(function_calls: 'list[types.FunctionCall]', tools_dict: 'dict[str, BaseTool]') -> 'set[str]'",
+                "doc": ""
+              },
+              "handle_function_calls_async": {
+                "type": "function",
+                "signature": "(invocation_context: 'InvocationContext', function_call_event: 'Event', tools_dict: 'dict[str, BaseTool]', filters: 'Optional[set[str]]' = None) -> 'Optional[Event]'",
+                "doc": "Calls the functions and returns the function response event."
+              },
+              "handle_function_calls_live": {
+                "type": "function",
+                "signature": "(invocation_context: 'InvocationContext', function_call_event: 'Event', tools_dict: 'dict[str, BaseTool]') -> 'Event'",
+                "doc": "Calls the functions and returns the function response event."
+              },
+              "merge_parallel_function_response_events": {
+                "type": "function",
+                "signature": "(function_response_events: \"list['Event']\") -> \"'Event'\"",
+                "doc": ""
+              },
+              "populate_client_function_call_id": {
+                "type": "function",
+                "signature": "(model_response_event: 'Event') -> 'None'",
+                "doc": ""
+              },
+              "remove_client_function_call_id": {
+                "type": "function",
+                "signature": "(content: 'types.Content') -> 'None'",
+                "doc": ""
+              }
+            }
+          },
+          "identity": {
+            "__members__": {
+              "_IdentityLlmRequestProcessor": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Gives the agent identity from the framework."
+              }
+            }
+          },
+          "instructions": {
+            "__members__": {
+              "_InstructionsLlmRequestProcessor": {
+                "type": "class",
+                "signature": "()",
+                "doc": "Handles instructions and global instructions for LLM flow."
+              }
+            }
+          },
+          "single_flow": {
+            "__members__": {
+              "SingleFlow": {
+                "type": "class",
+                "signature": "()",
+                "doc": "SingleFlow is the LLM flows that handles tools calls.\n\nA single flow only consider an agent itself and tools.\nNo sub-agents are allowed for single flow."
+              }
+            }
+          }
+        }
+      },
+      "memory": {
+        "_utils": {
+          "__members__": {
+            "format_timestamp": {
+              "type": "function",
+              "signature": "(timestamp: 'float') -> 'str'",
+              "doc": "Formats the timestamp of the memory entry."
+            }
+          }
+        },
+        "base_memory_service": {
+          "__members__": {
+            "BaseMemoryService": {
+              "type": "class",
+              "signature": "()",
+              "doc": "Base class for memory services.\n\nThe service provides functionalities to ingest sessions into memory so that\nthe memory can be used for user queries."
+            },
+            "SearchMemoryResponse": {
+              "type": "class",
+              "signature": "(*, memories: list[google.adk.memory.memory_entry.MemoryEntry] = <factory>) -> None",
+              "doc": "Represents the response from a memory search.\n\nAttributes:\n    memories: A list of memory entries that relate to the search query."
+            }
+          }
+        },
+        "in_memory_memory_service": {
+          "__members__": {
+            "InMemoryMemoryService": {
+              "type": "class",
+              "signature": "()",
+              "doc": "An in-memory memory service for prototyping purpose only.\n\nUses keyword matching instead of semantic search.\n\nThis class is thread-safe, however, it should be used for testing and\ndevelopment only."
+            },
+            "_extract_words_lower": {
+              "type": "function",
+              "signature": "(text: 'str') -> 'set[str]'",
+              "doc": "Extracts words from a string and converts them to lowercase."
+            },
+            "_user_key": {
+              "type": "function",
+              "signature": "(app_name: 'str', user_id: 'str')",
+              "doc": ""
+            }
+          }
+        },
+        "memory_entry": {
+          "__members__": {
+            "MemoryEntry": {
+              "type": "class",
+              "signature": "(*, content: google.genai.types.Content, author: Optional[str] = None, timestamp: Optional[str] = None) -> None",
+              "doc": "Represent one memory entry."
+            }
+          }
+        },
+        "vertex_ai_memory_bank_service": {
+          "__members__": {
+            "VertexAiMemoryBankService": {
+              "type": "class",
+              "signature": "(project: 'Optional[str]' = None, location: 'Optional[str]' = None, agent_engine_id: 'Optional[str]' = None)",
+              "doc": "Implementation of the BaseMemoryService using Vertex AI Memory Bank."
+            },
+            "_convert_api_response": {
+              "type": "function",
+              "signature": "(api_response) -> 'Dict[str, Any]'",
+              "doc": "Converts the API response to a JSON object based on the type."
+            },
+            "_should_filter_out_event": {
+              "type": "function",
+              "signature": "(content: 'types.Content') -> 'bool'",
+              "doc": "Returns whether the event should be filtered out."
+            }
+          }
+        },
+        "vertex_ai_rag_memory_service": {
+          "__members__": {
+            "VertexAiRagMemoryService": {
+              "type": "class",
+              "signature": "(rag_corpus: 'Optional[str]' = None, similarity_top_k: 'Optional[int]' = None, vector_distance_threshold: 'float' = 10)",
+              "doc": "A memory service that uses Vertex AI RAG for storage and retrieval."
+            },
+            "_merge_event_lists": {
+              "type": "function",
+              "signature": "(event_lists: 'list[list[Event]]') -> 'list[list[Event]]'",
+              "doc": "Merge event lists that have overlapping timestamps."
+            }
+          }
+        }
+      },
+      "models": {
+        "base_llm": {
+          "__members__": {
+            "BaseLlm": {
+              "type": "class",
+              "signature": "(*, model: str) -> None",
+              "doc": "The BaseLLM class.\n\nAttributes:\n  model: The name of the LLM, e.g. gemini-1.5-flash or gemini-1.5-flash-001."
+            }
+          }
+        },
+        "base_llm_connection": {
+          "__members__": {
+            "BaseLlmConnection": {
+              "type": "class",
+              "signature": "()",
+              "doc": "The base class for a live model connection."
+            }
+          }
+        },
+        "gemini_llm_connection": {
+          "__members__": {
+            "GeminiLlmConnection": {
+              "type": "class",
+              "signature": "(gemini_session: 'live.AsyncSession')",
+              "doc": "The Gemini model connection."
+            }
+          }
+        },
+        "google_llm": {
+          "__members__": {
+            "Gemini": {
+              "type": "class",
+              "signature": "(*, model: str = 'gemini-1.5-flash', retry_options: Optional[google.genai.types.HttpRetryOptions] = None) -> None",
+              "doc": "Integration for Gemini models.\n\nAttributes:\n  model: The name of the Gemini model."
+            },
+            "_build_function_declaration_log": {
+              "type": "function",
+              "signature": "(func_decl: 'types.FunctionDeclaration') -> 'str'",
+              "doc": ""
+            },
+            "_build_request_log": {
+              "type": "function",
+              "signature": "(req: 'LlmRequest') -> 'str'",
+              "doc": ""
+            },
+            "_build_response_log": {
+              "type": "function",
+              "signature": "(resp: 'types.GenerateContentResponse') -> 'str'",
+              "doc": ""
+            },
+            "_remove_display_name_if_present": {
+              "type": "function",
+              "signature": "(data_obj: 'Union[types.Blob, types.FileData, None]')",
+              "doc": "Sets display_name to None for the Gemini API (non-Vertex) backend.\n\nThis backend does not support the display_name parameter for file uploads,\nso it must be removed to prevent request failures."
+            }
+          }
+        },
+        "lite_llm": {
+          "__members__": {
+            "FunctionChunk": {
+              "type": "class",
+              "signature": "(*, id: Optional[str], name: Optional[str], args: Optional[str], index: Optional[int] = 0) -> None",
+              "doc": "!!! abstract \"Usage Documentation\"\n    [Models](../concepts/models.md)\n\nA base class for creating Pydantic models.\n\nAttributes:\n    __class_vars__: The names of the class variables defined on the model.\n    __private_attributes__: Metadata about the private attributes of the model.\n    __signature__: The synthesized `__init__` [`Signature`][inspect.Signature] of the model.\n\n    __pydantic_complete__: Whether model building is completed, or if there are still undefined fields.\n    __pydantic_core_schema__: The core schema of the model.\n    __pydantic_custom_init__: Whether the model has a custom `__init__` function.\n    __pydantic_decorators__: Metadata containing the decorators defined on the model.\n        This replaces `Model.__validators__` and `Model.__root_validators__` from Pydantic V1.\n    __pydantic_generic_metadata__: Metadata for generic models; contains data used for a similar purpose to\n        __args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.\n    __pydantic_parent_namespace__: Parent namespace of the model, used for automatic rebuilding of models.\n    __pydantic_post_init__: The name of the post-init method for the model, if defined.\n    __pydantic_root_model__: Whether the model is a [`RootModel`][pydantic.root_model.RootModel].\n    __pydantic_serializer__: The `pydantic-core` `SchemaSerializer` used to dump instances of the model.\n    __pydantic_validator__: The `pydantic-core` `SchemaValidator` used to validate instances of the model.\n\n    __pydantic_fields__: A dictionary of field names and their corresponding [`FieldInfo`][pydantic.fields.FieldInfo] objects.\n    __pydantic_computed_fields__: A dictionary of computed field names and their corresponding [`ComputedFieldInfo`][pydantic.fields.ComputedFieldInfo] objects.\n\n    __pydantic_extra__: A dictionary containing extra values, if [`extra`][pydantic.config.ConfigDict.extra]\n        is set to `'allow'`.\n    __pydantic_fields_set__: The names of fields explicitly set during instantiation.\n    __pydantic_private__: Values of private attributes set on the model instance."
+            },
+            "LiteLLMClient": {
+              "type": "class",
+              "signature": "()",
+              "doc": "Provides acompletion method (for better testability)."
+            },
+            "LiteLlm": {
+              "type": "class",
+              "signature": "(model: 'str', *, llm_client: google.adk.models.lite_llm.LiteLLMClient = <factory>) -> None",
+              "doc": "Wrapper around litellm.\n\nThis wrapper can be used with any of the models supported by litellm. The\nenvironment variable(s) needed for authenticating with the model endpoint must\nbe set prior to instantiating this class.\n\nExample usage:\n```\nos.environ[\"VERTEXAI_PROJECT\"] = \"your-gcp-project-id\"\nos.environ[\"VERTEXAI_LOCATION\"] = \"your-gcp-location\"\n\nagent = Agent(\n    model=LiteLlm(model=\"vertex_ai/claude-3-7-sonnet@20250219\"),\n    ...\n)\n```\n\nAttributes:\n  model: The name of the LiteLlm model.\n  llm_client: The LLM client to use for the model."
+            },
+            "TextChunk": {
+              "type": "class",
+              "signature": "(*, text: str) -> None",
+              "doc": "!!! abstract \"Usage Documentation\"\n    [Models](../concepts/models.md)\n\nA base class for creating Pydantic models.\n\nAttributes:\n    __class_vars__: The names of the class variables defined on the model.\n    __private_attributes__: Metadata about the private attributes of the model.\n    __signature__: The synthesized `__init__` [`Signature`][inspect.Signature] of the model.\n\n    __pydantic_complete__: Whether model building is completed, or if there are still undefined fields.\n    __pydantic_core_schema__: The core schema of the model.\n    __pydantic_custom_init__: Whether the model has a custom `__init__` function.\n    __pydantic_decorators__: Metadata containing the decorators defined on the model.\n        This replaces `Model.__validators__` and `Model.__root_validators__` from Pydantic V1.\n    __pydantic_generic_metadata__: Metadata for generic models; contains data used for a similar purpose to\n        __args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.\n    __pydantic_parent_namespace__: Parent namespace of the model, used for automatic rebuilding of models.\n    __pydantic_post_init__: The name of the post-init method for the model, if defined.\n    __pydantic_root_model__: Whether the model is a [`RootModel`][pydantic.root_model.RootModel].\n    __pydantic_serializer__: The `pydantic-core` `SchemaSerializer` used to dump instances of the model.\n    __pydantic_validator__: The `pydantic-core` `SchemaValidator` used to validate instances of the model.\n\n    __pydantic_fields__: A dictionary of field names and their corresponding [`FieldInfo`][pydantic.fields.FieldInfo] objects.\n    __pydantic_computed_fields__: A dictionary of computed field names and their corresponding [`ComputedFieldInfo`][pydantic.fields.ComputedFieldInfo] objects.\n\n    __pydantic_extra__: A dictionary containing extra values, if [`extra`][pydantic.config.ConfigDict.extra]\n        is set to `'allow'`.\n    __pydantic_fields_set__: The names of fields explicitly set during instantiation.\n    __pydantic_private__: Values of private attributes set on the model instance."
+            },
+            "UsageMetadataChunk": {
+              "type": "class",
+              "signature": "(*, prompt_tokens: int, completion_tokens: int, total_tokens: int) -> None",
+              "doc": "!!! abstract \"Usage Documentation\"\n    [Models](../concepts/models.md)\n\nA base class for creating Pydantic models.\n\nAttributes:\n    __class_vars__: The names of the class variables defined on the model.\n    __private_attributes__: Metadata about the private attributes of the model.\n    __signature__: The synthesized `__init__` [`Signature`][inspect.Signature] of the model.\n\n    __pydantic_complete__: Whether model building is completed, or if there are still undefined fields.\n    __pydantic_core_schema__: The core schema of the model.\n    __pydantic_custom_init__: Whether the model has a custom `__init__` function.\n    __pydantic_decorators__: Metadata containing the decorators defined on the model.\n        This replaces `Model.__validators__` and `Model.__root_validators__` from Pydantic V1.\n    __pydantic_generic_metadata__: Metadata for generic models; contains data used for a similar purpose to\n        __args__, __origin__, __parameters__ in typing-module generics. May eventually be replaced by these.\n    __pydantic_parent_namespace__: Parent namespace of the model, used for automatic rebuilding of models.\n    __pydantic_post_init__: The name of the post-init method for the model, if defined.\n    __pydantic_root_model__: Whether the model is a [`RootModel`][pydantic.root_model.RootModel].\n    __pydantic_serializer__: The `pydantic-core` `SchemaSerializer` used to dump instances of the model.\n    __pydantic_validator__: The `pydantic-core` `SchemaValidator` used to validate instances of the model.\n\n    __pydantic_fields__: A dictionary of field names and their corresponding [`FieldInfo`][pydantic.fields.FieldInfo] objects.\n    __pydantic_computed_fields__: A dictionary of computed field names and their corresponding [`ComputedFieldInfo`][pydantic.fields.ComputedFieldInfo] objects.\n\n    __pydantic_extra__: A dictionary containing extra values, if [`extra`][pydantic.config.ConfigDict.extra]\n        is set to `'allow'`.\n    __pydantic_fields_set__: The names of fields explicitly set during instantiation.\n    __pydantic_private__: Values of private attributes set on the model instance."
+            },
+            "_build_function_declaration_log": {
+              "type": "function",
+              "signature": "(func_decl: 'types.FunctionDeclaration') -> 'str'",
+              "doc": "Builds a function declaration log.\n\nArgs:\n  func_decl: The function declaration to convert.\n\nReturns:\n  The function declaration log."
+            },
+            "_build_request_log": {
+              "type": "function",
+              "signature": "(req: 'LlmRequest') -> 'str'",
+              "doc": "Builds a request log.\n\nArgs:\n  req: The request to convert.\n\nReturns:\n  The request log."
+            },
+            "_content_to_message_param": {
+              "type": "function",
+              "signature": "(content: 'types.Content') -> 'Union[Message, list[Message]]'",
+              "doc": "Converts a types.Content to a litellm Message or list of Messages.\n\nHandles multipart function responses by returning a list of\nChatCompletionToolMessage objects if multiple function_response parts exist.\n\nArgs:\n  content: The content to convert.\n\nReturns:\n  A litellm Message, a list of litellm Messages."
+            },
+            "_function_declaration_to_tool_param": {
+              "type": "function",
+              "signature": "(function_declaration: 'types.FunctionDeclaration') -> 'dict'",
+              "doc": "Converts a types.FunctionDeclaration to a openapi spec dictionary.\n\nArgs:\n  function_declaration: The function declaration to convert.\n\nReturns:\n  The openapi spec dictionary representation of the function declaration."
+            },
+            "_get_completion_inputs": {
+              "type": "function",
+              "signature": "(llm_request: 'LlmRequest') -> 'Tuple[List[Message], Optional[List[Dict]], Optional[types.SchemaUnion], Optional[Dict]]'",
+              "doc": "Converts an LlmRequest to litellm inputs and extracts generation params.\n\nArgs:\n  llm_request: The LlmRequest to convert.\n\nReturns:\n  The litellm inputs (message list, tool dictionary, response format and generation params)."
+            },
+            "_get_content": {
+              "type": "function",
+              "signature": "(parts: 'Iterable[types.Part]') -> 'Union[OpenAIMessageContent, str]'",
+              "doc": "Converts a list of parts to litellm content.\n\nArgs:\n  parts: The parts to convert.\n\nReturns:\n  The litellm content."
+            },
+            "_message_to_generate_content_response": {
+              "type": "function",
+              "signature": "(message: 'Message', is_partial: 'bool' = False) -> 'LlmResponse'",
+              "doc": "Converts a litellm message to LlmResponse.\n\nArgs:\n  message: The message to convert.\n  is_partial: Whether the message is partial.\n\nReturns:\n  The LlmResponse."
+            },
+            "_model_response_to_chunk": {
+              "type": "function",
+              "signature": "(response: 'ModelResponse') -> 'Generator[Tuple[Optional[Union[TextChunk, FunctionChunk, UsageMetadataChunk]], Optional[str]], None, None]'",
+              "doc": "Converts a litellm message to text, function or usage metadata chunk.\n\nArgs:\n  response: The response from the model.\n\nYields:\n  A tuple of text or function or usage metadata chunk and finish reason."
+            },
+            "_model_response_to_generate_content_response": {
+              "type": "function",
+              "signature": "(response: 'ModelResponse') -> 'LlmResponse'",
+              "doc": "Converts a litellm response to LlmResponse. Also adds usage metadata.\n\nArgs:\n  response: The model response.\n\nReturns:\n  The LlmResponse."
+            },
+            "_safe_json_serialize": {
+              "type": "function",
+              "signature": "(obj) -> 'str'",
+              "doc": "Convert any Python object to a JSON-serializable type or string.\n\nArgs:\n  obj: The object to serialize.\n\nReturns:\n  The JSON-serialized object string or string."
+            },
+            "_schema_to_dict": {
+              "type": "function",
+              "signature": "(schema: 'types.Schema') -> 'dict'",
+              "doc": "Recursively converts a types.Schema to a pure-python dict\nwith all enum values written as lower-case strings.\n\nArgs:\n  schema: The schema to convert.\n\nReturns:\n  The dictionary representation of the schema."
+            },
+            "_to_litellm_role": {
+              "type": "function",
+              "signature": "(role: 'Optional[str]') -> \"Literal['user', 'assistant']\"",
+              "doc": "Converts a types.Content role to a litellm role.\n\nArgs:\n  role: The types.Content role.\n\nReturns:\n  The litellm role."
+            }
+          }
+        },
+        "llm_request": {
+          "__members__": {
+            "LlmRequest": {
+              "type": "class",
+              "signature": "(*, model: Optional[str] = None, contents: list[google.genai.types.Content] = <factory>, config: google.genai.types.GenerateContentConfig = <factory>, live_connect_config: google.genai.types.LiveConnectConfig = <factory>, tools_dict: dict[str, google.adk.tools.base_tool.BaseTool] = <factory>) -> None",
+              "doc": "LLM request class that allows passing in tools, output schema and system\n\ninstructions to the model.\n\nAttributes:\n  model: The model name.\n  contents: The contents to send to the model.\n  config: Additional config for the generate content request.\n  tools_dict: The tools dictionary."
+            }
+          }
+        },
+        "llm_response": {
+          "__members__": {
+            "LlmResponse": {
+              "type": "class",
+              "signature": "(*, content: Optional[google.genai.types.Content] = None, groundingMetadata: Optional[google.genai.types.GroundingMetadata] = None, partial: Optional[bool] = None, turnComplete: Optional[bool] = None, errorCode: Optional[str] = None, errorMessage: Optional[str] = None, interrupted: Optional[bool] = None, customMetadata: Optional[dict[str, Any]] = None, usageMetadata: Optional[google.genai.types.GenerateContentResponseUsageMetadata] = None, liveSessionResumptionUpdate: Optional[google.genai.types.LiveServerSessionResumptionUpdate] = None) -> None",
+              "doc": "LLM response class that provides the first candidate response from the\n\nmodel if available. Otherwise, returns error code and message.\n\nAttributes:\n  content: The content of the response.\n  grounding_metadata: The grounding metadata of the response.\n  partial: Indicates whether the text content is part of a unfinished text\n    stream. Only used for streaming mode and when the content is plain text.\n  turn_complete: Indicates whether the response from the model is complete.\n    Only used for streaming mode.\n  error_code: Error code if the response is an error. Code varies by model.\n  error_message: Error message if the response is an error.\n  interrupted: Flag indicating that LLM was interrupted when generating the\n    content. Usually it's due to user interruption during a bidi streaming.\n  custom_metadata: The custom metadata of the LlmResponse."
+            }
+          }
+        },
+        "registry": {
+          "__members__": {
+            "LLMRegistry": {
+              "type": "class",
+              "signature": "()",
+              "doc": "Registry for LLMs."
+            }
+          }
+        }
+      },
+      "planners": {
+        "base_planner": {
+          "__members__": {
+            "BasePlanner": {
+              "type": "class",
+              "signature": "()",
+              "doc": "Abstract base class for all planners.\n\nThe planner allows the agent to generate plans for the queries to guide its\naction."
+            }
+          }
+        },
+        "built_in_planner": {
+          "__members__": {
+            "BuiltInPlanner": {
+              "type": "class",
+              "signature": "(*, thinking_config: google.genai.types.ThinkingConfig)",
+              "doc": "The built-in planner that uses model's built-in thinking features.\n\nAttributes:\n    thinking_config: Config for model built-in thinking features. An error\n      will be returned if this field is set for models that don't support\n      thinking."
+            }
+          }
+        },
+        "plan_re_act_planner": {
+          "__members__": {
+            "PlanReActPlanner": {
+              "type": "class",
+              "signature": "()",
+              "doc": "Plan-Re-Act planner that constrains the LLM response to generate a plan before any action/observation.\n\nNote: this planner does not require the model to support built-in thinking\nfeatures or setting the thinking config."
+            }
+          }
+        }
+      },
+      "platform": {
+        "thread": {
+          "__members__": {
+            "create_thread": {
+              "type": "function",
+              "signature": "(target: 'Callable[..., None]', *args, **kwargs)",
+              "doc": "Creates a thread."
+            }
+          }
+        }
+      },
+      "plugins": {
+        "base_plugin": {
+          "__members__": {
+            "BasePlugin": {
+              "type": "class",
+              "signature": "(name: 'str')",
+              "doc": "Base class for creating plugins.\n\nPlugins provide a structured way to intercept and modify agent, tool, and\nLLM behaviors at critical execution points in a callback manner. While agent\ncallbacks apply to a particular agent, plugins applies globally to all\nagents added in the runner. Plugins are best used for adding custom behaviors\nlike logging, monitoring, caching, or modifying requests and responses at key\nstages.\n\nA plugin can implement one or more methods of callbacks, but should not\nimplement the same method of callback for multiple times.\n\nRelation with [Agent callbacks](https://google.github.io/adk-docs/callbacks/):\n\n**Execution Order**\nSimilar to Agent callbacks, Plugins are executed in the order they are\nregistered. However, Plugin and Agent Callbacks are executed sequentially,\nwith Plugins takes precedence over agent callbacks. When the callback in a\nplugin returns a value, it will short circuit all remaining plugins and\nagent callbacks, causing all remaining plugins and agent callbacks\nto be skipped.\n\n**Change Propagation**\nPlugins and agent callbacks can both modify the value of the input parameters,\nincluding agent input, tool input, and LLM request/response, etc. They work in\nthe exactly same way. The modifications will be visible and passed to the next\ncallback in the chain. For example, if a plugin modifies the tool input with\nbefore_tool_callback, the modified tool input will be passed to the\nbefore_tool_callback of the next plugin, and further passed to the agent\ncallbacks if not short circuited.\n\nTo use a plugin, implement the desired callback methods and pass an instance\nof your custom plugin class to the ADK Runner.\n\nExamples:\n    A simple plugin that logs every tool call.\n\n    >>> class ToolLoggerPlugin(BasePlugin):\n    ..   def __init__(self):\n    ..     super().__init__(name=\"tool_logger\")\n    ..\n    ..   async def before_tool_callback(\n    ..       self, *, tool: BaseTool, tool_args: dict[str, Any],\n    tool_context:\n    ToolContext\n    ..   ):\n    ..     print(f\"[{self.name}] Calling tool '{tool.name}' with args:\n    {tool_args}\")\n    ..\n    ..   async def after_tool_callback(\n    ..       self, *, tool: BaseTool, tool_args: dict, tool_context:\n    ToolContext, result: dict\n    ..   ):\n    ..     print(f\"[{self.name}] Tool '{tool.name}' finished with result:\n    {result}\")\n    ..\n    >>> # Add the plugin to ADK Runner\n    >>> # runner = Runner(\n    >>> #     ...\n    >>> #     plugins=[ToolLoggerPlugin(), AgentPolicyPlugin()],\n    >>> # )"
+            }
+          }
+        },
+        "logging_plugin": {
+          "__members__": {
+            "LoggingPlugin": {
+              "type": "class",
+              "signature": "(name: 'str' = 'logging_plugin')",
+              "doc": "A plugin that logs important information at each callback point.\n\nThis plugin helps printing all critical events in the console. It is not a\nreplacement of existing logging in ADK. It rather helps terminal based\ndebugging by showing all logs in the console, and serves as a simple demo for\neveryone to leverage when developing new plugins.\n\nThis plugin helps users track the invocation status by logging:\n- User messages and invocation context\n- Agent execution flow\n- LLM requests and responses\n- Tool calls with arguments and results\n- Events and final responses\n- Errors during model and tool execution\n\nExample:\n    >>> logging_plugin = LoggingPlugin()\n    >>> runner = Runner(\n    ...     agents=[my_agent],\n    ...     # ...\n    ...     plugins=[logging_plugin],\n    ... )"
+            }
+          }
+        },
+        "plugin_manager": {
+          "__members__": {
+            "PluginManager": {
+              "type": "class",
+              "signature": "(plugins: 'Optional[List[BasePlugin]]' = None)",
+              "doc": "Manages the registration and execution of plugins.\n\nThe PluginManager is an internal class that orchestrates the invocation of\nplugin callbacks at key points in the SDK's execution lifecycle. It maintains\na list of registered plugins and ensures they are called in the order they\nwere registered.\n\nThe core execution logic implements an \"early exit\" strategy: if any plugin\ncallback returns a non-`None` value, the execution of subsequent plugins for\nthat specific event is halted, and the returned value is propagated up the\ncall stack. This allows plugins to short-circuit operations like agent runs,\ntool calls, or model requests."
             }
           }
         }
@@ -474,6 +2283,40 @@
               "signature": "(project: 'Optional[str]', location: 'Optional[str]') -> 'bool'",
               "doc": "Check if Vertex AI and API key are both enabled replacing project and location, meaning the user is using the Vertex Express Mode."
             }
+          }
+        }
+      },
+      "telemetry": {
+        "__members__": {
+          "_build_llm_request_for_trace": {
+            "type": "function",
+            "signature": "(llm_request: 'LlmRequest') -> 'dict[str, Any]'",
+            "doc": "Builds a dictionary representation of the LLM request for tracing.\n\nThis function prepares a dictionary representation of the LlmRequest\nobject, suitable for inclusion in a trace. It excludes fields that cannot\nbe serialized (e.g., function pointers) and avoids sending bytes data.\n\nArgs:\n  llm_request: The LlmRequest object.\n\nReturns:\n  A dictionary representation of the LLM request."
+          },
+          "_safe_json_serialize": {
+            "type": "function",
+            "signature": "(obj) -> 'str'",
+            "doc": "Convert any Python object to a JSON-serializable type or string.\n\nArgs:\n  obj: The object to serialize.\n\nReturns:\n  The JSON-serialized object string or <non-serializable> if the object cannot be serialized."
+          },
+          "trace_call_llm": {
+            "type": "function",
+            "signature": "(invocation_context: 'InvocationContext', event_id: 'str', llm_request: 'LlmRequest', llm_response: 'LlmResponse')",
+            "doc": "Traces a call to the LLM.\n\nThis function records details about the LLM request and response as\nattributes on the current OpenTelemetry span.\n\nArgs:\n  invocation_context: The invocation context for the current agent run.\n  event_id: The ID of the event.\n  llm_request: The LLM request object.\n  llm_response: The LLM response object."
+          },
+          "trace_merged_tool_calls": {
+            "type": "function",
+            "signature": "(response_event_id: 'str', function_response_event: 'Event')",
+            "doc": "Traces merged tool call events.\n\nCalling this function is not needed for telemetry purposes. This is provided\nfor preventing /debug/trace requests (typically sent by web UI).\n\nArgs:\n  response_event_id: The ID of the response event.\n  function_response_event: The merged response event."
+          },
+          "trace_send_data": {
+            "type": "function",
+            "signature": "(invocation_context: 'InvocationContext', event_id: 'str', data: 'list[types.Content]')",
+            "doc": "Traces the sending of data to the agent.\n\nThis function records details about the data sent to the agent as\nattributes on the current OpenTelemetry span.\n\nArgs:\n  invocation_context: The invocation context for the current agent run.\n  event_id: The ID of the event.\n  data: A list of content objects."
+          },
+          "trace_tool_call": {
+            "type": "function",
+            "signature": "(tool: 'BaseTool', args: 'dict[str, Any]', function_response_event: 'Event')",
+            "doc": "Traces tool call.\n\nArgs:\n  tool: The tool that was called.\n  args: The arguments to the tool call.\n  function_response_event: The event with the function response details."
           }
         }
       },
@@ -1459,6 +3302,84 @@
               "type": "class",
               "signature": "(*, data_store_id: 'Optional[str]' = None, data_store_specs: 'Optional[list[types.VertexAISearchDataStoreSpec]]' = None, search_engine_id: 'Optional[str]' = None, filter: 'Optional[str]' = None, max_results: 'Optional[int]' = None)",
               "doc": "A built-in tool using Vertex AI Search.\n\nAttributes:\n  data_store_id: The Vertex AI search data store resource ID.\n  search_engine_id: The Vertex AI search engine resource ID."
+            }
+          }
+        }
+      },
+      "utils": {
+        "feature_decorator": {
+          "__members__": {
+            "_create_decorator": {
+              "type": "function",
+              "signature": "(message: 'str', label: 'str', block_usage: 'bool', bypass_env_var: 'Optional[str]') -> 'Callable[[T], T]'",
+              "doc": ""
+            },
+            "_make_feature_decorator": {
+              "type": "function",
+              "signature": "(*, label: 'str', default_message: 'str', block_usage: 'bool' = False, bypass_env_var: 'Optional[str]' = None) -> 'Callable'",
+              "doc": ""
+            },
+            "experimental": {
+              "type": "function",
+              "signature": "(message_or_obj=None)",
+              "doc": ""
+            },
+            "working_in_progress": {
+              "type": "function",
+              "signature": "(message_or_obj=None)",
+              "doc": ""
+            }
+          }
+        },
+        "instructions_utils": {
+          "__members__": {
+            "_is_valid_state_name": {
+              "type": "function",
+              "signature": "(var_name)",
+              "doc": "Checks if the variable name is a valid state name.\n\nValid state is either:\n  - Valid identifier\n  - <Valid prefix>:<Valid identifier>\nAll the others will just return as it is.\n\nArgs:\n  var_name: The variable name to check.\n\nReturns:\n  True if the variable name is a valid state name, False otherwise."
+            },
+            "inject_session_state": {
+              "type": "function",
+              "signature": "(template: 'str', readonly_context: 'ReadonlyContext') -> 'str'",
+              "doc": "Populates values in the instruction template, e.g. state, artifact, etc.\n\nThis method is intended to be used in InstructionProvider based instruction\nand global_instruction which are called with readonly_context.\n\ne.g.\n```\n...\nfrom google.adk.utils.instructions_utils import inject_session_state\n\nasync def build_instruction(\n    readonly_context: ReadonlyContext,\n) -> str:\n  return await inject_session_state(\n      'You can inject a state variable like {var_name} or an artifact '\n      '{artifact.file_name} into the instruction template.',\n      readonly_context,\n  )\n\nagent = Agent(\n    model=\"gemini-2.0-flash\",\n    name=\"agent\",\n    instruction=build_instruction,\n)\n```\n\nArgs:\n  template: The instruction template.\n  readonly_context: The read-only context\n\nReturns:\n  The instruction template with values populated."
+            }
+          }
+        },
+        "model_name_utils": {
+          "__members__": {
+            "extract_model_name": {
+              "type": "function",
+              "signature": "(model_string: 'str') -> 'str'",
+              "doc": "Extract the actual model name from either simple or path-based format.\n\nArgs:\n  model_string: Either a simple model name like \"gemini-2.5-pro\" or\n                a path-based model name like \"projects/.../models/gemini-2.0-flash-001\"\n\nReturns:\n  The extracted model name (e.g., \"gemini-2.5-pro\")"
+            },
+            "is_gemini_1_model": {
+              "type": "function",
+              "signature": "(model_string: 'Optional[str]') -> 'bool'",
+              "doc": "Check if the model is a Gemini 1.x model using regex patterns.\n\nArgs:\n  model_string: Either a simple model name or path-based model name\n\nReturns:\n  True if it's a Gemini 1.x model, False otherwise"
+            },
+            "is_gemini_2_model": {
+              "type": "function",
+              "signature": "(model_string: 'Optional[str]') -> 'bool'",
+              "doc": "Check if the model is a Gemini 2.x model using regex patterns.\n\nArgs:\n  model_string: Either a simple model name or path-based model name\n\nReturns:\n  True if it's a Gemini 2.x model, False otherwise"
+            },
+            "is_gemini_model": {
+              "type": "function",
+              "signature": "(model_string: 'Optional[str]') -> 'bool'",
+              "doc": "Check if the model is a Gemini model using regex patterns.\n\nArgs:\n  model_string: Either a simple model name or path-based model name\n\nReturns:\n  True if it's a Gemini model, False otherwise"
+            }
+          }
+        },
+        "variant_utils": {
+          "__members__": {
+            "GoogleLLMVariant": {
+              "type": "class",
+              "signature": "(*values)",
+              "doc": "The Google LLM variant to use.\nsee https://google.github.io/adk-docs/get-started/quickstart/#set-up-the-model"
+            },
+            "get_google_llm_variant": {
+              "type": "function",
+              "signature": "() -> 'str'",
+              "doc": ""
             }
           }
         }

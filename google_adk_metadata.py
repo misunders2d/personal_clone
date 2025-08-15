@@ -4,14 +4,15 @@ import importlib
 import pkgutil
 
 ADK_MODULES = [
-    "google.adk.agents",
-    "google.adk.runners",
-    "google.adk.tools",
-    "google.adk.artifacts",
-    "google.adk.sessions",
-    "google.adk.tools.openapi_tool",
-    "google.adk.errors",
-]
+    'google.adk']
+#     "google.adk.agents",
+#     "google.adk.artifacts",
+#     "google.adk.errors",
+#     "google.adk.runners",
+#     "google.adk.sessions",
+#     "google.adk.tools",
+#     "google.adk.tools.openapi_tool",
+# ]
 
 
 def find_all_modules(base_packages):
