@@ -1,24 +1,66 @@
-from google.adk.agents import Agent, LoopAgent, SequentialAgent
-from google.adk.tools import exit_loop, AgentTool
-from google.adk.tools.load_web_page import load_web_page
-from google.adk.models.lite_llm import LiteLlm
-from google.adk.code_executors import BuiltInCodeExecutor
-from google.adk.planners import BuiltInPlanner
+import os
+from typing import Optional
 
+from google.adk.agents import Agent, LoopAgent, SequentialAgent
+from google.adk.agents.callback_context import CallbackContext
+from google.adk.tools import exit_loop, AgentTool, FunctionTool  # Import FunctionTool
+from google.adk.code_executors import BuiltInCodeExecutor
+from google.adk.models.lite_llm import LiteLlm
+from google.adk.planners import BuiltInPlanner
 from google.genai import types
 
-import os
-
 from ..sub_agents.search_agent import create_search_agent_tool
-
-
 from ..utils.github_utils import create_github_toolset
-
+from google.adk.tools.load_web_page import (
+    load_web_page,
+)  # Ensure this import is correct based on your structure
 from .. import instructions
 
-import os
+# --- Environment Variables ---
+# Provide default values for robustness
+MODEL_NAME = os.getenv("MODEL_NAME", "gemini-2.5-flash")  # Default model
+DEVELOPER_AGENT_MODEL = os.getenv(
+    "DEVELOPER_AGENT_MODEL", "gemini-2.5-pro"
+)  # Default for code reviewer
+MAX_LOOP_ITERATIONS = int(
+    os.getenv("MAX_LOOP_ITERATIONS", "5")
+)  # Default max iterations
 
-MODEL_NAME = os.environ["MODEL_NAME"]
+# --- Callbacks ---
+
+
+async def _check_and_confirm_adk_docs(
+    callback_context: CallbackContext,
+) -> Optional[types.Content]:
+    """
+    Callback executed before the developer agent runs.
+    Verifies ADK documentation loading and confirms to the user.
+    """
+    print(
+        f"[{callback_context.agent_name}] Performing initial setup: checking ADK documentation."
+    )
+
+    official_adk_references = callback_context.state.get("official_adk_references")
+
+    if not official_adk_references or not official_adk_references.get(
+        "conceptual_docs"
+    ):
+        error_message = (
+            "I cannot proceed as the Google ADK documentation could not be loaded."
+        )
+        print(f"[{callback_context.agent_name}] Error: {error_message}")
+        return types.Content(role="model", parts=[types.Part(text=error_message)])
+
+    conceptual_docs_content = official_adk_references["conceptual_docs"]
+    first_10_words = " ".join(conceptual_docs_content.split()[:10])
+
+    confirmation_message = f"I have read the Google ADK documentation. The first 10 words are '{first_10_words}'."
+    print(f"[{callback_context.agent_name}] {confirmation_message}")
+
+    return None
+
+
+# --- Agent Definitions ---
 
 
 def create_code_inspector_agent(name="code_inspector_agent"):
@@ -34,7 +76,7 @@ def create_code_inspector_agent(name="code_inspector_agent"):
 
 def create_planner_agent():
     planner_agent = Agent(
-        name=f"planner_agent",
+        name="planner_agent",
         description="Creates and refines development plans.",
         instruction=instructions.PLANNER_AGENT_INSTRUCTION,
         model=MODEL_NAME,
@@ -60,7 +102,7 @@ def create_code_reviewer_agent():
         name="code_reviewer_agent",
         description="Reviews development plans for quality and adherence to project standards.",
         instruction=instructions.CODE_REVIEWER_AGENT_INSTRUCTION,
-        model=LiteLlm(os.environ["DEVELOPER_AGENT_MODEL"]),
+        model=LiteLlm(model=DEVELOPER_AGENT_MODEL),
         tools=[
             create_github_toolset(),
             create_search_agent_tool(),
@@ -86,6 +128,7 @@ IMPORTANT! DO NOT MODIFY THE PLAN IN ANY WAY. OUTPUT IT UNCHANGED!
 """,
         model=MODEL_NAME,
         tools=[],
+        output_key="approved_plan",
     )
     return plan_fetcher_agent
 
@@ -95,10 +138,10 @@ IMPORTANT! DO NOT MODIFY THE PLAN IN ANY WAY. OUTPUT IT UNCHANGED!
 
 def create_code_review_loop():
     code_review_loop = LoopAgent(
-        name=f"review_loop",
+        name="review_loop",
         description="A loop agent that creates and reviews development plans iteratively to achieve best results.",
         sub_agents=[create_planner_agent(), create_code_reviewer_agent()],
-        max_iterations=int(os.environ["MAX_LOOP_ITERATIONS"]),
+        max_iterations=MAX_LOOP_ITERATIONS,
     )
     return code_review_loop
 
@@ -123,5 +166,6 @@ def create_developer_agent():
         model=MODEL_NAME,
         sub_agents=[plan_and_review_agent()],
         tools=[create_github_toolset()],
+        before_agent_callback=_check_and_confirm_adk_docs,
     )
     return developer_agent
