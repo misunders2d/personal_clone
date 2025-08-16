@@ -1,5 +1,4 @@
 import os
-import streamlit as st
 import requests
 from typing import Optional
 from datetime import datetime, timezone
@@ -8,14 +7,14 @@ from datetime import datetime, timezone
 class ClickUpAPI:
     def __init__(self):
         self.api_token = os.environ.get(
-            "CLICKUP_API_TOKEN", st.secrets["CLICKUP_API_TOKEN"]
+            "CLICKUP_API_TOKEN"
         )
         self.space_id = os.environ.get(
-            "CLICKUP_SPACE_ID", st.secrets["CLICKUP_SPACE_ID"]
+            "CLICKUP_SPACE_ID"
         )
-        self.list_id = os.environ.get("CLICKUP_LIST_ID", st.secrets["CLICKUP_LIST_ID"])
+        self.list_id = os.environ.get("CLICKUP_LIST_ID")
         self.user_email = os.environ.get(
-            "CLICKUP_USER_EMAIL", st.secrets["CLICKUP_USER_EMAIL"]
+            "CLICKUP_USER_EMAIL"
         )
         self.headers = {
             "Authorization": self.api_token,

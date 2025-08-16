@@ -5,7 +5,6 @@ from google.adk.tools.bigquery.config import BigQueryToolConfig
 from google.adk.tools.bigquery.config import WriteMode
 from google.oauth2 import service_account
 import tempfile
-import streamlit as st
 
 import os
 import json
@@ -18,7 +17,7 @@ tool_config = BigQueryToolConfig(write_mode=WriteMode.BLOCKED)
 # https://cloud.google.com/docs/authentication/provide-credentials-adc
 # application_default_credentials, _ = google.auth.default()
 
-bigquery_service_account_info = st.secrets["bigquery_service_account"]
+bigquery_service_account_info = json.loads(os.environ["BIGQUERY_SERVICE_ACCOUNT"])
 with tempfile.NamedTemporaryFile(
     mode="w", delete=False, suffix=".json"
 ) as temp_key_file:

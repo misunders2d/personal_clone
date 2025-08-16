@@ -13,7 +13,7 @@ litellm
 lxml
 PyGithub
 pytz
-streamlit
+# streamlit
 pandas
 matplotlib
 seaborn

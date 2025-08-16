@@ -1,5 +1,4 @@
 import os
-import streamlit as st
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 from io import BytesIO
@@ -13,8 +12,8 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive"
 ]  # Allows access to files created or opened by the app
 
-if "gcp_service_account" in st.secrets:
-    gcp_service_account_info = st.secrets["gcp_service_account"]
+if "GCP_SERVICE_ACCOUNT" in os.environ:
+    gcp_service_account_info = json.loads(os.environ["GCP_SERVICE_ACCOUNT"])
     with tempfile.NamedTemporaryFile(
         mode="w", delete=False, suffix=".json"
     ) as temp_key_file:
@@ -24,8 +23,8 @@ if "gcp_service_account" in st.secrets:
 
 
 def get_drive_service():
-    """Returns a Google Drive service using service account credentials from st.secrets."""
-    service_account_info = dict(st.secrets["gcp_service_account"])
+    """Returns a Google Drive service using service account credentials from environment."""
+    service_account_info = os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
     credentials = service_account.Credentials.from_service_account_info(
         service_account_info, scopes=SCOPES
     )
