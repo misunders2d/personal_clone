@@ -4,11 +4,9 @@ from google.adk.tools.load_web_page import load_web_page
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.code_executors import BuiltInCodeExecutor
 from google.adk.planners import BuiltInPlanner
-from google.adk.agents.callback_context import CallbackContext
 
 from google.genai import types
 
-import json
 import os
 
 from ..sub_agents.search_agent import create_search_agent_tool
@@ -21,31 +19,6 @@ from .. import instructions
 import os
 
 MODEL_NAME = os.environ["MODEL_NAME"]
-
-
-# Callback to load ADK documentation into the session state.
-def load_adk_docs_to_session(callback_context: CallbackContext):
-    """Loads ADK documentation into the session state for easy reference."""
-    if "official_adk_references" in callback_context.state:
-        return  # Docs are already loaded
-
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-
-    # Load API reference
-    json_path = os.path.join(script_dir, "..", "..", "adk_metadata.json")
-    with open(os.path.normpath(json_path)) as f:
-        api_reference = json.load(f)
-
-    # Load conceptual docs
-    txt_path = os.path.join(script_dir, "..", "..", "llms-full.txt")
-    with open(os.path.normpath(txt_path)) as f:
-        conceptual_docs = f.read()
-
-    callback_context.state["official_adk_references"] = {
-        "api_reference": api_reference,
-        "conceptual_docs": conceptual_docs,
-    }
-
 
 
 def create_code_inspector_agent(name="code_inspector_agent"):
@@ -150,6 +123,5 @@ def create_developer_agent():
         model=MODEL_NAME,
         sub_agents=[plan_and_review_agent()],
         tools=[create_github_toolset()],
-        before_agent_callback=[load_adk_docs_to_session],
     )
     return developer_agent

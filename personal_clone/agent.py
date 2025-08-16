@@ -1,7 +1,6 @@
 import os
-# from dotenv import load_dotenv
-# load_dotenv(os.path.join(os.path.abspath(__file__), '..', '.env'))
-
+import json
+from google.adk.agents.callback_context import CallbackContext
 
 from google.adk.agents import Agent
 from google.adk.tools.load_web_page import load_web_page
@@ -17,6 +16,30 @@ from .sub_agents.rag_agent import create_rag_agent_tool
 from .sub_agents.clickup_agent import create_clickup_agent_tool
 from .utils.datetime_utils import get_current_date
 from .instructions import MASTER_AGENT_INSTRUCTION
+
+
+# Callback to load ADK documentation into the session state.
+def load_adk_docs_to_session(callback_context: CallbackContext):
+    """Loads ADK documentation into the session state for easy reference."""
+    if "official_adk_references" in callback_context.state:
+        return  # Docs are already loaded
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Load API reference
+    json_path = os.path.join(script_dir, "..", "adk_metadata.json")
+    with open(os.path.normpath(json_path)) as f:
+        api_reference = json.load(f)
+
+    # Load conceptual docs
+    txt_path = os.path.join(script_dir, "..", "llms-full.txt")
+    with open(os.path.normpath(txt_path)) as f:
+        conceptual_docs = f.read()
+
+    callback_context.state["official_adk_references"] = {
+        "api_reference": api_reference,
+        "conceptual_docs": conceptual_docs,
+    }
 
 
 def create_master_agent():
@@ -36,6 +59,7 @@ def create_master_agent():
             AgentTool(agent=create_bigquery_agent()),
             AgentTool(agent=create_data_analyst_agent()),
         ],
+        before_agent_callback=[load_adk_docs_to_session],
     )
     return master_agent
 
