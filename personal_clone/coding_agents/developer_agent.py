@@ -3,7 +3,7 @@ from typing import Optional
 
 from google.adk.agents import Agent, LoopAgent, SequentialAgent
 from google.adk.agents.callback_context import CallbackContext
-from google.adk.tools import exit_loop, AgentTool, FunctionTool  # Import FunctionTool
+from google.adk.tools import exit_loop, AgentTool
 from google.adk.code_executors import BuiltInCodeExecutor
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.planners import BuiltInPlanner
@@ -91,7 +91,7 @@ def create_planner_agent():
         output_key="development_plan",
         planner=BuiltInPlanner(
             thinking_config=types.ThinkingConfig(
-                include_thoughts=True, thinking_budget=2048
+                include_thoughts=True, thinking_budget=4096
             )
         ),
     )
@@ -103,7 +103,8 @@ def create_code_reviewer_agent():
         name="code_reviewer_agent",
         description="Reviews development plans for quality and adherence to project standards.",
         instruction=instructions.CODE_REVIEWER_AGENT_INSTRUCTION,
-        model=LiteLlm(model=CODE_REVIEWER_AGENT_MODEL),
+        # model=LiteLlm(model=CODE_REVIEWER_AGENT_MODEL),
+        model=DEVELOPER_AGENT_MODEL,
         tools=[
             create_github_toolset(),
             create_search_agent_tool(),
