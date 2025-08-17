@@ -19,6 +19,7 @@ from .. import instructions
 # --- Environment Variables ---
 # Provide default values for robustness
 MODEL_NAME = os.getenv("MODEL_NAME", "gemini-2.5-flash")  # Default model
+CODE_REVIEWER_AGENT_MODEL = os.getenv('CODE_REVIEWER_AGENT_MODEL', "openai/gpt-5-mini")
 DEVELOPER_AGENT_MODEL = os.getenv(
     "DEVELOPER_AGENT_MODEL", "gemini-2.5-pro"
 )  # Default for code reviewer
@@ -79,7 +80,7 @@ def create_planner_agent():
         name="planner_agent",
         description="Creates and refines development plans.",
         instruction=instructions.PLANNER_AGENT_INSTRUCTION,
-        model=MODEL_NAME,
+        model=DEVELOPER_AGENT_MODEL,
         tools=[
             create_search_agent_tool(),
             AgentTool(agent=create_code_inspector_agent()),
@@ -102,7 +103,7 @@ def create_code_reviewer_agent():
         name="code_reviewer_agent",
         description="Reviews development plans for quality and adherence to project standards.",
         instruction=instructions.CODE_REVIEWER_AGENT_INSTRUCTION,
-        model=LiteLlm(model=DEVELOPER_AGENT_MODEL),
+        model=LiteLlm(model=CODE_REVIEWER_AGENT_MODEL),
         tools=[
             create_github_toolset(),
             create_search_agent_tool(),
@@ -163,7 +164,7 @@ def create_developer_agent():
         name="developer_agent",
         description="A developer agent that can plan and execute code changes after user approval.",
         instruction=instructions.DEVELOPER_AGENT_INSTRUCTION,
-        model=MODEL_NAME,
+        model=DEVELOPER_AGENT_MODEL,
         sub_agents=[plan_and_review_agent()],
         tools=[create_github_toolset()],
         before_agent_callback=_check_and_confirm_adk_docs,
