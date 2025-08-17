@@ -1,9 +1,10 @@
 import os
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from google.adk.agents import Agent, LoopAgent, SequentialAgent
 from google.adk.agents.callback_context import CallbackContext
-from google.adk.tools import exit_loop, AgentTool
+from google.adk.tools import exit_loop, AgentTool, ToolContext
+from google.adk.tools.base_tool import BaseTool
 from google.adk.code_executors import BuiltInCodeExecutor
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.planners import BuiltInPlanner
@@ -28,6 +29,24 @@ MAX_LOOP_ITERATIONS = int(
 )  # Default max iterations
 
 # --- Callbacks ---
+
+def block_master_branch_changes(
+    tool: BaseTool, args: Dict[str, Any], tool_context: ToolContext
+) -> Optional[Dict]:
+    """
+    Callback to prevent repository-changing actions on the master branch.
+    """
+    repo_changing_tools = [
+        "create_or_update_file",
+        "create_branch",
+        "create_pull_request",
+    ]
+    if tool.name in repo_changing_tools:
+        if args.get("branch") == "master":
+            error_message = "Repository-changing actions on the 'master' branch are not allowed."
+            print(f"[{tool_context.agent_name}] Error: {error_message}")
+            return {"status": "error", "error_message": error_message}
+    return None
 
 
 async def _check_and_confirm_adk_docs(
@@ -124,10 +143,10 @@ def create_plan_fetcher_agent():
     plan_fetcher_agent = Agent(
         name="plan_fetcher_agent",
         description="Fetches development plan from session state.",
-        instruction="""
+        instruction='''
 Your only job is to fetch the approved development plan(s) from {development_plan}.
 IMPORTANT! DO NOT MODIFY THE PLAN IN ANY WAY. OUTPUT IT UNCHANGED!
-""",
+''',
         model=MODEL_NAME,
         tools=[],
         output_key="approved_plan",
@@ -169,5 +188,6 @@ def create_developer_agent():
         sub_agents=[plan_and_review_agent()],
         tools=[create_github_toolset()],
         before_agent_callback=_check_and_confirm_adk_docs,
+        before_tool_callback=block_master_branch_changes,
     )
     return developer_agent

@@ -1,34 +1,35 @@
 import os
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 from io import BytesIO
-from google.oauth2 import service_account
 import json
-import tempfile
 
-
-# If modifying these scopes, delete the file token.pickle.
-SCOPES = [
-    "https://www.googleapis.com/auth/drive"
-]  # Allows access to files created or opened by the app
-
-if "GCP_SERVICE_ACCOUNT" in os.environ:
-    gcp_service_account_info = json.loads(os.environ["GCP_SERVICE_ACCOUNT"])
-    with tempfile.NamedTemporaryFile(
-        mode="w", delete=False, suffix=".json"
-    ) as temp_key_file:
-        json.dump(dict(gcp_service_account_info), temp_key_file)
-        temp_key_file_path = temp_key_file.name
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_key_file_path
-
+# If modifying these scopes, delete the file token.json.
+SCOPES = ["https://www.googleapis.com/auth/drive"]
 
 def get_drive_service():
-    """Returns a Google Drive service using service account credentials from environment."""
-    service_account_info = os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
-    credentials = service_account.Credentials.from_service_account_info(
-        service_account_info, scopes=SCOPES
-    )
-    return build("drive", "v3", credentials=credentials)
+    """Returns a Google Drive service using OAuth2 flow."""
+    creds = None
+    # The file token.json stores the user's access and refresh tokens, and is
+    # created automatically when the authorization flow completes for the first
+    # time.
+    if os.path.exists("token.json"):
+        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+    # If there are no (valid) credentials available, let the user log in.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            # Make sure to have credentials.json file in the same directory
+            flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
+            creds = flow.run_local_server(port=0)
+        # Save the credentials for the next run
+        with open("token.json", "w") as token:
+            token.write(creds.to_json())
+    return build("drive", "v3", credentials=creds)
 
 
 def get_or_create_folder(folder_name: str, parent_folder_id: str = "root") -> str:
@@ -161,7 +162,7 @@ def list_files_in_folder(folder_id: str = "root") -> list[dict]:
 def transfer_ownership(file_id: str, new_owner_email: str) -> bool:
     """Transfers ownership of a Google Drive file to a new user.
 
-    The service account (current owner) will automatically be downgraded to a writer.
+    The current user (owner) will automatically be downgraded to a writer.
 
     Args:
         file_id: The ID of the file to transfer ownership.
@@ -201,7 +202,7 @@ def transfer_ownership(file_id: str, new_owner_email: str) -> bool:
 def create_and_transfer_file_ownership(
     file_name: str, content: str, folder_id: str, new_owner_email: str
 ) -> str | None:
-    """Uploads a file to Google Drive using the service account and then transfers its ownership.
+    """Uploads a file to Google Drive using the current user's account and then transfers its ownership.
 
     Args:
         file_name: The name of the file to upload.
