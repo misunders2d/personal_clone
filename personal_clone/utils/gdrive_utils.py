@@ -5,32 +5,55 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 from io import BytesIO
-import json
+import pickle
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/drive"]
+TOKEN_PATH = os.environ.get("TOKEN_PATH", "")
+GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT")
+GOOGLE_DRIVE_CLIENT_ID = os.environ.get("GOOGLE_DRIVE_CLIENT_ID")
+GOOGLE_DRIVE_CLIENT_SECRET = os.environ.get("GOOGLE_DRIVE_CLIENT_SECRET")
 
 
 def get_drive_service():
-    """Returns a Google Drive service using OAuth2 flow."""
+    """Shows basic usage of the Drive v3 API.
+    Prints the names and IDs of the first 10 files the user has access to.
+    """
     creds = None
-    # The file token.json stores the user's access and refresh tokens, and is
+    # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+    if not os.path.exists(".secrets"):
+        os.makedirs(".secrets")
+    if os.path.exists(TOKEN_PATH):
+        with open(TOKEN_PATH, "rb") as token:
+            creds = pickle.load(token)
     # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
+    if not creds or not creds.valid or creds.expired:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            # Make sure to have GDRIVE_OAUTH environment variable initialized
-            flow = InstalledAppFlow.from_client_config(json.loads(os.environ.get('GDRIVE_OAUTH','')), scopes=SCOPES)
+            # Create a dummy client_secrets.json for InstalledAppFlow
+            # In a real application, this would be a file downloaded from Google Cloud Console
+            client_config = {
+                "web": {
+                    "client_id": GOOGLE_DRIVE_CLIENT_ID,
+                    "project_id": GOOGLE_CLOUD_PROJECT,  # Placeholder, not strictly used by flow
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                    "client_secret": GOOGLE_DRIVE_CLIENT_SECRET,
+                    "redirect_uris": ["http://localhost"],
+                }
+            }
+            flow = InstalledAppFlow.from_client_config(client_config, SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
-        with open("token.json", "w") as token:
-            token.write(creds.to_json())
-    return build("drive", "v3", credentials=creds)
+        with open(TOKEN_PATH, "wb") as token:
+            pickle.dump(creds, token)
+
+    service = build("drive", "v3", credentials=creds)
+    return service
 
 
 def get_or_create_folder(folder_name: str, parent_folder_id: str = "root") -> str:
@@ -158,4 +181,3 @@ def list_files_in_folder(folder_id: str = "root") -> list[dict]:
     )
     items = results.get("files", [])
     return items
-

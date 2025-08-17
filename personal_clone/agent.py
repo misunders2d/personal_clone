@@ -2,6 +2,11 @@ import os
 import json
 from google.adk.agents.callback_context import CallbackContext
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
 from google.adk.agents import Agent
 from google.adk.tools.load_web_page import load_web_page
 from google.adk.tools.agent_tool import AgentTool
@@ -62,5 +67,6 @@ def create_master_agent():
         before_agent_callback=[load_adk_docs_to_session],
     )
     return master_agent
+
 
 root_agent = create_master_agent()

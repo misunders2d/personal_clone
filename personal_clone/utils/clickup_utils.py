@@ -6,16 +6,10 @@ from datetime import datetime, timezone
 
 class ClickUpAPI:
     def __init__(self):
-        self.api_token = os.environ.get(
-            "CLICKUP_API_TOKEN"
-        )
-        self.space_id = os.environ.get(
-            "CLICKUP_SPACE_ID"
-        )
+        self.api_token = os.environ.get("CLICKUP_API_TOKEN")
+        self.space_id = os.environ.get("CLICKUP_SPACE_ID")
         self.list_id = os.environ.get("CLICKUP_LIST_ID")
-        self.user_email = os.environ.get(
-            "CLICKUP_USER_EMAIL"
-        )
+        self.user_email = os.environ.get("CLICKUP_USER_EMAIL")
         self.headers = {
             "Authorization": self.api_token,
             "Content-Type": "application/json",

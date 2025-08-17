@@ -20,7 +20,7 @@ from .. import instructions
 # --- Environment Variables ---
 # Provide default values for robustness
 MODEL_NAME = os.getenv("MODEL_NAME", "gemini-2.5-flash")  # Default model
-CODE_REVIEWER_AGENT_MODEL = os.getenv('CODE_REVIEWER_AGENT_MODEL', "openai/gpt-5-mini")
+CODE_REVIEWER_AGENT_MODEL = os.getenv("CODE_REVIEWER_AGENT_MODEL", "openai/gpt-5-mini")
 DEVELOPER_AGENT_MODEL = os.getenv(
     "DEVELOPER_AGENT_MODEL", "gemini-2.5-pro"
 )  # Default for code reviewer
@@ -29,6 +29,7 @@ MAX_LOOP_ITERATIONS = int(
 )  # Default max iterations
 
 # --- Callbacks ---
+
 
 def block_master_branch_changes(
     tool: BaseTool, args: Dict[str, Any], tool_context: ToolContext
@@ -43,7 +44,9 @@ def block_master_branch_changes(
     ]
     if tool.name in repo_changing_tools:
         if args.get("branch") == "master":
-            error_message = "Repository-changing actions on the 'master' branch are not allowed."
+            error_message = (
+                "Repository-changing actions on the 'master' branch are not allowed."
+            )
             print(f"[{tool_context.agent_name}] Error: {error_message}")
             return {"status": "error", "error_message": error_message}
     return None
@@ -143,10 +146,10 @@ def create_plan_fetcher_agent():
     plan_fetcher_agent = Agent(
         name="plan_fetcher_agent",
         description="Fetches development plan from session state.",
-        instruction='''
+        instruction="""
 Your only job is to fetch the approved development plan(s) from {development_plan}.
 IMPORTANT! DO NOT MODIFY THE PLAN IN ANY WAY. OUTPUT IT UNCHANGED!
-''',
+""",
         model=MODEL_NAME,
         tools=[],
         output_key="approved_plan",

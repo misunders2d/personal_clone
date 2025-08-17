@@ -213,7 +213,7 @@ class GithubToolset(BaseToolset):
             self._create_pull_request,
         ]
         print(f"GithubToolset providing tools: {[t.name for t in tools_to_return]}")
-        return tools_to_return #type: ignore
+        return tools_to_return  # type: ignore
 
     async def close(self) -> None:
         # No resources to clean up in this simple example

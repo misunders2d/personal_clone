@@ -20,6 +20,8 @@ if "GCP_SERVICE_ACCOUNT" in os.environ:
         json.dump(dict(gcp_service_account_info), temp_key_file)
         temp_key_file_path = temp_key_file.name
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_key_file_path
+else:
+    raise BaseException("No service account credentials for VertexAI")
 
 # Initialize clients
 pc = Pinecone(api_key=PINECONE_API_KEY)
