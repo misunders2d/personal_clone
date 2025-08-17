@@ -1,6 +1,7 @@
 import os
 import json
 from google.adk.agents.callback_context import CallbackContext
+from google.genai import types
 
 from google.adk.agents import Agent
 from google.adk.tools.load_web_page import load_web_page
@@ -17,6 +18,41 @@ from .sub_agents.clickup_agent import create_clickup_agent_tool
 from .utils.datetime_utils import get_current_date
 from .instructions import MASTER_AGENT_INSTRUCTION
 
+# --- Authorization Callback ---
+# This is a list of user IDs that are allowed to access this agent.
+# In a production system, you would load this from a secure database or user management service.
+AUTHORIZED_USER_IDS = ['user123', 'admin_user', 'test_user']
+
+def check_user_authorization(callback_context: CallbackContext) -> types.Content | None:
+    """
+    Checks if the user is authorized to access the agent.
+
+    This callback runs before the agent's main logic. It inspects the user_id
+    from the session and checks it against a predefined list of authorized users.
+
+    Args:
+        callback_context: The context object provided by the ADK framework.
+
+    Returns:
+        A `types.Content` object with an error message if the user is not
+        authorized, which stops agent execution.
+        `None` if the user is authorized, allowing the agent to proceed.
+    """
+    user_id = callback_context.invocation_context.session.user_id
+    print(f"Auth Callback: Checking authorization for user_id: '{user_id}'")
+
+    if user_id not in AUTHORIZED_USER_IDS:
+        print(f"Auth Callback: User '{user_id}' is NOT AUTHORIZED.")
+        # Returning a Content object stops the agent and sends this message back.
+        return types.Content(
+            parts=[types.Part(
+                text="Access Denied: You are not authorized to use this agent."
+            )]
+        )
+
+    print(f"Auth Callback: User '{user_id}' is authorized.")
+    # Returning None allows the agent execution to continue.
+    return None
 
 # Callback to load ADK documentation into the session state.
 def load_adk_docs_to_session(callback_context: CallbackContext):
@@ -59,7 +95,7 @@ def create_master_agent():
             AgentTool(agent=create_bigquery_agent()),
             AgentTool(agent=create_data_analyst_agent()),
         ],
-        before_agent_callback=[load_adk_docs_to_session],
+        before_agent_callback=[check_user_authorization, load_adk_docs_to_session],
     )
     return master_agent
 
