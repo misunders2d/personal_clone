@@ -3,6 +3,7 @@
 from google.adk.agents import Agent
 from ..utils.telegram_utils import get_telegram_client, get_chat_history
 import asyncio
+from google.adk.models.google_llm import Gemini
 
 async def get_chat_summary(chat_id: str) -> str:
   """Summarizes a Telegram chat."""
@@ -10,7 +11,6 @@ async def get_chat_summary(chat_id: str) -> str:
   history = await get_chat_history(bot, chat_id)
   
   # Create a summary using an LLM
-  from google.adk.models import Gemini
   llm = Gemini(model="gemini-1.5-flash")
   
   # Prepare the prompt for the LLM
@@ -30,7 +30,6 @@ async def create_draft_reply(chat_id: str, user_message: str) -> str:
   history = await get_chat_history(bot, chat_id)
   
   # Create a draft reply using an LLM
-  from google.adk.models import Gemini
   llm = Gemini(model="gemini-1.5-flash")
   
   # Prepare the prompt for the LLM
