@@ -28,6 +28,7 @@ from .sub_agents.financial_analyst import create_financial_analyst_agent
 from .sub_agents.bigquery_agent import create_bigquery_agent
 from .coding_agents.developer_agent import create_developer_agent
 from .sub_agents.data_analyst_agent import create_data_analyst_agent
+from .sub_agents.telegram_agent import telegram_agent
 
 from .sub_agents.rag_agent import create_rag_agent_tool
 from .sub_agents.clickup_agent import create_clickup_agent_tool
@@ -104,7 +105,7 @@ def create_master_agent():
         description="A personal clone that acts as a second brain, helping to remember, recall, find, update, and delete experiences, and also to develop itself.",
         instruction=MASTER_AGENT_INSTRUCTION,
         model=MASTER_AGENT_MODEL,
-        sub_agents=[create_developer_agent(), create_financial_analyst_agent()],
+        sub_agents=[create_developer_agent(), create_financial_analyst_agent(), telegram_agent],
         tools=[
             create_search_agent_tool("master_search_agent"),
             load_web_page,
