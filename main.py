@@ -16,15 +16,32 @@ import traceback
 st.set_page_config(layout="wide")
 
 # environment variables setup
+def inject_section(section_name, section_value):
+    """Convert a st.secrets section into an env var (JSON if dict/list)."""
+    if isinstance(section_value, (dict, list)):
+        os.environ[section_name] = json.dumps(section_value)
+    else:
+        os.environ[section_name] = str(section_value)
+
+
+def traverse(prefix, data):
+    """Recursively traverse st.secrets and inject top-level sections."""
+    for key, value in data.items():
+        name = key if not prefix else f"{prefix}__{key}"
+        if isinstance(value, dict):
+            # inject the whole table as JSON under its top-level name
+            if not prefix:  
+                inject_section(key, value)
+            traverse(name, value)
+        else:
+            if not prefix:
+                inject_section(key, value)
+
+
 def load_secrets_into_env():
-    """Load st.secrets into os.environ, storing tables/lists as JSON strings."""
+    """Load st.secrets into os.environ with JSON blobs for tables."""
     if st is not None and hasattr(st, "secrets"):
-        for key in st.secrets:
-            value = st.secrets[key]
-            if isinstance(value, (dict, list)):
-                os.environ.setdefault(key, json.dumps(value))  # ✅ store as JSON blob
-            else:
-                os.environ.setdefault(key, str(value))
+        traverse("", dict(st.secrets))
 
 APP_NAME = "misunderstood-personal-clone-app"
 USER_ID = (
