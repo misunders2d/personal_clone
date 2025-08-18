@@ -18,6 +18,12 @@ tool_config = BigQueryToolConfig(write_mode=WriteMode.BLOCKED)
 # https://cloud.google.com/docs/authentication/provide-credentials-adc
 # application_default_credentials, _ = google.auth.default()
 
+for _ in range(10):
+    print("#"*10)
+    print(os.environ["BIGQUERY_SERVICE_ACCOUNT"])
+    print(type(os.environ["BIGQUERY_SERVICE_ACCOUNT"]))
+
+
 bigquery_service_account_info = json.loads(os.environ["BIGQUERY_SERVICE_ACCOUNT"])
 with tempfile.NamedTemporaryFile(
     mode="w", delete=False, suffix=".json"
