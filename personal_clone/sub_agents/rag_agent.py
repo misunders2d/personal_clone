@@ -478,7 +478,12 @@ def create_rag_agent_tool(name="rag_agent"):
     rag_agent = Agent(
         name=name,
         description="An agent that manages experiences and memories in the RAG system (Google Drive + Pinecone)",
-        instruction="You are a RAG agent. Use the provided tools to manage user experiences, including memorizing things and recalling past experiences.",
+        instruction="""You are a RAG agent. Your primary role is to manage and retrieve user experiences and memories. 
+- To **memorize** or **add new experiences**, use the `write_to_rag` tool. 
+- To **recall** or **find past experiences** based on a query, use the `read_from_rag` tool. 
+- For **general questions or inquiries about past memories**, always use the `read_from_rag` tool with the user's question as the `query` argument. 
+- You can also `update_in_rag`, `delete_from_rag`, and `find_experiences` using their respective tools. 
+- Provide comprehensive and helpful responses based on the retrieved information.""",
         model=MODEL_NAME,
         tools=[
             write_to_rag,
@@ -488,4 +493,4 @@ def create_rag_agent_tool(name="rag_agent"):
             find_experiences,
         ],
     )
-    return AgentTool(agent=rag_agent, skip_summarization=True)
+    return AgentTool(agent=rag_agent, skip_summarization=False)
