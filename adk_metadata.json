@@ -2112,6 +2112,84 @@
             }
           }
         }
+      },
+      "utils": {
+        "feature_decorator": {
+          "__members__": {
+            "_create_decorator": {
+              "type": "function",
+              "signature": "(message: 'str', label: 'str', block_usage: 'bool', bypass_env_var: 'Optional[str]') -> 'Callable[[T], T]'",
+              "doc": ""
+            },
+            "_make_feature_decorator": {
+              "type": "function",
+              "signature": "(*, label: 'str', default_message: 'str', block_usage: 'bool' = False, bypass_env_var: 'Optional[str]' = None) -> 'Callable'",
+              "doc": ""
+            },
+            "experimental": {
+              "type": "function",
+              "signature": "(message_or_obj=None)",
+              "doc": ""
+            },
+            "working_in_progress": {
+              "type": "function",
+              "signature": "(message_or_obj=None)",
+              "doc": ""
+            }
+          }
+        },
+        "instructions_utils": {
+          "__members__": {
+            "_is_valid_state_name": {
+              "type": "function",
+              "signature": "(var_name)",
+              "doc": "Checks if the variable name is a valid state name.\n\nValid state is either:\n  - Valid identifier\n  - <Valid prefix>:<Valid identifier>\nAll the others will just return as it is.\n\nArgs:\n  var_name: The variable name to check.\n\nReturns:\n  True if the variable name is a valid state name, False otherwise."
+            },
+            "inject_session_state": {
+              "type": "function",
+              "signature": "(template: 'str', readonly_context: 'ReadonlyContext') -> 'str'",
+              "doc": "Populates values in the instruction template, e.g. state, artifact, etc.\n\nThis method is intended to be used in InstructionProvider based instruction\nand global_instruction which are called with readonly_context.\n\ne.g.\n```\n...\nfrom google.adk.utils.instructions_utils import inject_session_state\n\nasync def build_instruction(\n    readonly_context: ReadonlyContext,\n) -> str:\n  return await inject_session_state(\n      'You can inject a state variable like {var_name} or an artifact '\n      '{artifact.file_name} into the instruction template.',\n      readonly_context,\n  )\n\nagent = Agent(\n    model=\"gemini-2.0-flash\",\n    name=\"agent\",\n    instruction=build_instruction,\n)\n```\n\nArgs:\n  template: The instruction template.\n  readonly_context: The read-only context\n\nReturns:\n  The instruction template with values populated."
+            }
+          }
+        },
+        "model_name_utils": {
+          "__members__": {
+            "extract_model_name": {
+              "type": "function",
+              "signature": "(model_string: 'str') -> 'str'",
+              "doc": "Extract the actual model name from either simple or path-based format.\n\nArgs:\n  model_string: Either a simple model name like \"gemini-2.5-pro\" or\n                a path-based model name like \"projects/.../models/gemini-2.0-flash-001\"\n\nReturns:\n  The extracted model name (e.g., \"gemini-2.5-pro\")"
+            },
+            "is_gemini_1_model": {
+              "type": "function",
+              "signature": "(model_string: 'Optional[str]') -> 'bool'",
+              "doc": "Check if the model is a Gemini 1.x model using regex patterns.\n\nArgs:\n  model_string: Either a simple model name or path-based model name\n\nReturns:\n  True if it's a Gemini 1.x model, False otherwise"
+            },
+            "is_gemini_2_model": {
+              "type": "function",
+              "signature": "(model_string: 'Optional[str]') -> 'bool'",
+              "doc": "Check if the model is a Gemini 2.x model using regex patterns.\n\nArgs:\n  model_string: Either a simple model name or path-based model name\n\nReturns:\n  True if it's a Gemini 2.x model, False otherwise"
+            },
+            "is_gemini_model": {
+              "type": "function",
+              "signature": "(model_string: 'Optional[str]') -> 'bool'",
+              "doc": "Check if the model is a Gemini model using regex patterns.\n\nArgs:\n  model_string: Either a simple model name or path-based model name\n\nReturns:\n  True if it's a Gemini model, False otherwise"
+            }
+          }
+        },
+        "variant_utils": {
+          "__members__": {
+            "GoogleLLMVariant": {
+              "type": "class",
+              "signature": "(*values)",
+              "doc": "The Google LLM variant to use.\nsee https://google.github.io/adk-docs/get-started/quickstart/#set-up-the-model"
+            },
+            "get_google_llm_variant": {
+              "type": "function",
+              "signature": "() -> 'str'",
+              "doc": ""
+            }
+          }
+        }
       }
     }
   }

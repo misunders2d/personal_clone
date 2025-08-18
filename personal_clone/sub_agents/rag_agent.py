@@ -476,8 +476,8 @@ def read_from_rag(
 def create_rag_agent_tool(name="rag_agent"):
     rag_agent = Agent(
         name=name,
-        description="An agent that manages experiences in the RAG system (Google Drive + Pinecone).",
-        instruction="You are a RAG agent. Use the provided tools to manage experiences.",
+        description="An agent that manages experiences and memories in the RAG system (Google Drive + Pinecone)",
+        instruction="You are a RAG agent. Use the provided tools to manage user experiences, including memorizing things and recalling past experiences.",
         model=os.environ["MODEL_NAME"],
         tools=[
             write_to_rag,
