@@ -6,6 +6,14 @@ from .rag_agent import create_rag_agent_tool
 
 import os
 
+try:
+    import streamlit as st
+
+    MODEL_NAME = st.secrets["MODEL_NAME"]
+except:
+    MODEL_NAME = os.environ["MODEL_NAME"]
+
+
 clickup_api = ClickUpAPI()
 
 
@@ -20,7 +28,7 @@ To do this, you need to use the `rag_agent` tool.
 First, create the ClickUp task using `create_task`.
 Then, use the `rag_agent.write_to_rag` tool to create the experience, passing the `clickup_task_id` from the created task.
 """,
-        model=os.environ["MODEL_NAME"],
+        model=MODEL_NAME,
         tools=[
             clickup_api.get_tasks,
             clickup_api.create_task,

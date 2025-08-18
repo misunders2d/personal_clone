@@ -3,9 +3,13 @@ import json
 from google.adk.agents.callback_context import CallbackContext
 from google.genai import types
 
-from dotenv import load_dotenv
+try:
+    import streamlit as st
 
-load_dotenv()
+    MASTER_AGENT_MODEL = st.secrets.get("MASTER_AGENT_MODEL", "")
+except:
+    MASTER_AGENT_MODEL = os.environ.get("MASTER_AGENT_MODEL", "")
+
 
 from google.adk.agents import Agent
 from google.adk.tools.load_web_page import load_web_page
@@ -26,7 +30,8 @@ from .instructions import MASTER_AGENT_INSTRUCTION
 # --- Authorization Callback ---
 # This is a list of user IDs that are allowed to access this agent.
 # In a production system, you would load this from a secure database or user management service.
-AUTHORIZED_USER_IDS = [x.strip() for x in os.environ['AUTHORIZED_USERS'].split(',')]
+AUTHORIZED_USER_IDS = [x.strip() for x in os.environ["AUTHORIZED_USERS"].split(",")]
+
 
 def check_user_authorization(callback_context: CallbackContext) -> types.Content | None:
     """
@@ -43,16 +48,18 @@ def check_user_authorization(callback_context: CallbackContext) -> types.Content
         authorized, which stops agent execution.
         `None` if the user is authorized, allowing the agent to proceed.
     """
-    user_id = callback_context.state.get('user_id')
+    user_id = callback_context.state.get("user_id")
     print(f"Auth Callback: Checking authorization for user_id: '{user_id}'")
 
     if user_id not in AUTHORIZED_USER_IDS:
         print(f"Auth Callback: User '{user_id}' is NOT AUTHORIZED.")
         # Returning a Content object stops the agent and sends this message back.
         return types.Content(
-            parts=[types.Part(
-                text="Access Denied: You are not authorized to use this agent."
-            )]
+            parts=[
+                types.Part(
+                    text="Access Denied: You are not authorized to use this agent."
+                )
+            ]
         )
 
     print(f"Auth Callback: User '{user_id}' is authorized.")
@@ -89,7 +96,7 @@ def create_master_agent():
         name="personal_clone",
         description="A personal clone that acts as a second brain, helping to remember, recall, find, update, and delete experiences, and also to develop itself.",
         instruction=MASTER_AGENT_INSTRUCTION,
-        model=os.environ["MASTER_AGENT_MODEL"],
+        model=MASTER_AGENT_MODEL,
         sub_agents=[create_developer_agent(), create_financial_analyst_agent()],
         tools=[
             create_search_agent_tool("master_search_agent"),

@@ -19,14 +19,32 @@ from .. import instructions
 
 # --- Environment Variables ---
 # Provide default values for robustness
-MODEL_NAME = os.getenv("MODEL_NAME", "gemini-2.5-flash")  # Default model
-CODE_REVIEWER_AGENT_MODEL = os.getenv("CODE_REVIEWER_AGENT_MODEL", "openai/gpt-5-mini")
-DEVELOPER_AGENT_MODEL = os.getenv(
-    "DEVELOPER_AGENT_MODEL", "gemini-2.5-pro"
-)  # Default for code reviewer
-MAX_LOOP_ITERATIONS = int(
-    os.getenv("MAX_LOOP_ITERATIONS", "5")
-)  # Default max iterations
+
+try:
+    import streamlit as st
+
+    MODEL_NAME = st.secrets.get("MODEL_NAME", "gemini-2.5-flash")  # Default model
+    CODE_REVIEWER_AGENT_MODEL = st.secrets.get(
+        "CODE_REVIEWER_AGENT_MODEL", "openai/gpt-5-mini"
+    )
+    DEVELOPER_AGENT_MODEL = st.secrets.get(
+        "DEVELOPER_AGENT_MODEL", "gemini-2.5-pro"
+    )  # Default for code reviewer
+    MAX_LOOP_ITERATIONS = int(
+        st.secrets.get("MAX_LOOP_ITERATIONS", "5")
+    )  # Default max iterations
+except:
+    MODEL_NAME = os.getenv("MODEL_NAME", "gemini-2.5-flash")  # Default model
+    CODE_REVIEWER_AGENT_MODEL = os.getenv(
+        "CODE_REVIEWER_AGENT_MODEL", "openai/gpt-5-mini"
+    )
+    DEVELOPER_AGENT_MODEL = os.getenv(
+        "DEVELOPER_AGENT_MODEL", "gemini-2.5-pro"
+    )  # Default for code reviewer
+    MAX_LOOP_ITERATIONS = int(
+        os.getenv("MAX_LOOP_ITERATIONS", "5")
+    )  # Default max iterations
+
 
 # --- Callbacks ---
 

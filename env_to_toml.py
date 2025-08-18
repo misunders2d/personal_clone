@@ -5,6 +5,7 @@ import json
 from dotenv import dotenv_values
 import toml
 
+
 def parse_value(value: str):
     """
     Try to parse .env value into a TOML-compatible type.
@@ -45,7 +46,9 @@ def parse_value(value: str):
 
 def env_to_toml(env_file: str, toml_file: str):
     env_vars = dotenv_values(env_file)
-    parsed_vars = {key: parse_value(value) for key, value in env_vars.items() if value is not None}
+    parsed_vars = {
+        key: parse_value(value) for key, value in env_vars.items() if value is not None
+    }
 
     with open(toml_file, "w") as f:
         toml.dump(parsed_vars, f)

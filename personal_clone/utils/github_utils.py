@@ -15,13 +15,19 @@ from google.adk.agents.readonly_context import ReadonlyContext
 
 from typing import Optional, List
 
+try:
+    import streamlit as st
+
+    GITHUB_TOKEN = st.secrets.get("GITHUB_TOKEN")
+except:
+    GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
+
 
 def _get_repo(repo_owner: str, repo_name: str):
     """Helper function to get a repository object."""
-    github_token = os.environ.get("GITHUB_TOKEN")
-    if not github_token:
+    if not GITHUB_TOKEN:
         raise ValueError("GITHUB_TOKEN environment variable not set.")
-    g = Github(github_token)
+    g = Github(GITHUB_TOKEN)
     try:
         repo = g.get_repo(f"{repo_owner}/{repo_name}")
         return repo

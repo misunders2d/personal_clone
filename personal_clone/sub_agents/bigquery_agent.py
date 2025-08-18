@@ -19,11 +19,12 @@ tool_config = BigQueryToolConfig(write_mode=WriteMode.BLOCKED)
 
 try:
     import streamlit as st
+
     bigquery_service_account_info = st.secrets["BIGQUERY_SERVICE_ACCOUNT"]
 except:
     bigquery_service_account_info = json.loads(os.environ["BIGQUERY_SERVICE_ACCOUNT"])
 
-    
+
 with tempfile.NamedTemporaryFile(
     mode="w", delete=False, suffix=".json"
 ) as temp_key_file:

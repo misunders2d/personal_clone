@@ -3,6 +3,13 @@ from google.adk.tools import AgentTool, google_search
 
 import os
 
+try:
+    import streamlit as st
+
+    SEARCH_MODEL_NAME = st.secrets["SEARCH_MODEL_NAME"]
+except:
+    SEARCH_MODEL_NAME = os.environ["SEARCH_MODEL_NAME"]
+
 
 def create_search_agent_tool(name="web_search_agent"):
     search_agent_tool = AgentTool(
@@ -11,7 +18,7 @@ def create_search_agent_tool(name="web_search_agent"):
             description="A web search agent that can search the web and find information.",
             instruction="You are a web search agent. Use the `google_search` tool to find relevant information online.",
             tools=[google_search],
-            model=os.environ["SEARCH_MODEL_NAME"],
+            model=SEARCH_MODEL_NAME,
         ),
         skip_summarization=True,
     )

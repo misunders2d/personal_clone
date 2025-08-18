@@ -4,6 +4,13 @@ import os
 
 COINGECKO_MCP_HOST = "https://mcp.api.coingecko.com/sse"
 
+try:
+    import streamlit as st
+
+    MODEL_NAME = st.secrets["MODEL_NAME"]
+except:
+    MODEL_NAME = os.environ["MODEL_NAME"]
+
 
 def create_financial_analyst_agent(name="financial_analyst_agent"):
     """
@@ -38,7 +45,7 @@ def create_financial_analyst_agent(name="financial_analyst_agent"):
         6. Handle cases where data for a specific cryptocurrency might be temporarily unavailable gracefully by
            stating the limitation.
         """,
-        model=os.environ["MODEL_NAME"],
+        model=MODEL_NAME,
         tools=[
             coingecko_toolset,
         ],

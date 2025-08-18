@@ -22,11 +22,12 @@ from ..utils.pinecone_utils import (
     delete_vectors,
 )
 
-load_dotenv(os.path.join(os.path.dirname(__file__), "../../.env"))
+try:
+    import streamlit as st
 
-# --- Configuration ---
-
-# -------------------
+    MODEL_NAME = st.secrets["MODEL_NAME"]
+except:
+    MODEL_NAME = os.environ["MODEL_NAME"]
 
 
 def _generate_file_name():
@@ -478,7 +479,7 @@ def create_rag_agent_tool(name="rag_agent"):
         name=name,
         description="An agent that manages experiences and memories in the RAG system (Google Drive + Pinecone)",
         instruction="You are a RAG agent. Use the provided tools to manage user experiences, including memorizing things and recalling past experiences.",
-        model=os.environ["MODEL_NAME"],
+        model=MODEL_NAME,
         tools=[
             write_to_rag,
             read_from_rag,
