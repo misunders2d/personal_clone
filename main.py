@@ -17,11 +17,12 @@ st.set_page_config(layout="wide")
 
 # environment variables setup
 def load_secrets_into_env():
-    """Load st.secrets into os.environ, converting dict/list to JSON strings."""
+    """Load st.secrets into os.environ, storing tables/lists as JSON strings."""
     if st is not None and hasattr(st, "secrets"):
-        for key, value in st.secrets.items():
+        for key in st.secrets:
+            value = st.secrets[key]
             if isinstance(value, (dict, list)):
-                os.environ.setdefault(key, json.dumps(value))  # ✅ store as JSON string
+                os.environ.setdefault(key, json.dumps(value))  # ✅ store as JSON blob
             else:
                 os.environ.setdefault(key, str(value))
 
