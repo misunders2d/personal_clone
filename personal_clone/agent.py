@@ -7,8 +7,10 @@ try:
     import streamlit as st
 
     MASTER_AGENT_MODEL = st.secrets.get("MASTER_AGENT_MODEL", "")
+    AUTHORIZED_USER_IDS = [x.strip() for x in st.secrets.get("AUTHORIZED_USERS",[])]
 except:
     MASTER_AGENT_MODEL = os.environ.get("MASTER_AGENT_MODEL", "")
+    AUTHORIZED_USER_IDS = [x.strip() for x in os.environ["AUTHORIZED_USERS"].split(",")]
 
 
 from google.adk.agents import Agent
@@ -30,7 +32,6 @@ from .instructions import MASTER_AGENT_INSTRUCTION
 # --- Authorization Callback ---
 # This is a list of user IDs that are allowed to access this agent.
 # In a production system, you would load this from a secure database or user management service.
-AUTHORIZED_USER_IDS = [x.strip() for x in os.environ["AUTHORIZED_USERS"].split(",")]
 
 
 def check_user_authorization(callback_context: CallbackContext) -> types.Content | None:
