@@ -4,6 +4,7 @@ from google.adk.agents.callback_context import CallbackContext
 # from dotenv import load_dotenv
 
 # load_dotenv()
+print(os.environ["AUTHORIZED_USERS"])
 
 PREAUTHORIZED_EMAILS = [x.strip() for x in os.environ["AUTHORIZED_USERS"].split(",")]
 
