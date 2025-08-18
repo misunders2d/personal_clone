@@ -8,8 +8,8 @@ import tempfile
 
 import os
 import json
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 # Define a tool configuration to block any write operations
 tool_config = BigQueryToolConfig(write_mode=WriteMode.BLOCKED)
 
