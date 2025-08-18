@@ -5,14 +5,14 @@ from google.genai import types
 
 from dotenv import load_dotenv
 load_dotenv()
-
+import streamlit as st
+os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = st.secrets.get("GOOGLE_GENAI_USE_VERTEXAI", '')
+os.environ['GOOGLE_CLOUD_PROJECT'] = st.secrets.get("GOOGLE_CLOUD_PROJECT", '')
+os.environ['GOOGLE_CLOUD_LOCATION'] = st.secrets.get("GOOGLE_CLOUD_LOCATION", '')
 try:
     import streamlit as st
     MASTER_AGENT_MODEL = st.secrets.get("MASTER_AGENT_MODEL", "")
     AUTHORIZED_USER_IDS = [x.strip() for x in st.secrets.get("AUTHORIZED_USERS", [])]
-    os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = st.secrets.get("GOOGLE_GENAI_USE_VERTEXAI", '')
-    os.environ['GOOGLE_CLOUD_PROJECT'] = st.secrets.get("GOOGLE_CLOUD_PROJECT", '')
-    os.environ['GOOGLE_CLOUD_LOCATION'] = st.secrets.get("GOOGLE_CLOUD_LOCATION", '')
 except:
     MASTER_AGENT_MODEL = os.environ.get("MASTER_AGENT_MODEL", "")
     AUTHORIZED_USER_IDS = [x.strip() for x in os.environ["AUTHORIZED_USERS"].split(",")]
