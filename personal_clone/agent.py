@@ -3,11 +3,14 @@ import json
 from google.adk.agents.callback_context import CallbackContext
 from google.genai import types
 
+from dotenv import load_dotenv
+load_dotenv()
+
 try:
     import streamlit as st
 
     MASTER_AGENT_MODEL = st.secrets.get("MASTER_AGENT_MODEL", "")
-    AUTHORIZED_USER_IDS = [x.strip() for x in st.secrets.get("AUTHORIZED_USERS",[])]
+    AUTHORIZED_USER_IDS = [x.strip() for x in st.secrets.get("AUTHORIZED_USERS", [])]
 except:
     MASTER_AGENT_MODEL = os.environ.get("MASTER_AGENT_MODEL", "")
     AUTHORIZED_USER_IDS = [x.strip() for x in os.environ["AUTHORIZED_USERS"].split(",")]

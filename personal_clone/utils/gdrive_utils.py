@@ -52,7 +52,7 @@ def get_drive_service():
                     "token_uri": "https://oauth2.googleapis.com/token",
                     "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
                     "client_secret": GOOGLE_DRIVE_CLIENT_SECRET,
-                    "redirect_uris": ["http://localhost"],
+                    "redirect_uris": ["http://localhost/oauth2callback", "https://misunderstood.streamlit.app/oauth2callback"],
                 }
             }
             flow = InstalledAppFlow.from_client_config(client_config, SCOPES)
