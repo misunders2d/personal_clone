@@ -21,9 +21,10 @@ try:
     import streamlit as st
 
     bigquery_service_account_info = st.secrets["BIGQUERY_SERVICE_ACCOUNT"]
+    MODEL_NAME=st.secrets["MODEL_NAME"]
 except:
     bigquery_service_account_info = json.loads(os.environ["BIGQUERY_SERVICE_ACCOUNT"])
-
+    MODEL_NAME=os.environ["MODEL_NAME"]
 
 with tempfile.NamedTemporaryFile(
     mode="w", delete=False, suffix=".json"
@@ -47,7 +48,7 @@ bigquery_toolset = BigQueryToolset(
 # Agent Definition
 def create_bigquery_agent():
     bigquery_agent = Agent(
-        model=os.environ["MODEL_NAME"],
+        model=MODEL_NAME,
         name="bigquery_agent",
         description=(
             "Agent to answer questions about BigQuery data and models and execute"
