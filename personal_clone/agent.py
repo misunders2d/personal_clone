@@ -16,9 +16,6 @@ try:
 except:
     MASTER_AGENT_MODEL = os.environ.get("MASTER_AGENT_MODEL", "")
     AUTHORIZED_USER_IDS = [x.strip() for x in os.environ["AUTHORIZED_USERS"].split(",")]
-    GOOGLE_GENAI_USE_VERTEXAI=os.environ.get("GOOGLE_GENAI_USE_VERTEXAI", '')
-    GOOGLE_CLOUD_PROJECT=os.environ.get("GOOGLE_CLOUD_PROJECT", '')
-    GOOGLE_CLOUD_LOCATION=os.environ.get("GOOGLE_CLOUD_LOCATION", '')
 
 
 
