@@ -8,8 +8,8 @@ import tempfile
 
 import os
 import json
-# from dotenv import load_dotenv
-# load_dotenv()
+from dotenv import load_dotenv
+load_dotenv()
 # Define a tool configuration to block any write operations
 tool_config = BigQueryToolConfig(write_mode=WriteMode.BLOCKED)
 
@@ -17,11 +17,6 @@ tool_config = BigQueryToolConfig(write_mode=WriteMode.BLOCKED)
 # credentials
 # https://cloud.google.com/docs/authentication/provide-credentials-adc
 # application_default_credentials, _ = google.auth.default()
-
-for _ in range(10):
-    print("#"*10)
-    print(os.environ["BIGQUERY_SERVICE_ACCOUNT"])
-    print(type(os.environ["BIGQUERY_SERVICE_ACCOUNT"]))
 
 
 bigquery_service_account_info = json.loads(os.environ["BIGQUERY_SERVICE_ACCOUNT"])
