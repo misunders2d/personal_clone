@@ -1,9 +1,7 @@
 import streamlit as st
 from login import require_login
-from dotenv import load_dotenv
-
-load_dotenv()
-
+import os
+import json
 
 # Import ADK services and types
 from google.adk.sessions import InMemorySessionService
@@ -16,6 +14,15 @@ from personal_clone.agent import create_master_agent
 import traceback
 
 st.set_page_config(layout="wide")
+
+# environment variables setup
+def load_secrets_into_env():
+    if st is not None and hasattr(st, "secrets"):
+        for key, value in st.secrets.items():
+            if isinstance(value, (dict, list)):
+                os.environ.setdefault(key, json.dumps(value))
+            else:
+                os.environ.setdefault(key, str(value))
 
 APP_NAME = "misunderstood-personal-clone-app"
 USER_ID = (
