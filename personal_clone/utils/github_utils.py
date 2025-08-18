@@ -185,19 +185,19 @@ class GithubToolset(BaseToolset):
         self._get_repo = FunctionTool(
             func=_get_repo,
         )
-        self._list_files_in_repo = FunctionTool(
+        self.list_files_in_repo = FunctionTool(
             func=list_files_in_repo,
         )
-        self._get_file_content = FunctionTool(
+        self.get_file_content = FunctionTool(
             func=get_file_content,
         )
-        self._create_or_update_file = FunctionTool(
+        self.create_or_update_file = FunctionTool(
             func=create_or_update_file,
         )
-        self._create_branch = FunctionTool(
+        self.create_branch = FunctionTool(
             func=create_branch,
         )
-        self._create_pull_request = FunctionTool(
+        self.create_pull_request = FunctionTool(
             func=create_pull_request,
         )
         print(f"GithubToolset initialized with prefix '{self.prefix}'")
@@ -206,11 +206,11 @@ class GithubToolset(BaseToolset):
         self, readonly_context: Optional[ReadonlyContext] = None
     ) -> List[BaseTool]:
         tools_to_return = [
-            self._list_files_in_repo,
-            self._get_file_content,
-            self._create_or_update_file,
-            self._create_branch,
-            self._create_pull_request,
+            self.list_files_in_repo,
+            self.get_file_content,
+            self.create_or_update_file,
+            self.create_branch,
+            self.create_pull_request,
         ]
         print(f"GithubToolset providing tools: {[t.name for t in tools_to_return]}")
         return tools_to_return  # type: ignore
