@@ -8,8 +8,7 @@ import tempfile
 
 import os
 import json
-from dotenv import load_dotenv
-load_dotenv()
+
 # Define a tool configuration to block any write operations
 tool_config = BigQueryToolConfig(write_mode=WriteMode.BLOCKED)
 
@@ -18,8 +17,11 @@ tool_config = BigQueryToolConfig(write_mode=WriteMode.BLOCKED)
 # https://cloud.google.com/docs/authentication/provide-credentials-adc
 # application_default_credentials, _ = google.auth.default()
 
-
-bigquery_service_account_info = json.loads(os.environ["BIGQUERY_SERVICE_ACCOUNT"])
+try:
+    import streamlit as st
+    bigquery_service_account_info = st.secrets["BIGQUERY_SERVICE_ACCOUNT"]
+except:
+    bigquery_service_account_info = json.loads(os.environ["BIGQUERY_SERVICE_ACCOUNT"])
 with tempfile.NamedTemporaryFile(
     mode="w", delete=False, suffix=".json"
 ) as temp_key_file:
