@@ -1,46 +1,57 @@
 # small useful utility to convert .env variables to TOML format for deploying on Streamlit
 
-import toml
 import os
+import json
+from dotenv import dotenv_values
+import toml
 
-def convert_env_to_toml(env_file_path, toml_file_path):
+def parse_value(value: str):
     """
-    Converts a .env file to a .toml file.
-
-    Args:
-        env_file_path (str): The path to the input .env file.
-        toml_file_path (str): The path to the output .toml file.
+    Try to parse .env value into a TOML-compatible type.
+    Supports: int, float, bool, JSON objects/arrays, lists, or fallback to string.
     """
-    # Ensure the .env file exists
-    if not os.path.exists(env_file_path):
-        print(f"Error: .env file not found at '{env_file_path}'")
-        return
+    value = value.strip()
 
-    # Read .env file and parse key-value pairs
-    data = {}
-    with open(env_file_path, 'r') as env_file:
-        for line in env_file:
-            line = line.strip()
-            # Skip comments and empty lines
-            if line and not line.startswith('#'):
-                try:
-                    key, value = line.split('=', 1)
-                    key = key.strip()
-                    value = value.strip().strip('"\'')
-                    data[key] = value
-                except ValueError:
-                    print(f"Skipping malformed line: '{line}'")
+    # Try boolean
+    if value.lower() in ["true", "false"]:
+        return value.lower() == "true"
 
-    # Write the parsed data to a .toml file
-    with open(toml_file_path, 'w') as toml_file:
-        toml.dump(data, toml_file)
+    # Try int
+    try:
+        return int(value)
+    except ValueError:
+        pass
 
-    print(f"Successfully converted '{env_file_path}' to '{toml_file_path}'")
+    # Try float
+    try:
+        return float(value)
+    except ValueError:
+        pass
 
-if __name__ == '__main__':
-    # Define file paths
-    input_env_file = '.env'
-    output_toml_file = '.toml'
+    # Try JSON (object or array)
+    try:
+        parsed = json.loads(value)
+        return parsed
+    except (json.JSONDecodeError, TypeError):
+        pass
 
-    # Convert the file
-    convert_env_to_toml(input_env_file, output_toml_file)
+    # Try list (comma-separated)
+    if "," in value:
+        return [v.strip() for v in value.split(",")]
+
+    # Fallback: string
+    return value
+
+
+def env_to_toml(env_file: str, toml_file: str):
+    env_vars = dotenv_values(env_file)
+    parsed_vars = {key: parse_value(value) for key, value in env_vars.items() if value is not None}
+
+    with open(toml_file, "w") as f:
+        toml.dump(parsed_vars, f)
+
+    print(f"Converted {env_file} → {toml_file}")
+
+
+if __name__ == "__main__":
+    env_to_toml(".env", "config.toml")
