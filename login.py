@@ -2,8 +2,8 @@ import streamlit as st
 import os
 from google.adk.agents.callback_context import CallbackContext
 from dotenv import load_dotenv
-
 load_dotenv()
+
 print(st.secrets["AUTHORIZED_USERS"])
 
 PREAUTHORIZED_EMAILS = [x.strip() for x in st.secrets["AUTHORIZED_USERS"]]
