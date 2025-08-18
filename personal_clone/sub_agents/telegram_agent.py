@@ -1,9 +1,10 @@
 # This file will contain the Telegram agent and its tools.
-rom google.adk.agents import Agent
+
+from google.adk.agents import Agent
 from ..utils.telegram_utils import get_telegram_client, get_chat_history
 import asyncio
 
-asyn def get_chat_summary(chat_id: str) -> str:
+async def get_chat_summary(chat_id: str) -> str:
   """Summarizes a Telegram chat."""
   bot = get_telegram_client()
   history = await get_chat_history(bot, chat_id)
@@ -23,7 +24,7 @@ asyn def get_chat_summary(chat_id: str) -> str:
   return response.text
 
 
-asyn def create_draft_reply(chat_id: str, user_message: str) -> str:
+async def create_draft_reply(chat_id: str, user_message: str) -> str:
   """Creates a draft reply to a user's message."""
   bot = get_telegram_client()
   history = await get_chat_history(bot, chat_id)
