@@ -15,12 +15,12 @@ try:
 except:
     PINECONE_API_KEY = os.environ["PINECONE_API_KEY"]
     PINECONE_INDEX_NAME = os.environ["PINECONE_INDEX_NAME"]
-    GCP_SERVICE_ACCOUNT = os.environ["GCP_SERVICE_ACCOUNT"]
+    GCP_SERVICE_ACCOUNT = json.loads(os.environ["GCP_SERVICE_ACCOUNT"])
 
 
 # Handle Google Cloud service account credentials for Vertex AI
 if GCP_SERVICE_ACCOUNT:
-    gcp_service_account_info = json.loads(GCP_SERVICE_ACCOUNT)
+    gcp_service_account_info = GCP_SERVICE_ACCOUNT
     with tempfile.NamedTemporaryFile(
         mode="w", delete=False, suffix=".json"
     ) as temp_key_file:
