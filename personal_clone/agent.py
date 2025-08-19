@@ -4,22 +4,26 @@ from google.adk.agents.callback_context import CallbackContext
 from google.genai import types
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 try:
     import streamlit as st
+
     MASTER_AGENT_MODEL = st.secrets.get("MASTER_AGENT_MODEL", "")
     AUTHORIZED_USER_IDS = [x.strip() for x in st.secrets.get("AUTHORIZED_USERS", [])]
-    os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = str(st.secrets.get("GOOGLE_GENAI_USE_VERTEXAI", ''))
-    os.environ['GOOGLE_CLOUD_PROJECT'] = st.secrets.get("GOOGLE_CLOUD_PROJECT", '')
-    os.environ['GOOGLE_CLOUD_LOCATION'] = st.secrets.get("GOOGLE_CLOUD_LOCATION", '')
+    os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = str(
+        st.secrets.get("GOOGLE_GENAI_USE_VERTEXAI", "")
+    )
+    os.environ["GOOGLE_CLOUD_PROJECT"] = st.secrets.get("GOOGLE_CLOUD_PROJECT", "")
+    os.environ["GOOGLE_CLOUD_LOCATION"] = st.secrets.get("GOOGLE_CLOUD_LOCATION", "")
 except:
     MASTER_AGENT_MODEL = os.environ.get("MASTER_AGENT_MODEL", "")
     AUTHORIZED_USER_IDS = [x.strip() for x in os.environ["AUTHORIZED_USERS"].split(",")]
 
 
-
 from google.adk.agents import Agent
+from google.adk.planners import BuiltInPlanner
 from google.adk.tools.load_web_page import load_web_page
 from google.adk.tools.agent_tool import AgentTool
 
@@ -104,7 +108,11 @@ def create_master_agent():
         description="A personal clone that acts as a second brain, helping to remember, recall, find, update, and delete experiences, and also to develop itself.",
         instruction=MASTER_AGENT_INSTRUCTION,
         model=MASTER_AGENT_MODEL,
-        sub_agents=[create_developer_agent(), create_financial_analyst_agent(), create_bigquery_agent()],
+        sub_agents=[
+            create_developer_agent(),
+            create_financial_analyst_agent(),
+            create_bigquery_agent(),
+        ],
         tools=[
             create_search_agent_tool("master_search_agent"),
             load_web_page,
@@ -113,6 +121,11 @@ def create_master_agent():
             create_clickup_agent_tool(),
             AgentTool(agent=create_data_analyst_agent()),
         ],
+        planner=BuiltInPlanner(
+            thinking_config=types.ThinkingConfig(
+                include_thoughts=True, thinking_budget=1024
+            )
+        ),
         before_agent_callback=[load_adk_docs_to_session],
     )
     return master_agent

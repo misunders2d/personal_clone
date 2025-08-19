@@ -21,10 +21,10 @@ try:
     import streamlit as st
 
     bigquery_service_account_info = st.secrets["BIGQUERY_SERVICE_ACCOUNT"]
-    MODEL_NAME = st.secrets['MODEL_NAME']
+    MODEL_NAME = st.secrets["MODEL_NAME"]
 except:
     bigquery_service_account_info = json.loads(os.environ["BIGQUERY_SERVICE_ACCOUNT"])
-    MODEL_NAME = os.environ['MODEL_NAME']
+    MODEL_NAME = os.environ["MODEL_NAME"]
 
 
 with tempfile.NamedTemporaryFile(

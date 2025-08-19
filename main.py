@@ -127,7 +127,9 @@ if prompt := st.chat_input("Ask me what I can do ;)", accept_file=True):
         try:
             st.write_stream(
                 run_agent(
-                    user_input=prompt_text, session_id=f"{USER_ID}_session", user_id=USER_ID
+                    user_input=prompt_text,
+                    session_id=f"{USER_ID}_session",
+                    user_id=USER_ID,
                 )
             )
         except Exception as e:
