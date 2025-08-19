@@ -3,6 +3,8 @@ from google.adk.tools.bigquery import BigQueryCredentialsConfig
 from google.adk.tools.bigquery import BigQueryToolset
 from google.adk.tools.bigquery.config import BigQueryToolConfig
 from google.adk.tools.bigquery.config import WriteMode
+from google.adk.planners import BuiltInPlanner
+from google.genai import types
 from google.oauth2 import service_account
 import tempfile
 
@@ -77,5 +79,10 @@ def create_bigquery_agent():
                 *   If the user is asking for the "latest" or up-to-date data - make sure to identify and understand the "date"-related columns and use them in your queries.
         """,
         tools=[bigquery_toolset],
+        planner=BuiltInPlanner(
+            thinking_config=types.ThinkingConfig(
+                include_thoughts=True, thinking_budget=1024
+            )
+        ),
     )
     return bigquery_agent
