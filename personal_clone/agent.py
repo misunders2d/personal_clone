@@ -123,7 +123,7 @@ def create_master_agent():
         ],
         planner=BuiltInPlanner(
             thinking_config=types.ThinkingConfig(
-                include_thoughts=True, thinking_budget=1024
+                include_thoughts=True, thinking_budget=-1
             )
         ),
         before_agent_callback=[load_adk_docs_to_session],
