@@ -3,18 +3,10 @@ import requests
 from typing import Optional
 from datetime import datetime, timezone
 
-try:
-    import streamlit as st
-
-    CLICKUP_API_TOKEN = st.secrets.get("CLICKUP_API_TOKEN")
-    CLICKUP_SPACE_ID = st.secrets.get("CLICKUP_SPACE_ID")
-    CLICKUP_LIST_ID = st.secrets.get("CLICKUP_LIST_ID")
-    CLICKUP_USER_EMAIL = st.secrets.get("CLICKUP_USER_EMAIL")
-except:
-    CLICKUP_API_TOKEN = os.environ.get("CLICKUP_API_TOKEN")
-    CLICKUP_SPACE_ID = os.environ.get("CLICKUP_SPACE_ID")
-    CLICKUP_LIST_ID = os.environ.get("CLICKUP_LIST_ID")
-    CLICKUP_USER_EMAIL = os.environ.get("CLICKUP_USER_EMAIL")
+CLICKUP_API_TOKEN = os.environ.get("CLICKUP_API_TOKEN")
+CLICKUP_SPACE_ID = os.environ.get("CLICKUP_SPACE_ID")
+CLICKUP_LIST_ID = os.environ.get("CLICKUP_LIST_ID")
+CLICKUP_USER_EMAIL = os.environ.get("CLICKUP_USER_EMAIL")
 
 
 class ClickUpAPI:

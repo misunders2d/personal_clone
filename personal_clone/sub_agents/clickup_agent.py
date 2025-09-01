@@ -6,12 +6,8 @@ from .rag_agent import create_rag_agent_tool
 
 import os
 
-try:
-    import streamlit as st
 
-    MODEL_NAME = st.secrets["MODEL_NAME"]
-except:
-    MODEL_NAME = os.environ["MODEL_NAME"]
+MODEL_NAME = os.environ["MODEL_NAME"]
 
 
 clickup_api = ClickUpAPI()

@@ -4,12 +4,7 @@ import os
 
 COINGECKO_MCP_HOST = "https://mcp.api.coingecko.com/sse"
 
-try:
-    import streamlit as st
-
-    MODEL_NAME = st.secrets["MODEL_NAME"]
-except:
-    MODEL_NAME = os.environ["MODEL_NAME"]
+MODEL_NAME = os.environ["MODEL_NAME"]
 
 
 def create_financial_analyst_agent(name="financial_analyst_agent"):

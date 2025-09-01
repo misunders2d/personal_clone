@@ -6,16 +6,9 @@ import tempfile
 
 
 # Load environment variables
-try:
-    import streamlit as st
-
-    PINECONE_API_KEY = st.secrets["PINECONE_API_KEY"]
-    PINECONE_INDEX_NAME = st.secrets["PINECONE_INDEX_NAME"]
-    GCP_SERVICE_ACCOUNT = st.secrets["GCP_SERVICE_ACCOUNT"]
-except:
-    PINECONE_API_KEY = os.environ["PINECONE_API_KEY"]
-    PINECONE_INDEX_NAME = os.environ["PINECONE_INDEX_NAME"]
-    GCP_SERVICE_ACCOUNT = json.loads(os.environ["GCP_SERVICE_ACCOUNT"])
+PINECONE_API_KEY = os.environ["PINECONE_API_KEY"]
+PINECONE_INDEX_NAME = os.environ["PINECONE_INDEX_NAME"]
+GCP_SERVICE_ACCOUNT = json.loads(os.environ["GCP_SERVICE_ACCOUNT"])
 
 
 # Handle Google Cloud service account credentials for Vertex AI

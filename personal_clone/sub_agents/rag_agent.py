@@ -22,12 +22,7 @@ from ..utils.pinecone_utils import (
     delete_vectors,
 )
 
-try:
-    import streamlit as st
-
-    MODEL_NAME = st.secrets["MODEL_NAME"]
-except:
-    MODEL_NAME = os.environ["MODEL_NAME"]
+MODEL_NAME = os.environ["MODEL_NAME"]
 
 
 def _generate_file_name():

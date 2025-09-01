@@ -6,7 +6,6 @@ from google.adk.agents.callback_context import CallbackContext
 from google.adk.tools import exit_loop, AgentTool, ToolContext
 from google.adk.tools.base_tool import BaseTool
 from google.adk.code_executors import BuiltInCodeExecutor
-from google.adk.models.lite_llm import LiteLlm
 from google.adk.planners import BuiltInPlanner
 from google.genai import types
 
@@ -20,30 +19,14 @@ from .. import instructions
 # --- Environment Variables ---
 # Provide default values for robustness
 
-try:
-    import streamlit as st
-
-    MODEL_NAME = st.secrets.get("MODEL_NAME", "gemini-2.5-flash")  # Default model
-    CODE_REVIEWER_AGENT_MODEL = st.secrets.get(
-        "CODE_REVIEWER_AGENT_MODEL", "openai/gpt-5-mini"
-    )
-    DEVELOPER_AGENT_MODEL = st.secrets.get(
-        "DEVELOPER_AGENT_MODEL", "gemini-2.5-pro"
-    )  # Default for code reviewer
-    MAX_LOOP_ITERATIONS = int(
-        st.secrets.get("MAX_LOOP_ITERATIONS", "5")
-    )  # Default max iterations
-except:
-    MODEL_NAME = os.getenv("MODEL_NAME", "gemini-2.5-flash")  # Default model
-    CODE_REVIEWER_AGENT_MODEL = os.getenv(
-        "CODE_REVIEWER_AGENT_MODEL", "openai/gpt-5-mini"
-    )
-    DEVELOPER_AGENT_MODEL = os.getenv(
-        "DEVELOPER_AGENT_MODEL", "gemini-2.5-pro"
-    )  # Default for code reviewer
-    MAX_LOOP_ITERATIONS = int(
-        os.getenv("MAX_LOOP_ITERATIONS", "5")
-    )  # Default max iterations
+MODEL_NAME = os.getenv("MODEL_NAME", "gemini-2.5-flash")  # Default model
+CODE_REVIEWER_AGENT_MODEL = os.getenv("CODE_REVIEWER_AGENT_MODEL", "openai/gpt-5-mini")
+DEVELOPER_AGENT_MODEL = os.getenv(
+    "DEVELOPER_AGENT_MODEL", "gemini-2.5-pro"
+)  # Default for code reviewer
+MAX_LOOP_ITERATIONS = int(
+    os.getenv("MAX_LOOP_ITERATIONS", "5")
+)  # Default max iterations
 
 
 # --- Callbacks ---

@@ -10,18 +10,10 @@ import pickle
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/drive"]
 
-try:
-    import streamlit as st
-
-    TOKEN_PATH = st.secrets.get("TOKEN_PATH", "")
-    GOOGLE_CLOUD_PROJECT = st.secrets.get("GOOGLE_CLOUD_PROJECT")
-    GOOGLE_DRIVE_CLIENT_ID = st.secrets.get("GOOGLE_DRIVE_CLIENT_ID")
-    GOOGLE_DRIVE_CLIENT_SECRET = st.secrets.get("GOOGLE_DRIVE_CLIENT_SECRET")
-except:
-    TOKEN_PATH = os.environ.get("TOKEN_PATH", "")
-    GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    GOOGLE_DRIVE_CLIENT_ID = os.environ.get("GOOGLE_DRIVE_CLIENT_ID")
-    GOOGLE_DRIVE_CLIENT_SECRET = os.environ.get("GOOGLE_DRIVE_CLIENT_SECRET")
+TOKEN_PATH = os.environ.get("TOKEN_PATH", "")
+GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT")
+GOOGLE_DRIVE_CLIENT_ID = os.environ.get("GOOGLE_DRIVE_CLIENT_ID")
+GOOGLE_DRIVE_CLIENT_SECRET = os.environ.get("GOOGLE_DRIVE_CLIENT_SECRET")
 
 
 def get_drive_service():

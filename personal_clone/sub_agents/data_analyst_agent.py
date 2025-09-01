@@ -5,12 +5,7 @@ import seaborn as sns
 from google.adk.agents import Agent
 import os
 
-try:
-    import streamlit as st
-
-    MODEL_NAME = st.secrets["MODEL_NAME"]
-except:
-    MODEL_NAME = os.environ["MODEL_NAME"]
+MODEL_NAME = os.environ["MODEL_NAME"]
 
 
 def create_visualization_from_data(data: str, chart_type: str, title: str) -> dict:

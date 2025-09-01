@@ -15,12 +15,7 @@ from google.adk.agents.readonly_context import ReadonlyContext
 
 from typing import Optional, List
 
-try:
-    import streamlit as st
-
-    GITHUB_TOKEN = st.secrets.get("GITHUB_TOKEN")
-except:
-    GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 
 
 def _get_repo(repo_owner: str, repo_name: str):
