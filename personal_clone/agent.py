@@ -1,4 +1,5 @@
 from google.adk.agents import Agent
+from google.adk.tools.preload_memory_tool import PreloadMemoryTool
 
 def get_current_datetime():
     from datetime import datetime
@@ -9,5 +10,5 @@ root_agent = Agent(
     name='root_agent',
     description='A helpful assistant for user questions.',
     instruction='Answer user questions to the best of your knowledge',
-    tools=[get_current_datetime]
+    tools=[get_current_datetime, PreloadMemoryTool()]
 )

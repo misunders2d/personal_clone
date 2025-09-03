@@ -1,4 +1,5 @@
 import os
+import asyncio
 
 import vertexai
 from absl import app, flags
@@ -78,6 +79,8 @@ def main(argv: list[str]) -> None:  # pylint: disable=unused-argument
                         if "text" in part:
                             text_part = part["text"]
                             print(f"Response: {text_part}")
+
+        # agent.async_add_session_to_memory(session = session) # type: ignore
 
     # agent.delete_session(user_id=FLAGS.user_id, session_id=session["id"]) # type: ignore
     # print(f"Deleted session for user ID: {FLAGS.user_id}")
