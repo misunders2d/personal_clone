@@ -1,6 +1,7 @@
 from google.adk.agents import Agent
 from google.adk.tools.preload_memory_tool import PreloadMemoryTool
 
+
 def get_current_datetime():
     from datetime import datetime
     return datetime.now().isoformat()

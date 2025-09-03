@@ -16,6 +16,7 @@ flags.DEFINE_string("resource_id", None, "ReasoningEngine resource ID.")
 
 flags.DEFINE_bool("list", False, "List all agents.")
 flags.DEFINE_bool("create", False, "Creates a new agent.")
+flags.DEFINE_bool("create_memory_bank", False, "Creates a new engine without an agent.")
 flags.DEFINE_bool("update", False, "Updates an agent.")
 flags.DEFINE_bool("delete", False, "Deletes an existing agent.")
 flags.mark_bool_flags_as_mutual_exclusive(["create", "delete", "update"])
@@ -25,9 +26,24 @@ requirements_path = "requirements.txt"
 agents_path = "personal_clone"
 
 
+def create_memory_bank() -> None:
+    """Creates a Vertex AI Memory Bank without an agent."""
+
+    client = vertexai.Client(  # type: ignore
+        project=(
+            FLAGS.project_id if FLAGS.project_id else os.environ["GOOGLE_CLOUD_PROJECT"]
+        ),
+        location=(
+            FLAGS.location if FLAGS.location else os.environ["GOOGLE_CLOUD_LOCATION"]
+        ),
+    )
+    agent_engine = client.agent_engines.create()
+    print(f"Created memory bank: {agent_engine.api_resource.name}")
+
+
 def create() -> None:
     """Creates an agent engine for Personal Clone agent."""
-    adk_app = AdkApp(agent=root_agent,enable_tracing=True)
+    adk_app = AdkApp(agent=root_agent, enable_tracing=True)
 
     remote_agent = agent_engines.create(
         adk_app,
@@ -37,26 +53,28 @@ def create() -> None:
     )
     print(f"Created remote agent: {remote_agent.resource_name}")
 
+
 def update(resource_id: str) -> None:
     """Updates an agent engine for Personal Clone agent."""
 
-    def memory_bank_service_builder(agent_engine_id: str = resource_id) -> VertexAiMemoryBankService:
+    def memory_bank_service_builder(
+        agent_engine_id: str = resource_id,
+    ) -> VertexAiMemoryBankService:
         return VertexAiMemoryBankService(
-            project=os.environ['GOOGLE_CLOUD_PROJECT'],
-            location=os.environ['GOOGLE_CLOUD_LOCATION'],
-            agent_engine_id=agent_engine_id
+            project=os.environ["GOOGLE_CLOUD_PROJECT"],
+            location=os.environ["GOOGLE_CLOUD_LOCATION"],
+            agent_engine_id=agent_engine_id,
         )
-
 
     adk_app = AdkApp(
         agent=root_agent,
         enable_tracing=True,
-        memory_service_builder=memory_bank_service_builder
-        )
+        memory_service_builder=memory_bank_service_builder,
+    )
 
     remote_agent = agent_engines.update(
         resource_id,
-        agent_engine=adk_app, # type: ignore
+        agent_engine=adk_app,  # type: ignore
         display_name="personal_clone",
         requirements=requirements_path,
         # extra_packages=[agents_path]
@@ -86,10 +104,12 @@ def list_agents() -> None:
 def main(argv: list[str]) -> None:
     del argv  # unused
     load_dotenv(dotenv_path)
-    
-    project_id = (FLAGS.project_id if FLAGS.project_id else os.getenv("GOOGLE_CLOUD_PROJECT"))
-    location = (FLAGS.location if FLAGS.location else os.getenv("GOOGLE_CLOUD_LOCATION"))
-    bucket = (FLAGS.bucket if FLAGS.bucket else os.getenv("GOOGLE_CLOUD_STORAGE_BUCKET"))
+
+    project_id = (
+        FLAGS.project_id if FLAGS.project_id else os.getenv("GOOGLE_CLOUD_PROJECT")
+    )
+    location = FLAGS.location if FLAGS.location else os.getenv("GOOGLE_CLOUD_LOCATION")
+    bucket = FLAGS.bucket if FLAGS.bucket else os.getenv("GOOGLE_CLOUD_STORAGE_BUCKET")
 
     print(f"PROJECT: {project_id}")
     print(f"LOCATION: {location}")
@@ -102,9 +122,7 @@ def main(argv: list[str]) -> None:
         print("Missing required environment variable: GOOGLE_CLOUD_LOCATION")
         return
     elif not bucket:
-        print(
-            "Missing required environment variable: GOOGLE_CLOUD_STORAGE_BUCKET"
-        )
+        print("Missing required environment variable: GOOGLE_CLOUD_STORAGE_BUCKET")
         return
 
     vertexai.init(
@@ -117,6 +135,8 @@ def main(argv: list[str]) -> None:
         list_agents()
     elif FLAGS.create:
         create()
+    elif FLAGS.create_memory_bank:
+        create_memory_bank()
     elif FLAGS.delete:
         if not FLAGS.resource_id:
             print("resource_id is required for delete")
