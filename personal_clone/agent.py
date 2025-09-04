@@ -1,15 +1,22 @@
 from google.adk.agents import Agent
-from google.adk.tools.preload_memory_tool import PreloadMemoryTool
+from google.adk.tools.bigquery import bigquery_toolset
+from .sub_agents.memory_agent import memory_agent
+
+from dotenv import load_dotenv
+load_dotenv()
 
 
 def get_current_datetime():
     from datetime import datetime
     return datetime.now().isoformat()
 
+
+
 root_agent = Agent(
     model='gemini-2.5-flash',
-    name='root_agent',
+    name='personal_clone',
     description='A helpful assistant for user questions.',
     instruction='Answer user questions to the best of your knowledge',
-    tools=[get_current_datetime, PreloadMemoryTool()]
+    sub_agents=[memory_agent],
+    tools=[get_current_datetime]
 )

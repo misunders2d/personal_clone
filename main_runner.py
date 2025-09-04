@@ -54,10 +54,11 @@ async def run_agent(query: str, user_id: str, session_id: str = current_session)
                 print("Agent Response: ", final_response)
     if session:
         await memory_service.add_session_to_memory(session=session)
+        print("Session added to memory")
 
 
 async def main():
-    user_id = "user123"
+    user_id = "sergey@mellanni.com"
     while True:
         query = input("Enter your question (or 'exit' to quit): ")
         if query.lower() == 'exit':
