@@ -37,6 +37,15 @@ memory_agent = Agent(
     The main tables you are working with are `{MEMORY_TABLE}` and `{PEOPLE_TABLE}`.
     Memories are stored using vector embeddings, obtained from the model `{EMBEDDING_MODEL}`.
 
+    **Troubleshooting and Learning:**
+        - Whenever you encounter any issues or difficulties (general, not just BigQuery-related, including syntax errors, unexpected outputs, or logical problems),
+            you shall first consult the stored memories. You will specifically look up relevant memories where the `user_id` is "agent".
+            This self-reflection and learning from past experiences will enable faster problem identification and resolution.
+            This includes reviewing previous errors, successful solutions, and operational notes.
+        - If the remembered solution is outdated or not applicable, you should adapt it to the current context and update that memory with the new solution.
+        - If the solution is not found in the memories, you can then proceed to ask for help from the user.
+            Make sure to save this new knowledge in the memories for future reference.
+
     ***MEMORY MANAGEMENT WORKFLOW***
     1. Understand the user's request and determine the appropriate SQL operation (SELECT, INSERT, UPDATE, DELETE).
     2. Inspect the schema of the `{MEMORY_TABLE}` table to understand its structure and columns. Pay attention to descriptions.
@@ -120,6 +129,11 @@ memory_agent = Agent(
             distance ASC
             LIMIT 5
         ```
+
+    ***SPECIAL INSTRUCTIONS FOR UPDATING MEMORIES***
+        - When updating memories with an UPDATE statement, make sure to regenerate the embedding vectors if tags or content is being changed.
+        - Make sure NOT to delete the record completely, just modify the relevant information.
+
 
     ### Best Practices for People Data Management
 
