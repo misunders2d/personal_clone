@@ -1,15 +1,10 @@
 from vertexai import rag
 import vertexai
 from google.adk import Agent
-from google.adk.tools.base_toolset import BaseToolset
-from google.adk.tools import FunctionTool, BaseTool, LongRunningFunctionTool
-from google.adk.agents.readonly_context import ReadonlyContext
+from google.adk.tools import LongRunningFunctionTool
 
-
-from typing import Optional, List, Dict
 import os
 import re
-import asyncio
 
 PROJECT_ID = os.environ["GOOGLE_CLOUD_PROJECT"]
 # LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
@@ -253,42 +248,17 @@ def rag_query(query: str, corpus_name: str) -> dict:
     }
 
 
-class RagToolset(BaseToolset):
-    def __init__(self, prefix: str = "rag_"):
-        self.prefix = prefix
-        self._create_tool = FunctionTool(func=create_corpus)
-        self._upload = LongRunningFunctionTool(func=upload_files_to_corpus)
-        self._delete_files = FunctionTool(func=delete_files_from_corpus)
-        self._delete_corpus = FunctionTool(func=delete_corpus)
-        self._list_corpora = FunctionTool(func=list_corpora)
-        self._list_files = FunctionTool(func=list_files_in_corpus)
-        self._rag_query = FunctionTool(func=rag_query)
-
-    async def get_tools(
-        self, readonly_context: Optional[ReadonlyContext] = None
-    ) -> List[BaseTool]:
-
-        tools_to_return = [
-            self._create_tool,
-            self._upload,
-            self._delete_files,
-            self._delete_corpus,
-            self._list_corpora,
-            self._list_files,
-            self._rag_query,
-        ]
-        return tools_to_return  # type: ignore
-
-    async def close(self) -> None:
-        print(f"RagToolset.close() called for prefix '{self.prefix}'.")
-        await asyncio.sleep(0)  # Placeholder for async cleanup if needed
-
-
-rag_toolset = RagToolset(prefix="rag_")
-
 rag_agent = Agent(
     name="rag_agent",
     description="A memory agent that uses a RAG corpus to store and retrieve information from documents.",
     instruction="You are a memory agent that uses a RAG corpus to store and retrieve information from documents.",
-    tools=[rag_toolset],
+    tools=[
+        create_corpus,
+        LongRunningFunctionTool(upload_files_to_corpus),
+        delete_files_from_corpus,
+        delete_corpus,
+        list_corpora,
+        list_files_in_corpus,
+        rag_query
+    ],
 )
