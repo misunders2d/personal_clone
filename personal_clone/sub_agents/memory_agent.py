@@ -32,8 +32,11 @@ bigquery_toolset = BigQueryToolset(
 
 memory_agent = Agent(
     name="memory_agent",
-    description="An agent that can handles memory management - creating, retrieving, updating and deleting memories. Use it whenever the conversation implies memory management (remembering, recalling etc.). Also use it to manage people data in the people table.",
-    instruction=f"""You are an agent that can interact with a specific table in Google BigQuery to run SQL queries and manage memories.
+    description="""An agent that can handles experience and memory management - creating, retrieving, updating and deleting experiences or memories.
+        Use it whenever the conversation implies experience or memory management (remembering, recalling etc.).
+        Also use it to manage people data in the people table.
+        """,
+    instruction=f"""You are an agent that can interact with specific table in Google BigQuery to run SQL queries and manage memories and/or experiences.
     The main tables you are working with are `{MEMORY_TABLE}` and `{PEOPLE_TABLE}`.
     Memories are stored using vector embeddings, obtained from the model `{EMBEDDING_MODEL}`.
 

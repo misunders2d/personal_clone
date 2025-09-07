@@ -10,7 +10,7 @@ load_dotenv("personal_clone/.env")
 import os
 
 agent_engine_id = "2225697407641845760"
-USER_ID='sergey@mellanni.com'
+USER_ID = "sergey@mellanni.com"
 GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
 GOOGLE_CLOUD_LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "")
 GOOGLE_CLOUD_STORAGE_BUCKET = os.environ.get("GOOGLE_CLOUD_STORAGE_BUCKET", "")

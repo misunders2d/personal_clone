@@ -1,3 +1,6 @@
+# Efficient but expensive service, use for enterprise-level data
+
+
 from vertexai import rag
 import vertexai
 from google.adk import Agent
@@ -250,15 +253,15 @@ def rag_query(query: str, corpus_name: str) -> dict:
 
 rag_agent = Agent(
     name="rag_agent",
-    description="A memory agent that uses a RAG corpus to store and retrieve information from documents.",
-    instruction="You are a memory agent that uses a RAG corpus to store and retrieve information from documents.",
+    description="A knowledge agent that uses a RAG corpus to store and retrieve information from documents.",
+    instruction="You are a knowledge agent that uses a RAG corpus to store and retrieve information from documents.",
     tools=[
         create_corpus,
-        LongRunningFunctionTool(upload_files_to_corpus),
+        upload_files_to_corpus,
         delete_files_from_corpus,
         delete_corpus,
         list_corpora,
         list_files_in_corpus,
-        rag_query
+        rag_query,
     ],
 )

@@ -49,7 +49,7 @@ def create() -> None:
         adk_app,
         display_name=root_agent.name,
         requirements=requirements_path,
-        extra_packages=[agents_path]
+        extra_packages=[agents_path],
     )
     print(f"Created remote agent: {remote_agent.resource_name}")
 
@@ -77,7 +77,7 @@ def update(resource_id: str) -> None:
         agent_engine=adk_app,  # type: ignore
         display_name="personal_clone",
         requirements=requirements_path,
-        extra_packages=[agents_path]
+        extra_packages=[agents_path],
     )
     print(f"Updated remote agent: {remote_agent.resource_name}")
 
