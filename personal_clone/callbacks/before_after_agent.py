@@ -3,7 +3,9 @@ from typing import Optional
 from google.genai import types
 
 
-def check_if_agent_should_run(callback_context: CallbackContext) -> Optional[types.Content]:
+def check_if_agent_should_run(
+    callback_context: CallbackContext,
+) -> Optional[types.Content]:
     """
     Logs entry and checks 'answer_needed' in session state.
     If True, returns Content to skip the agent's execution.
@@ -17,8 +19,9 @@ def check_if_agent_should_run(callback_context: CallbackContext) -> Optional[typ
     if current_state.get("answer_needed", "TRUE").strip() == "FALSE":
         # Return Content to skip the agent's run
         return types.Content(
-            parts=[types.Part(text="")],
-            role="model" # Assign model role to the overriding response
+            # parts=[types.Part(text="")],
+            parts = None,
+            role="model",  # Assign model role to the overriding response
         )
     else:
         # Return None to allow the LlmAgent's normal execution
