@@ -6,6 +6,8 @@ from google.adk.tools.bigquery.config import WriteMode
 from google.adk.planners import BuiltInPlanner
 from google.genai import types
 
+from pydantic import BaseModel, Field
+
 from google.oauth2 import service_account
 import os
 import json
@@ -30,25 +32,25 @@ bigquery_toolset = BigQueryToolset(
 )
 
 
+class MemoryOutput(BaseModel):
+    topic: str = Field(
+        description="The main topic of the memory (i.e. `User's pet project`)"
+    )
+    memory: str = Field(description="The actual contents of the memory")
+    related_memories: str = Field(description="List of related memories IDs")
+
+
 memory_agent = Agent(
     name="memory_agent",
     description="""An agent that can handles experience and memory management - creating, retrieving, updating and deleting experiences or memories.
         Use it whenever the conversation implies experience or memory management (remembering, recalling etc.).
         Also use it to manage people data in the people table.
         """,
-    instruction=f"""You are an agent that can interact with specific table in Google BigQuery to run SQL queries and manage memories and/or experiences.
+    instruction=f"""You are an agent that can interact with specific tables in Google BigQuery to run SQL queries and manage memories and/or experiences.
     The main tables you are working with are `{MEMORY_TABLE}` and `{PEOPLE_TABLE}`.
     Memories are stored using vector embeddings, obtained from the model `{EMBEDDING_MODEL}`.
 
-    **Troubleshooting and Learning:**
-        - Whenever you encounter any issues or difficulties (general, not just BigQuery-related, including syntax errors, unexpected outputs, or logical problems),
-            you shall first consult the stored memories. You will specifically look up relevant memories where the `user_id` is "agent".
-            This self-reflection and learning from past experiences will enable faster problem identification and resolution.
-            This includes reviewing previous errors, successful solutions, and operational notes.
-        - If the remembered solution is outdated or not applicable, you should adapt it to the current context and update that memory with the new solution.
-        - If the solution is not found in the memories, you can then proceed to ask for help from the user.
-            Make sure to save this new knowledge in the memories for future reference.
-
+s
     ***MEMORY MANAGEMENT WORKFLOW***
     1. Understand the user's request and determine the appropriate SQL operation (SELECT, INSERT, UPDATE, DELETE).
     2. Inspect the schema of the `{MEMORY_TABLE}` table to understand its structure and columns. Pay attention to descriptions.
@@ -56,7 +58,7 @@ memory_agent = Agent(
     4. Execute the SQL query using the BigQuery toolset's `execute_sql` function, do not use `ask_data_insights`:
          - For SELECT queries, retrieve the relevant memories and present them to the user.
          - For INSERT queries, add new memories to the table. Make sure to apply the logic from the example below to auto-generate the `memory_id`.
-         - For UPDATE queries, modify existing memories as per the user's request. Always make sure to update the `updated_at` field.
+         - For UPDATE queries, modify existing memories as per the user's request. Do not overwrite the memory completely. Always make sure to update the `updated_at` field.
          - For DELETE queries, remove memories that are no longer needed. Confirm the user's intent before deletion.
     IMPORTANT: Always confirm the user's intent before performing any DELETE or UPDATE operations to avoid accidental data loss.
 
@@ -183,8 +185,10 @@ memory_agent = Agent(
 
     """,
     model="gemini-2.5-flash",
-    planner=BuiltInPlanner(
-        thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
-    ),
+    # planner=BuiltInPlanner(
+    #     thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
+    # ),
     tools=[bigquery_toolset],
+    output_schema=MemoryOutput,
+    output_key="memory_search",
 )
