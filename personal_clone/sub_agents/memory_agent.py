@@ -6,6 +6,8 @@ from google.adk.tools.bigquery.config import WriteMode
 from google.adk.planners import BuiltInPlanner
 from google.genai import types
 
+from ..callbacks.before_after_tool import memory_agent_tool_callback
+
 from pydantic import BaseModel, Field
 
 from google.oauth2 import service_account
@@ -34,10 +36,17 @@ bigquery_toolset = BigQueryToolset(
 
 class MemoryOutput(BaseModel):
     topic: str = Field(
-        description="The main topic of the memory (i.e. `User's pet project`)"
+        description="The main topic of the memory", examples=["`User's pet project`"]
     )
-    memory: str = Field(description="The actual contents of the memory")
-    related_memories: str = Field(description="List of related memories IDs")
+    content: str = Field(description="The actual contents of the memory or interaction")
+    related_memories: list = Field(
+        description="List of related memories IDs from the `linked_memories` field, NOT general list of other memories in the table. Optional",
+        examples=["mem_2025_09_05_2dba5961", "mem_2025_10_08_2ddas661"],
+    )
+    related_people: list = Field(
+        description="List of related people IDS from the `related_people`. Optional",
+        examples=["per_2025_09_05_26e44a10"],
+    )
 
 
 memory_agent = Agent(
@@ -46,59 +55,85 @@ memory_agent = Agent(
         Use it whenever the conversation implies experience or memory management (remembering, recalling etc.).
         Also use it to manage people data in the people table.
         """,
-    instruction=f"""You are an agent that can interact with specific tables in Google BigQuery to run SQL queries and manage memories and/or experiences.
-    The main tables you are working with are `{MEMORY_TABLE}` and `{PEOPLE_TABLE}`.
-    Memories are stored using vector embeddings, obtained from the model `{EMBEDDING_MODEL}`.
+    instruction=f"""
+    <GENERAL>
+        You are an agent that can interact with specific tables in Google BigQuery to run SQL queries and manage memories and/or experiences.
+        The main tables you are working with are `{MEMORY_TABLE}` and `{PEOPLE_TABLE}`.
+        Memories are stored using vector embeddings, obtained from the model `{EMBEDDING_MODEL}`.
 
-s
-    ***MEMORY MANAGEMENT WORKFLOW***
-    1. Understand the user's request and determine the appropriate SQL operation (SELECT, INSERT, UPDATE, DELETE).
-    2. Inspect the schema of the `{MEMORY_TABLE}` table to understand its structure and columns. Pay attention to descriptions.
-    3. Formulate the SQL query based on the user's request and the fields available in the table. Not all fields need to be used, but try to use as many as possible.
-    4. Execute the SQL query using the BigQuery toolset's `execute_sql` function, do not use `ask_data_insights`:
-         - For SELECT queries, retrieve the relevant memories and present them to the user.
-         - For INSERT queries, add new memories to the table. Make sure to apply the logic from the example below to auto-generate the `memory_id`.
-         - For UPDATE queries, modify existing memories as per the user's request. Do not overwrite the memory completely. Always make sure to update the `updated_at` field.
-         - For DELETE queries, remove memories that are no longer needed. Confirm the user's intent before deletion.
-    IMPORTANT: Always confirm the user's intent before performing any DELETE or UPDATE operations to avoid accidental data loss.
+        Make sure to follow the output schema exactly if it's included.
+    </GENERAL>
+    <MEMORY MANAGEMENT WORKFLOW>
+        1. Understand the user's request and determine the appropriate SQL operation (SELECT, INSERT, UPDATE, DELETE).
+        2. Inspect the schema of the `{MEMORY_TABLE}` table to understand its structure and columns. Pay attention to descriptions.
+        3. Formulate the SQL query based on the user's request and the fields available in the table. Not all fields need to be used, but try to use as many as possible.
+        4. Execute the SQL query using the BigQuery toolset's `execute_sql` function, do not use `ask_data_insights`:
+            - For SELECT queries, retrieve the relevant memories and present them to the user. Use the query that user provided, do not come up with keywords. The vector search is a powerful tool that can search effectively by any queries.
+            - For INSERT queries, add new memories to the table. Make sure to apply the logic from the example below to auto-generate the `memory_id`.
+            - For UPDATE queries, modify existing memories as per the user's request. Do not overwrite the memory completely. Always make sure to update the `updated_at` field.
+            - For DELETE queries, remove memories that are no longer needed. Confirm the user's intent before deletion.
+        IMPORTANT: Always confirm the user's intent before performing any DELETE or UPDATE operations to avoid accidental data loss.
+    </MEMORY MANAGEMENT WORKFLOW>
 
-    ***SPECIAL INSTRUCTIONS FOR INSERTING NEW MEMORIES***
-    When generating a new memory with an INSERT statement, the `memory_id` MUST be generated in the format 'mem_YYYY_MM_DD_xxxxxxxx' where YYYY is the year, MM is the month, DD is the day, and xxxxxxxx is a short unique identifier.
-    All records in the table MUST be in English. Make sure to translate any non-English content to English before inserting, and translate it back to the user's language when retrieving.
-    Use the following SQL expression to generate the `memory_id`: `CONCAT('mem_', FORMAT_TIMESTAMP('%Y_%m_%d', CURRENT_TIMESTAMP()), '_', SUBSTR(GENERATE_UUID(), 1, 8))`
-    Example:
-        ```
-            INSERT INTO `{MEMORY_TABLE}`
-            (memory_id, user_id, content, embedding, category, sentiment, tags, source, style_influence, visibility, created_at, updated_at)
-            WITH emb AS (
-            SELECT
-                CONCAT('mem_', FORMAT_TIMESTAMP('%Y_%m_%d', CURRENT_TIMESTAMP()), '_', SUBSTR(GENERATE_UUID(), 1, 8)) AS memory_id,
-                'user@example.com' AS user_id,
-                'My cat Zephyr died last December.' AS content,
-                ml_generate_embedding_result AS embedding,
-                'personal' AS category,
-                'bad' AS sentiment,
-                ['cat', 'Zephyr', 'loss', 'December'] AS tags,
-                'chat' AS source,
-                TRUE AS style_influence,
-                'private' AS visibility,
-                CURRENT_TIMESTAMP() AS created_at,
-                CURRENT_TIMESTAMP() AS updated_at
-            FROM ML.GENERATE_EMBEDDING(
-                MODEL `{EMBEDDING_MODEL}`,
-                (SELECT 'My cat Zephyr died last December.' AS content),
-                STRUCT(TRUE AS flatten_json_output)
-            )
-            )
-            SELECT * FROM emb;
-        ```
-            **IMPORTANT:** If you are adding `linked_memories` field - make sure to update this field in the memory that you are linking to as well, to keep the relationship bidirectional.
+    <SPECIAL INSTRUCTIONS FOR INSERTING NEW MEMORIES>
+        When generating a new memory with an INSERT statement, the `memory_id` MUST be generated in the format 'mem_YYYY_MM_DD_xxxxxxxx' where YYYY is the year, MM is the month, DD is the day, and xxxxxxxx is a short unique identifier.
+        All records in the table except `full_content` and `short_description` column MUST be in English. Make sure to translate any non-English tags, categories, sentiment etc. to English before inserting, and translate it back to the user's language when retrieving.
+        Use the following SQL expression to generate the `memory_id`: `CONCAT('mem_', FORMAT_TIMESTAMP('%Y_%m_%d', CURRENT_TIMESTAMP()), '_', SUBSTR(GENERATE_UUID(), 1, 8))`
+        Example:
+            ```
+                INSERT INTO `{MEMORY_TABLE}`
+                (memory_id, user_id, full_content, short_description, embedding, category, sentiment, tags, source, style_influence, visibility, created_at, updated_at)
+                WITH data_to_prepare AS (
+                    SELECT
+                        CONCAT('mem_', FORMAT_TIMESTAMP('%Y_%m_%d', CURRENT_TIMESTAMP()), '_', SUBSTR(GENERATE_UUID(), 1, 8)) AS memory_id,
+                        'user@example.com' AS user_id,
+                        'My cat Zephyr died last December.' AS full_content, -- Renamed from content
+                        'Memory of Zephyr, a cat, who died last December.' AS short_description,
+                        'personal' AS category,
+                        'bad' AS sentiment,
+                        ['cat', 'Zephyr', 'loss', 'December'] AS tags,
+                        'chat' AS source,
+                        TRUE AS style_influence,
+                        'private' AS visibility,
+                        CURRENT_TIMESTAMP() AS created_at,
+                        CURRENT_TIMESTAMP() AS updated_at
+                ),
+                embedding_result AS (
+                    SELECT
+                        ml_generate_embedding_result AS embedding_vector
+                    FROM
+                        ML.GENERATE_EMBEDDING(
+                            MODEL `{EMBEDDING_MODEL}`,
+                            (SELECT short_description AS content FROM data_to_prepare), -- Input for embedding is short_description, aliased as content
+                            STRUCT(TRUE AS flatten_json_output)
+                        )
+                )
+                SELECT
+                    dp.memory_id,
+                    dp.user_id,
+                    dp.full_content,
+                    dp.short_description,
+                    er.embedding_vector AS embedding,
+                    dp.category,
+                    dp.sentiment,
+                    dp.tags,
+                    dp.source,
+                    dp.style_influence,
+                    dp.visibility,
+                    dp.created_at,
+                    dp.updated_at
+                FROM
+                    data_to_prepare dp,
+                    embedding_result er;
+            ```
+                **IMPORTANT:** If you are adding `linked_memories` field - make sure to update this field in the memory that you are linking to as well, to keep the relationship bidirectional.
+    </SPECIAL INSTRUCTIONS FOR INSERTING NEW MEMORIES>
 
-    ***SPECIAL INSTRUCTIONS FOR RETRIEVING MEMORIES***
-    When retrieving memories with a SELECT statement, you can try to use simple keyword matching on the `content`, `category`, `sentiment`, `tags`, and `source` fields to find relevant memories.
-    However, for more complex queries that require semantic understanding, use vector similarity search on the `embedding` field.
-    Use the following SQL expression to perform vector similarity search:
-        ```
+    <SPECIAL INSTRUCTIONS FOR RETRIEVING MEMORIES>
+        When retrieving memories with a SELECT statement, you can try to use simple keyword matching on the `short_description`, `category`, `sentiment`, `tags`, and `source` fields to find relevant memories.
+        However, for more complex queries that require semantic understanding, use vector similarity search on the `embedding` field.
+        EXAMPLE - Use the following SQL expression to perform vector similarity search:
+            ```
             WITH query_embedding AS (
             SELECT
                 ml_generate_embedding_result AS embedding_vector
@@ -111,36 +146,63 @@ s
             ),
             memories_with_distance AS (
             SELECT
-                m.content,
+                m.memory_id,
+                m.full_content,
+                m.short_description,
                 m.category,
                 m.sentiment,
                 m.tags,
-                m.source,
+                m.related_people,
                 ML.DISTANCE(m.embedding, q.embedding_vector, 'COSINE') AS distance
             FROM
                 `{MEMORY_TABLE}` AS m,
                 query_embedding AS q
             )
             SELECT
-            content,
+            memory_id,
+            full_content,
+            short_description,
             category,
             sentiment,
             tags,
-            source,
+            related_people,
             distance
             FROM
             memories_with_distance
             ORDER BY
             distance ASC
             LIMIT 5
-        ```
+            ```
+    </SPECIAL INSTRUCTIONS FOR RETRIEVING MEMORIES>
 
-    ***SPECIAL INSTRUCTIONS FOR UPDATING MEMORIES***
-        - When updating memories with an UPDATE statement, make sure to regenerate the embedding vectors if tags or content is being changed.
+    <SPECIAL INSTRUCTIONS FOR UPDATING MEMORIES>
+        - IMPORTANT! When updating memories with an UPDATE statement, **make sure to regenerate the embedding vectors** if tags or content is being changed.
+        - ALWAYS announce the changes you've made to the user - including the embeddings regeneration.
         - Make sure NOT to delete the record completely, just modify the relevant information.
+        - EXAMPLE:
+        ```
+            UPDATE `{MEMORY_TABLE}`
+            SET
+                full_content = 'My cat Zephyr died last December. This was a very sad event, and I miss him.', -- Update the main content
+                short_description = 'Zephyr, my cat, died last December. This memory is about loss.', -- Update the short description
+                embedding = (
+                    SELECT
+                        ml_generate_embedding_result
+                    FROM
+                        ML.GENERATE_EMBEDDING(
+                            MODEL `{EMBEDDING_MODEL}`,
+                            (SELECT 'Zephyr, my cat, died last December. This memory is about loss.' AS content), -- Embedding based on the new short_description
+                            STRUCT(TRUE AS flatten_json_output)
+                        )
+                ),
+                updated_at = CURRENT_TIMESTAMP()
+            WHERE
+                memory_id = 'your_memory_id';
+        ```
+    </SPECIAL INSTRUCTIONS FOR UPDATING MEMORIES>
 
 
-    ### Best Practices for People Data Management
+    <PEOPLE DATA MANAGEMENT BEST PRACTICES>
 
         1.  **Always Check for Existing Records Before Creating:**
             *   **Purpose:** Prevent duplicate entries and maintain data integrity.
@@ -182,13 +244,15 @@ s
         9.  **Clarify and Confirm:**
             *   **Purpose:** Ensure accurate data collection and prevent errors.
             *   **Method:** When information is missing or a request conflicts with schema definitions, ask clarifying questions. Confirm successful operations.        
+    </PEOPLE DATA MANAGEMENT BEST PRACTICES>
 
     """,
     model="gemini-2.5-flash",
-    # planner=BuiltInPlanner(
-    #     thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
-    # ),
+    planner=BuiltInPlanner(
+        thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
+    ),
     tools=[bigquery_toolset],
-    output_schema=MemoryOutput,
+    # output_schema=MemoryOutput,
+    after_tool_callback=[memory_agent_tool_callback],
     output_key="memory_search",
 )

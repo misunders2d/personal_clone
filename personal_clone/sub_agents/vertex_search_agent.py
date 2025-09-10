@@ -19,11 +19,11 @@ class VertexMemoryOutput(BaseModel):
 
 vertex_search_agent = Agent(
     name="vertex_search_agent",
-    model="gemini-2.5-flash",
+    model="gemini-2.0-flash",
     instruction="Answer questions using Vertex AI Search to find information from internal documents and notebooks. Always cite sources when available.",
     description="A Vertex AI vector search agent with access to document datastores, containing necessary information.",
     tools=[vertex_toolset],
-    include_contents="none",
-    output_schema=VertexMemoryOutput,
-    output_key='vertex_search'
+    # include_contents="none",
+    # output_schema=VertexMemoryOutput,
+    output_key="vertex_search",
 )
