@@ -52,7 +52,7 @@ memory_validator_agent = Agent(
 starter_agent = ParallelAgent(
     name="starter_agent",
     description="Validator agent which runs prior to main agent's logic. Designed to alter {use_memory} and {answer_needed} state keys.",
-    sub_agents=[answer_validator_agent, memory_validator_agent]
+    sub_agents=[answer_validator_agent, memory_validator_agent],
 )
 
 main_agent = Agent(
