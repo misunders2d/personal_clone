@@ -7,6 +7,11 @@ from google.adk import Agent
 from google.adk.tools import LongRunningFunctionTool
 
 import os
+from dotenv import load_dotenv
+
+dotenv_file_path = os.path.abspath(os.path.join(__file__, os.pardir, ".env"))
+load_dotenv()
+
 import re
 
 PROJECT_ID = os.environ["GOOGLE_CLOUD_PROJECT"]

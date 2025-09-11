@@ -15,7 +15,11 @@ def memory_agent_tool_callback(
     # print(tool_response)
     # print("$" * 80)
 
-    if "status" in tool_response and not tool_response["status"] == "SUCCESS":
+    if (
+        tool_response
+        and "status" in tool_response
+        and not tool_response["status"] == "SUCCESS"
+    ):
         # print(f"[TOOL CALLBACK] for {tool_name}: {tool_response['status']}")
         return {
             "actions_needed": f"You MUST search the memory using `memory_agent` for this error: {tool_response}",

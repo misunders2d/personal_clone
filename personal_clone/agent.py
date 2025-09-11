@@ -3,11 +3,14 @@ from google.adk.tools import AgentTool
 from google.adk.planners import BuiltInPlanner
 from google.genai import types
 
-from .sub_agents.memory_agent import memory_agent
-from .sub_agents.vertex_search_agent import vertex_search_agent, vertex_toolset
+from .sub_agents.memory_agent import create_memory_agent, MemoryOutput, READ_INSTRUCTION
+from .sub_agents.vertex_search_agent import (
+    create_vertex_search_agent,
+    VertexMemoryOutput,
+)
 from .callbacks.before_after_agent import check_if_agent_should_run, state_setter
 
-from .callbacks.before_after_agent import memory_state_management
+# from .callbacks.before_after_agent import memory_state_management
 
 
 from dotenv import load_dotenv
@@ -35,24 +38,24 @@ answer_validator_agent = Agent(
     before_agent_callback=[state_setter],
 )
 
-
-memory_validator_agent = Agent(
-    name="memory_validator_agent",
-    description="Checks the user input and decides whether or not to call the memory agents",
-    model="gemini-2.0-flash-lite",
-    instruction="""You are an agent designed to assess the user's input.
-    Your ONLY job is to decide whether or not the `personal_clone` agent should use its memory tools before answering the user's query.
-    That includes creating new memories, recalling memories, modifying or deleting them.
-    You reply ONLY with "USE MEMORY" or "DON'T USE MEMORY", nothing else.
-    """,
-    output_key="use_memory",
-    # before_agent_callback=[check_if_agent_should_run],
-)
-
-starter_agent = ParallelAgent(
-    name="starter_agent",
-    description="Validator agent which runs prior to main agent's logic. Designed to alter {use_memory} and {answer_needed} state keys.",
-    sub_agents=[answer_validator_agent, memory_validator_agent],
+memory_parallel_agent = ParallelAgent(
+    name="memory_parallel_agent",
+    description="A recall agent running memory recall and vertex search to support the context of the conversation",
+    sub_agents=[
+        create_memory_agent(
+            name="memory_recall_agent",
+            write="blocked",
+            instruction=READ_INSTRUCTION,
+            output_schema=MemoryOutput,
+            output_key="memory_search",
+        ),
+        create_vertex_search_agent(
+            name="vertex_recall_agent",
+            # output_schema=VertexMemoryOutput,
+            output_key="vertex_search",
+        ),
+    ],
+    before_agent_callback=[check_if_agent_should_run],
 )
 
 main_agent = Agent(
@@ -67,10 +70,9 @@ main_agent = Agent(
     </GENERAL>
     <IMPORTANT!>
         <MEMORY USAGE>
-            - If {use_memory} says exactly "USE MEMORY":
-                - First, you must check {memories_combined} and {vertex_search_combined} to see if the discussed topic is already in the memory context.
-                - If the topic is not found in state, you MUST use your memory tools (first `memory_agent` and if no relevant memories are found - then `vertex_search_agent`) to pull relevant data and answer the question in the most effective manner.
-                    - Use the EXACT query the user submitted, even if you think it's too vague or requires more details.
+            - You are equipped with a system of agents who fetch knowledge and memories based on the user's input BEFORE you start your communication.
+                Refer to {memory_search} and {vertex_search} to make your conversation as context-aware, as possible.
+            - If the user is explicitly asking to recall something, modify or update some memory, or create a new one - you ALWAYS use your `memory_agent` to handle that request.
         </MEMORY USAGE>
         <ERROR HANDLING>
             - If you receive an error message from any of the tools or sub-agents - you MUST follow the <MEMORY USAGE> protocol. Only if such an error is not found in memories, should you seek guidance from the user.
@@ -88,10 +90,12 @@ main_agent = Agent(
     </Troubleshooting and Learning>
 
     """,
-    tools=[get_current_datetime, AgentTool(vertex_search_agent)],
-    sub_agents=[memory_agent],
+    tools=[get_current_datetime, AgentTool(create_vertex_search_agent())],
+    sub_agents=[
+        create_memory_agent(name="memory_agent", write="allowed", output_key=None)
+    ],
     before_agent_callback=[check_if_agent_should_run],
-    after_agent_callback=[memory_state_management],
+    # after_agent_callback=[memory_state_management],
     planner=BuiltInPlanner(
         thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
     ),
@@ -100,6 +104,6 @@ main_agent = Agent(
 
 root_agent = SequentialAgent(
     name="root_agent_flow",
-    description="A sequence of agents utilizing a helper agent which decides whether or not to use memory tools",
-    sub_agents=[starter_agent, main_agent],
+    description="A sequence of agents utilizing a flow of converation supported by memories",
+    sub_agents=[answer_validator_agent, memory_parallel_agent, main_agent],
 )

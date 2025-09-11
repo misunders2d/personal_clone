@@ -5,7 +5,7 @@ import vertexai
 from absl import app, flags
 from dotenv import load_dotenv
 from vertexai import agent_engines
-from google.adk.memory import VertexAiMemoryBankService
+from google.adk.memory import VertexAiMemoryBankService, InMemoryMemoryService
 
 
 dotenv_path = os.path.join("personal_clone", ".env")
@@ -54,6 +54,7 @@ def main(argv: list[str]) -> None:  # pylint: disable=unused-argument
     memory_service = VertexAiMemoryBankService(
         project=project_id, location=location, agent_engine_id=FLAGS.resource_id
     )
+    # memory_service = InMemoryMemoryService()
 
     agent = agent_engines.get(FLAGS.resource_id)
     print(f"Found agent with resource ID: {FLAGS.resource_id}")
@@ -76,9 +77,9 @@ def main(argv: list[str]) -> None:  # pylint: disable=unused-argument
                             text_part = part["text"]
                             print(f"Response: {text_part}")
 
-        if "events" in session and len(session["events"]) > 0:
-            asyncio.run(memory_service.add_session_to_memory(session))
-            print(f"✅ Session {session["id"]} automatically saved to memory bank")
+        # if "events" in session and len(session["events"]) > 0:
+        #     asyncio.run(memory_service.add_session_to_memory(session))
+        #     print(f"✅ Session {session["id"]} automatically saved to memory bank")
 
     # agent.delete_session(user_id=FLAGS.user_id, session_id=session["id"]) # type: ignore
     # print(f"Deleted session for user ID: {FLAGS.user_id}")

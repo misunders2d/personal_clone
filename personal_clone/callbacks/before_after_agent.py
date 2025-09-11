@@ -10,10 +10,10 @@ def state_setter(
 
     current_state = callback_context.state.to_dict()
     current_user = callback_context._invocation_context.user_id
-    if "memories_combined" not in current_state:
-        callback_context.state["memories_combined"] = []
-    if "vertex_search_combined" not in current_state:
-        callback_context.state["vertex_search_combined"] = []
+    # if "memories_combined" not in current_state:
+    #     callback_context.state["memories_combined"] = []
+    # if "vertex_search_combined" not in current_state:
+    #     callback_context.state["vertex_search_combined"] = []
     if "user_id" not in current_state:
         callback_context.state["user_id"] = (
             current_user  # TODO change to `current_user` for production
@@ -48,33 +48,33 @@ def check_if_agent_should_run(
         return None
 
 
-def memory_state_management(
-    callback_context: CallbackContext,
-) -> Optional[types.Content]:
-    """
-    Appends the memories to the "combined" state
-    """
-    agent_name = callback_context.agent_name
-    invocation_id = callback_context.invocation_id
-    current_state = callback_context.state.to_dict()
-    if "memories_combined" not in current_state:
-        callback_context.state["memories_combined"] = []
-    if "vertex_search_combined" not in current_state:
-        callback_context.state["vertex_search_combined"] = []
-    current_state = callback_context.state.to_dict()
+# def memory_state_management(
+#     callback_context: CallbackContext,
+# ) -> Optional[types.Content]:
+#     """
+#     Appends the memories to the "combined" state
+#     """
+#     agent_name = callback_context.agent_name
+#     invocation_id = callback_context.invocation_id
+#     current_state = callback_context.state.to_dict()
+#     if "memories_combined" not in current_state:
+#         callback_context.state["memories_combined"] = []
+#     if "vertex_search_combined" not in current_state:
+#         callback_context.state["vertex_search_combined"] = []
+#     current_state = callback_context.state.to_dict()
 
-    if (
-        "memory_search" in current_state
-        and current_state["memory_search"] not in current_state["memories_combined"]
-    ):
-        current_state["memories_combined"].append(current_state["memory_search"])
+#     if (
+#         "memory_search" in current_state
+#         and current_state["memory_search"] not in current_state["memories_combined"]
+#     ):
+#         current_state["memories_combined"].append(current_state["memory_search"])
 
-    if (
-        "vertex_search" in current_state
-        and current_state["vertex_search"]
-        not in current_state["vertex_search_combined"]
-    ):
-        current_state["vertex_search_combined"].append(current_state["vertex_search"])
-    for key, value in current_state.items():
-        callback_context.state[key] = value
-    return None
+#     if (
+#         "vertex_search" in current_state
+#         and current_state["vertex_search"]
+#         not in current_state["vertex_search_combined"]
+#     ):
+#         current_state["vertex_search_combined"].append(current_state["vertex_search"])
+#     for key, value in current_state.items():
+#         callback_context.state[key] = value
+#     return None
