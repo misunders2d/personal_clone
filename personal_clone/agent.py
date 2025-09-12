@@ -45,9 +45,16 @@ memory_parallel_agent = ParallelAgent(
         create_memory_agent(
             name="memory_recall_agent",
             write="blocked",
-            instruction=READ_INSTRUCTION,
-            output_schema=MemoryOutput,
+            instruction=f"""
+            You are a read-only agent, do not attempt to use write mode.
+            If the user's request involves updating or modifying memories, just output `PASS`.
+            If you are not finding anything or the user's text does not imply recalling a memory, just output `PASS`.
+            {READ_INSTRUCTION}
+            """,
+            # output_schema=MemoryOutput,
             output_key="memory_search",
+            disallow_transfer_to_parent=True,
+            disallow_transfer_to_peers=True,
         ),
         create_vertex_search_agent(
             name="vertex_recall_agent",
@@ -56,6 +63,20 @@ memory_parallel_agent = ParallelAgent(
         ),
     ],
     before_agent_callback=[check_if_agent_should_run],
+)
+
+summary_agent = Agent(
+    name="summary_agent",
+    description="agent that summarizes information from memory search agents.",
+    instruction="""
+    You are a summarizer agent designed to recap the contents from {memory_search} and {vertex_search} session keys.
+    Make sure to output the information in a concise manner, but keep all the necessary details, including people ids, memory ids,
+    mentions of specific events, details, etc.
+    Summarize it in two sections:
+    {memory_search} should start with "MEMORY SEARCH:", and {vertex_search} should start with "VERTEX SEARCH:"
+    """,
+    model="gemini-2.5-flash-lite",
+    output_key="memory_recap",
 )
 
 main_agent = Agent(
@@ -71,8 +92,8 @@ main_agent = Agent(
     <IMPORTANT!>
         <MEMORY USAGE>
             - You are equipped with a system of agents who fetch knowledge and memories based on the user's input BEFORE you start your communication.
-                Refer to {memory_search} and {vertex_search} to make your conversation as context-aware, as possible.
-            - If the user is explicitly asking to recall something, modify or update some memory, or create a new one - you ALWAYS use your `memory_agent` to handle that request.
+                Refer to {memory_recap} to make your conversation as context-aware, as possible.
+            - If the user is explicitly asking to recall something, modify or update some memory, or create a new one - you ALWAYS use your `memory_agent` (NOT `memory_recall_agent`) to handle that request.
         </MEMORY USAGE>
         <ERROR HANDLING>
             - If you receive an error message from any of the tools or sub-agents - you MUST follow the <MEMORY USAGE> protocol. Only if such an error is not found in memories, should you seek guidance from the user.
@@ -105,5 +126,10 @@ main_agent = Agent(
 root_agent = SequentialAgent(
     name="root_agent_flow",
     description="A sequence of agents utilizing a flow of converation supported by memories",
-    sub_agents=[answer_validator_agent, memory_parallel_agent, main_agent],
+    sub_agents=[
+        answer_validator_agent,
+        memory_parallel_agent,
+        summary_agent,
+        main_agent,
+    ],
 )

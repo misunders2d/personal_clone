@@ -36,6 +36,7 @@ agent_engine = agent_engines.get(
 # for item in agent_engine.operation_schemas():
 #     print(item, end="\n\n")
 
+
 async def call_agent(query, session, user_id):
 
     async for event in agent_engine.async_stream_query(
@@ -48,6 +49,8 @@ async def call_agent(query, session, user_id):
             and event["content"]
             and "parts" in event["content"]
             and event["content"]["parts"]
+            and event["content"]["parts"][0]
+            and "text" in event["content"]["parts"][0]
         ):
             final_response = event["content"]["parts"][0]["text"]
             print("Agent Response: ", final_response)
@@ -58,7 +61,7 @@ async def main():
     print("Session ID: ", session)
 
     session = agent_engine.get_session(  # type: ignore
-        session_id=session['id'], user_id=USER_ID
+        session_id=session["id"], user_id=USER_ID
     )
     while True:
         input_text = input("You: ")
@@ -66,7 +69,8 @@ async def main():
             break
         await call_agent(input_text, session=session, user_id=USER_ID)
 
-    agent_engine.delete_session(session_id=session['id'])
+    agent_engine.delete_session(session_id=session["id"], user_id=USER_ID)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -41,19 +41,6 @@ READ_INSTRUCTION = f"""
         Make sure to follow the output schema exactly if it's included.
     </GENERAL>
 
-    <MEMORY MANAGEMENT WORKFLOW>
-        0. FIRST, ALWAYS search the tables you have access to for the exact input the user has submitted. DON'T ASK ANY QUESTIONS.
-        1. Understand the user's request and determine the appropriate SQL operation (SELECT, INSERT, UPDATE, DELETE).
-        2. Inspect the schema of the `{MEMORY_TABLE}` table to understand its structure and columns. Pay attention to descriptions.
-        3. Formulate the SQL query based on the user's request and the fields available in the table. Not all fields need to be used, but try to use as many as possible.
-        4. Execute the SQL query using the BigQuery toolset's `execute_sql` function, do not use `ask_data_insights`:
-            - For SELECT queries, retrieve the relevant memories and present them to the user. Use the query that user provided, do not come up with keywords. The vector search is a powerful tool that can search effectively by any queries.
-            - For INSERT queries, add new memories to the table. Make sure to apply the logic from the example below to auto-generate the `memory_id`.
-            - For UPDATE queries, modify existing memories as per the user's request. Do not overwrite the memory completely. Always make sure to update the `updated_at` field.
-            - For DELETE queries, remove memories that are no longer needed. Confirm the user's intent before deletion.
-        IMPORTANT: Always confirm the user's intent before performing any DELETE or UPDATE operations to avoid accidental data loss.
-    </MEMORY MANAGEMENT WORKFLOW>
-   
     <SPECIAL INSTRUCTIONS FOR RETRIEVING MEMORIES>
         When retrieving memories with a SELECT statement, you can try to use simple keyword matching on the `short_description`, `category`, `sentiment`, `tags`, and `source` fields to find relevant memories.
         However, for more complex queries that require semantic understanding, use vector similarity search on the `embedding` field.
@@ -183,6 +170,19 @@ WRITE_INSTRUCTION = f"""
         ```
     </SPECIAL INSTRUCTIONS FOR UPDATING MEMORIES>
 
+    <MEMORY MANAGEMENT WORKFLOW>
+        0. FIRST, ALWAYS search the tables you have access to for the exact input the user has submitted. DON'T ASK ANY QUESTIONS.
+        1. Understand the user's request and determine the appropriate SQL operation (SELECT, INSERT, UPDATE, DELETE).
+        2. Inspect the schema of the `{MEMORY_TABLE}` table to understand its structure and columns. Pay attention to descriptions.
+        3. Formulate the SQL query based on the user's request and the fields available in the table. Not all fields need to be used, but try to use as many as possible.
+        4. Execute the SQL query using the BigQuery toolset's `execute_sql` function, do not use `ask_data_insights`:
+            - For SELECT queries, retrieve the relevant memories and present them to the user. Use the query that user provided, do not come up with keywords. The vector search is a powerful tool that can search effectively by any queries.
+            - For INSERT queries, add new memories to the table. Make sure to apply the logic from the example below to auto-generate the `memory_id`.
+            - For UPDATE queries, modify existing memories as per the user's request. Do not overwrite the memory completely. Always make sure to update the `updated_at` field.
+            - For DELETE queries, remove memories that are no longer needed. Confirm the user's intent before deletion.
+        IMPORTANT: Always confirm the user's intent before performing any DELETE or UPDATE operations to avoid accidental data loss.
+    </MEMORY MANAGEMENT WORKFLOW>
+    
     <PEOPLE DATA MANAGEMENT BEST PRACTICES>
 
         1.  **Always Check for Existing Records Before Creating:**
@@ -266,6 +266,8 @@ def create_memory_agent(
     instruction: str = READ_INSTRUCTION + WRITE_INSTRUCTION,
     output_schema: type[BaseModel] | None = None,
     output_key: str | None = None,
+    disallow_transfer_to_parent=False,
+    disallow_transfer_to_peers=False,
 ) -> Agent:
     memory_agent = Agent(
         name=name,
@@ -284,5 +286,7 @@ def create_memory_agent(
         output_schema=output_schema,
         # after_tool_callback=[memory_agent_tool_callback],
         output_key=output_key,
+        disallow_transfer_to_parent=disallow_transfer_to_parent,
+        disallow_transfer_to_peers=disallow_transfer_to_peers,
     )
     return memory_agent
