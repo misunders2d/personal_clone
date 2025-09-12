@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv("personal_clone/.env")
 import os
 
-agent_engine_id = "2225697407641845760"
+agent_engine_id = "303645529173131264"
 USER_ID = "sergey@mellanni.com"
 GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
 GOOGLE_CLOUD_LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "")
@@ -21,16 +21,24 @@ vertexai.init(
     staging_bucket=GOOGLE_CLOUD_STORAGE_BUCKET,
 )
 
-client = vertexai.Client()  # type: ignore
+# client = vertexai.Client()  # type: ignore
 
-agent_engine = client.agent_engines.get(
-    name="projects/personal-clone-464511/locations/us-central1/reasoningEngines/2225697407641845760"
+# agent_engine = client.agent_engines.get(
+#     name=f"projects/personal-clone-464511/locations/us-central1/reasoningEngines/{agent_engine_id}"
+# )
+
+
+agent_engine = agent_engines.get(
+    resource_name=f"projects/personal-clone-464511/locations/us-central1/reasoningEngines/{agent_engine_id}"
 )
 
 
+# for item in agent_engine.operation_schemas():
+#     print(item, end="\n\n")
+
 async def call_agent(query, session, user_id):
 
-    async for event in agent_engine.async_stream_query(  # type: ignore
+    async for event in agent_engine.async_stream_query(
         user_id=user_id,
         session_id=session.get("id"),
         message=query,
@@ -44,33 +52,21 @@ async def call_agent(query, session, user_id):
             final_response = event["content"]["parts"][0]["text"]
             print("Agent Response: ", final_response)
 
-    try:
-        client.agent_engines.memories.generate(
-            name="projects/personal-clone-464511/locations/us-central1/reasoningEngines/2225697407641845760",
-            vertex_session_source={
-                "session": f'projects/{GOOGLE_CLOUD_PROJECT}/locations/{GOOGLE_CLOUD_LOCATION}/reasoningEngines/{agent_engine_id}/sessions/{session.get("id")}'
-            },
-            config={"wait_for_completion": True},
-        )
-
-        print("Session added to memory")
-    except Exception as e:
-        print("Error adding session to memory: ", e)
-
 
 async def main():
-    session = await agent_engine.async_create_session(user_id=USER_ID)
+    session = agent_engine.create_session(user_id=USER_ID)
     print("Session ID: ", session)
 
-    # session = await agent_engine.async_get_session(  # type: ignore
-    #     session_id="1789003824682237952", user_id=USER_ID
-    # )
+    session = agent_engine.get_session(  # type: ignore
+        session_id=session['id'], user_id=USER_ID
+    )
     while True:
         input_text = input("You: ")
         if input_text.lower() in ["exit", "quit"]:
             break
         await call_agent(input_text, session=session, user_id=USER_ID)
 
+    agent_engine.delete_session(session_id=session['id'])
 
 if __name__ == "__main__":
     asyncio.run(main())

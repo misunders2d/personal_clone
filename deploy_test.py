@@ -51,9 +51,9 @@ def main(argv: list[str]) -> None:  # pylint: disable=unused-argument
         staging_bucket=bucket,
     )
 
-    memory_service = VertexAiMemoryBankService(
-        project=project_id, location=location, agent_engine_id=FLAGS.resource_id
-    )
+    # memory_service = VertexAiMemoryBankService(
+    #     project=project_id, location=location, agent_engine_id=FLAGS.resource_id
+    # )
     # memory_service = InMemoryMemoryService()
 
     agent = agent_engines.get(FLAGS.resource_id)
@@ -69,7 +69,13 @@ def main(argv: list[str]) -> None:  # pylint: disable=unused-argument
         for event in agent.stream_query(  # type: ignore
             user_id=FLAGS.user_id, session_id=session["id"], message=user_input
         ):
-            if "content" in event:
+            if event["author"] in (
+                "memory_recall_agent",
+                "vertex_recall_agent",
+                "answer_validator_agent",
+            ):
+                pass
+            elif "content" in event:
                 if "parts" in event["content"]:
                     parts = event["content"]["parts"]
                     for part in parts:
@@ -81,8 +87,8 @@ def main(argv: list[str]) -> None:  # pylint: disable=unused-argument
         #     asyncio.run(memory_service.add_session_to_memory(session))
         #     print(f"✅ Session {session["id"]} automatically saved to memory bank")
 
-    # agent.delete_session(user_id=FLAGS.user_id, session_id=session["id"]) # type: ignore
-    # print(f"Deleted session for user ID: {FLAGS.user_id}")
+    agent.delete_session(user_id=FLAGS.user_id, session_id=session["id"])  # type: ignore
+    print(f"Deleted session for user ID: {FLAGS.user_id}")
 
 
 if __name__ == "__main__":
