@@ -6,8 +6,8 @@ from google.adk.tools.bigquery.config import WriteMode
 from google.adk.planners import BuiltInPlanner
 from google.genai import types
 from typing import Literal
-
-from ..callbacks.before_after_tool import memory_agent_tool_callback
+import json
+import tempfile
 
 from pydantic import BaseModel, Field
 
@@ -17,25 +17,26 @@ from dotenv import load_dotenv
 
 dotenv_file_path = os.path.abspath(os.path.join(__file__, os.pardir, ".env"))
 load_dotenv()
-import json
-import tempfile
 
 with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_json:
     temp_json.write(os.environ["GCP_SERVICE_ACCOUNT_INFO"])
     temp_json.flush()
     GCP_SERVICE_ACCOUNT_INFO = json.load(open(temp_json.name))
 DATASET_PATH = os.environ["MEMORY_DATASET_ID"]
-MEMORY_TABLE = f"{DATASET_PATH}.memories"
+MEMORY_TABLE = f"{DATASET_PATH}.memories_personal"
+MEMORY_TABLE_PROFESSIONAL = f"{DATASET_PATH}.memories_professional"
 PEOPLE_TABLE = f"{DATASET_PATH}.people"
 EMBEDDING_MODEL = f"{DATASET_PATH}.embedding_model"
 credentials = service_account.Credentials.from_service_account_info(
     GCP_SERVICE_ACCOUNT_INFO
 )
 
-READ_INSTRUCTION = f"""
+
+def create_read_instruction(table):
+    return f"""
     <GENERAL>
         You are an agent that can interact with specific tables in Google BigQuery to run SQL queries and manage memories and/or experiences.
-        The main tables you are working with are `{MEMORY_TABLE}` and `{PEOPLE_TABLE}`.
+        The main tables you are working with are `{table}` and `{PEOPLE_TABLE}`.
         Memories are stored using vector embeddings, obtained from the model `{EMBEDDING_MODEL}`.
 
         Make sure to follow the output schema exactly if it's included.
@@ -46,8 +47,8 @@ READ_INSTRUCTION = f"""
         However, for more complex queries that require semantic understanding, use vector similarity search on the `embedding` field.
         IMPORTANT! Always fetch the `memory_id`, `related_people` and `linked_memories` when doing the search and there are results.
         EXAMPLE - Use the following SQL expression to perform vector similarity search:
-            ```
-            WITH query_embedding AS (
+
+        WITH query_embedding AS (
             SELECT
                 ml_generate_embedding_result AS embedding_vector
             FROM
@@ -68,7 +69,7 @@ READ_INSTRUCTION = f"""
                 m.related_people,
                 ML.DISTANCE(m.embedding, q.embedding_vector, 'COSINE') AS distance
             FROM
-                `{MEMORY_TABLE}` AS m,
+                `{table}` AS m,
                 query_embedding AS q
             )
             SELECT
@@ -85,9 +86,10 @@ READ_INSTRUCTION = f"""
             ORDER BY
             distance ASC
             LIMIT 5
-            ```
+
     </SPECIAL INSTRUCTIONS FOR RETRIEVING MEMORIES>
 """
+
 
 WRITE_INSTRUCTION = f"""
     <SPECIAL INSTRUCTIONS FOR INSERTING NEW MEMORIES>
@@ -95,7 +97,7 @@ WRITE_INSTRUCTION = f"""
         All records in the table except `full_content` and `short_description` column MUST be in English. Make sure to translate any non-English tags, categories, sentiment etc. to English before inserting, and translate it back to the user's language when retrieving.
         Use the following SQL expression to generate the `memory_id`: `CONCAT('mem_', FORMAT_TIMESTAMP('%Y_%m_%d', CURRENT_TIMESTAMP()), '_', SUBSTR(GENERATE_UUID(), 1, 8))`
         Example:
-            ```
+            
                 INSERT INTO `{MEMORY_TABLE}`
                 (memory_id, user_id, full_content, short_description, embedding, category, sentiment, tags, source, style_influence, visibility, created_at, updated_at)
                 WITH data_to_prepare AS (
@@ -140,7 +142,7 @@ WRITE_INSTRUCTION = f"""
                 FROM
                     data_to_prepare dp,
                     embedding_result er;
-            ```
+            
                 **IMPORTANT:** If you are adding `linked_memories` field - make sure to update this field in the memory that you are linking to as well, to keep the relationship bidirectional.
     </SPECIAL INSTRUCTIONS FOR INSERTING NEW MEMORIES>
 
@@ -149,7 +151,7 @@ WRITE_INSTRUCTION = f"""
         - ALWAYS announce the changes you've made to the user - including the embeddings regeneration.
         - Make sure NOT to delete the record completely, just modify the relevant information.
         - EXAMPLE:
-        ```
+
             UPDATE `{MEMORY_TABLE}`
             SET
                 full_content = 'My cat Zephyr died last December. This was a very sad event, and I miss him.', -- Update the main content
@@ -167,7 +169,7 @@ WRITE_INSTRUCTION = f"""
                 updated_at = CURRENT_TIMESTAMP()
             WHERE
                 memory_id = 'your_memory_id';
-        ```
+        
     </SPECIAL INSTRUCTIONS FOR UPDATING MEMORIES>
 
     <MEMORY MANAGEMENT WORKFLOW>
@@ -244,10 +246,18 @@ def create_bigquery_toolset(
 
 
 class MemoryOutput(BaseModel):
-    topic: str = Field(
-        description="The main topic of the memory", examples=["`User's pet project`"]
+    result: str = Field(
+        default="PASS",
+        description="Should be either `SUCCESS` if the relevant memory was found, or `PASS` in any other case",
+        examples=["`SUCCESS`, `PASS`"],
     )
-    content: str = Field(description="The actual contents of the memory or interaction")
+    topic: str = Field(
+        description="The main topic of the memory. Set to `PASS` if you can't fulfill the request",
+        examples=["`User's pet project`, `PASS`"],
+    )
+    content: str = Field(
+        description="The actual contents of the memory or interaction. Set to `PASS` if you can't fulfill the request"
+    )
     related_memories: list[str] = Field(
         description="List of related memories IDs from the `linked_memories` field, NOT general list of other memories in the table. Optional",
         examples=["mem_2025_09_05_2dba5961", "mem_2025_10_08_2ddas661"],
@@ -263,11 +273,16 @@ class MemoryOutput(BaseModel):
 def create_memory_agent(
     name: str = "memory_agent",
     write: Literal["blocked", "allowed"] = "allowed",
-    instruction: str = READ_INSTRUCTION + WRITE_INSTRUCTION,
+    instruction: str = create_read_instruction(MEMORY_TABLE) + WRITE_INSTRUCTION,
     output_schema: type[BaseModel] | None = None,
     output_key: str | None = None,
-    disallow_transfer_to_parent=False,
-    disallow_transfer_to_peers=False,
+    disallow_transfer_to_parent: bool = False,
+    disallow_transfer_to_peers: bool = False,
+    planner: BuiltInPlanner | None = BuiltInPlanner(
+        thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
+    ),
+    before_model_callback: list | None = None,
+    after_model_callback: list | None = None,
 ) -> Agent:
     memory_agent = Agent(
         name=name,
@@ -277,16 +292,13 @@ def create_memory_agent(
             """,
         instruction=instruction,
         model="gemini-2.5-flash",
-        planner=BuiltInPlanner(
-            thinking_config=types.ThinkingConfig(
-                include_thoughts=True, thinking_budget=-1
-            )
-        ),
+        planner=planner,
         tools=[create_bigquery_toolset(write=write)],
         output_schema=output_schema,
-        # after_tool_callback=[memory_agent_tool_callback],
         output_key=output_key,
         disallow_transfer_to_parent=disallow_transfer_to_parent,
         disallow_transfer_to_peers=disallow_transfer_to_peers,
+        before_model_callback=before_model_callback,
+        after_model_callback=after_model_callback,
     )
     return memory_agent

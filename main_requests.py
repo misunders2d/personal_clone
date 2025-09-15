@@ -15,7 +15,7 @@ def get_identity_token():
     return credentials.token
 
 
-if not "identity_token" in globals():
+if "identity_token" not in globals():
     identity_token = get_identity_token()
 
 
@@ -27,6 +27,7 @@ def get_resource_data():
             "Authorization": f"Bearer {identity_token}",
         },
     )
+    response.raise_for_status()
     if response.status_code == 200:
         return response.json()
 
@@ -48,7 +49,7 @@ def create_session():
     print(response.json())
 
 
-async def list_sessions(user_id):
+def list_sessions(user_id):
     response = requests.post(
         f"{endpoint}:query",
         headers={
@@ -57,12 +58,12 @@ async def list_sessions(user_id):
         },
         data=json.dumps(
             {
-                "class_method": "async_list_sessions",
+                "class_method": "list_sessions",
                 "input": {"user_id": USER_ID},
             }
         ),
     )
-    print(response.content)
+    print(response.text)
 
 
 async def stream_response(user_id=USER_ID, session_id=""):
@@ -106,4 +107,5 @@ def get_session(user_id=USER_ID, session_id=""):
 if __name__ == "__main__":
     # create_session()
     # asyncio.run(stream_response(session_id="3682947787898486784"))
-    get_session(session_id="3682947787898486784")
+    # get_session(session_id="3682947787898486784")
+    list_sessions(user_id=USER_ID)
