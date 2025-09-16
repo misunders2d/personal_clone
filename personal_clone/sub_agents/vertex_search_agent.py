@@ -53,6 +53,6 @@ def create_vertex_search_agent(
         # include_contents="none",
         output_schema=output_schema,
         output_key=output_key,
-        before_model_callback=before_model_callback
+        before_model_callback=before_model_callback,
     )
     return vertex_search_agent

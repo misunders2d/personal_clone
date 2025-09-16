@@ -4,16 +4,16 @@ from google.adk.tools.base_tool import BaseTool
 from typing import Dict, Any, Optional
 
 
+forbidden_statements = [
+"INSERT", "UPDATE", "DELETE", "CREATE", "ALTER", "DROP", "TRUNCATE", "GRANT", "REVOKE", "RENAME", "COMMIT", "ROLLBACK"]
+
 def memory_agent_tool_callback(
     tool: BaseTool, args: Dict[str, Any], tool_context: ToolContext, tool_response: Dict
 ) -> Optional[Dict]:
     """Inspects/modifies the tool result after execution."""
-    agent_name = tool_context.agent_name
-    tool_name = tool.name
-    # print("$" * 80)
-    # print(type(tool_response))
-    # print(tool_response)
-    # print("$" * 80)
+    # agent_name = tool_context.agent_name
+    # tool_name = tool.name
+
 
     if (
         tool_response
@@ -27,3 +27,13 @@ def memory_agent_tool_callback(
         }
 
     return None
+
+def before_recall_modifier(
+    tool: BaseTool, args: Dict[str, Any], tool_context: ToolContext
+) -> Optional[Dict]:
+    """Inspects/modifies tool args or skips the tool call."""
+    agent_name = tool_context.agent_name
+    tool_name = tool.name
+    if tool_name == 'execute_sql' and 'query' in args:
+        if any([x.lower() in args.get('query','').lower() for x in forbidden_statements]):
+            return {"status":"PASS", "agent_name":agent_name}

@@ -1,7 +1,7 @@
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.models.llm_response import LlmResponse
 
-from google.adk.models.llm_request import LlmRequest
+# from google.adk.models.llm_request import LlmRequest
 from typing import Optional
 from google.genai import types
 import json
@@ -21,27 +21,13 @@ def create_default_response(message="") -> LlmResponse:
                             "content": f"PASS {message}".strip(),
                             "related_memories": [],
                             "related_people": [],
+                            "additional_notes": "PASS",
                         }
                     )
                 )
             ],
         ),
     )
-
-
-def recall_agents_stopper(
-    callback_context: CallbackContext, llm_request: LlmRequest
-) -> Optional[LlmResponse]:
-    if (
-        llm_request.contents
-        and llm_request.contents[-1].role == "user"
-        and llm_request.contents[-1].parts
-    ):
-        if (
-            llm_request.contents[-1].parts[0].text
-            and "memory_agent" in llm_request.contents[-1].parts[0].text
-        ):
-            return create_default_response()
 
 
 def recall_agents_checker(
@@ -59,10 +45,21 @@ def recall_agents_checker(
         and llm_response.content.parts
         and llm_response.content.parts[0].text
     ):
+        # print("#"*40)
+        # print(f"[CALLBACK] ORIGINAL TEXT. Agent: {agent_name}")
+        # print(json.loads(llm_response.content.parts[0].text))
+        # for i in range(10):
+        #     print("\n")
         try:
             original_text = json.loads(llm_response.content.parts[0].text)
-            if "result" not in original_text or original_text["result"] == "PASS":
+            if (
+                "result" not in original_text
+                or original_text["result"].strip().lower() == "pass"
+            ):
                 return create_default_response()
+            elif "additional_notes" in original_text:
+                del original_text["additional_notes"]
+                return original_text
         except JSONDecodeError as e:
             return create_default_response(str(e))
 

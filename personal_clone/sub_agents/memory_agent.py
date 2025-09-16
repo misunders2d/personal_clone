@@ -32,6 +32,52 @@ credentials = service_account.Credentials.from_service_account_info(
 )
 
 
+class MemoryOutput(BaseModel):
+    result: str = Field(
+        default="PASS",
+        description="Should be either `SUCCESS` if the relevant memory was found, or `PASS` in any other case",
+        examples=["`SUCCESS`, `PASS`"],
+    )
+    topic: str = Field(
+        description="The main topic of the memory. Set to `PASS` if you can't fulfill the request. Do not put anything else",
+        examples=["`User's pet project`, `PASS`"],
+    )
+    content: str = Field(
+        description="The actual contents of the memory or interaction. Set to `PASS` if you can't fulfill the request. Do not put anything else"
+    )
+    related_memories: list[str] = Field(
+        description="List of related memories IDs from the `linked_memories` field, NOT general list of other memories in the table. Optional",
+        examples=["mem_2025_09_05_2dba5961", "mem_2025_10_08_2ddas661"],
+        default_factory=list,
+    )
+    related_people: list[str] = Field(
+        description="List of related people IDS from the `related_people`. Optional",
+        examples=["per_2025_09_05_26e44a10"],
+        default_factory=list,
+    )
+    additional_notes: str = Field(
+        description="Any additional notes, including your notes about not being able to fulfill the request",
+        examples=[
+            "I apologize but I cannot fulfill this request because the system is read only."
+        ],
+    )
+
+
+RECALL_INSTRUCTION = f"""
+    - Your ONLY mode of operation is SEARCHING MEMORIES, anything beyond that automatically implies "PASS"!
+    <MODE OF OPERATION>
+        1. If you ARE able to perform the task:
+            - use the `bigquery_toolset` to perform search on the database
+            - output your results in JSON format
+            - Follow the output schema PRECISELY: {json.dumps(MemoryOutput.model_json_schema(), indent=2)}.
+        2. If you are UNABLE to perform the task (not enough permissions, read-only mode etc.):
+            - Fill all the output fields with "PASS", nothing else. DO NOT add any thoughts or objections.
+            - You NEVER ask additional questions. If you need to ask any questions, just output "PASS" in all schema fields.
+        3. IMPORTANT!!! If the user's request requires the use of `execute_sql` tool with anything but the `SELECT` statement (UPDATE, INSERT etc), YOU "PASS"!
+    </MODE OF OPERATION>
+"""
+
+
 def create_read_instruction(table):
     return f"""
     <GENERAL>
@@ -245,31 +291,6 @@ def create_bigquery_toolset(
     return bigquery_toolset
 
 
-class MemoryOutput(BaseModel):
-    result: str = Field(
-        default="PASS",
-        description="Should be either `SUCCESS` if the relevant memory was found, or `PASS` in any other case",
-        examples=["`SUCCESS`, `PASS`"],
-    )
-    topic: str = Field(
-        description="The main topic of the memory. Set to `PASS` if you can't fulfill the request",
-        examples=["`User's pet project`, `PASS`"],
-    )
-    content: str = Field(
-        description="The actual contents of the memory or interaction. Set to `PASS` if you can't fulfill the request"
-    )
-    related_memories: list[str] = Field(
-        description="List of related memories IDs from the `linked_memories` field, NOT general list of other memories in the table. Optional",
-        examples=["mem_2025_09_05_2dba5961", "mem_2025_10_08_2ddas661"],
-        default_factory=list,
-    )
-    related_people: list[str] = Field(
-        description="List of related people IDS from the `related_people`. Optional",
-        examples=["per_2025_09_05_26e44a10"],
-        default_factory=list,
-    )
-
-
 def create_memory_agent(
     name: str = "memory_agent",
     write: Literal["blocked", "allowed"] = "allowed",
@@ -281,6 +302,7 @@ def create_memory_agent(
     planner: BuiltInPlanner | None = BuiltInPlanner(
         thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
     ),
+    before_tool_callback: list | None = None,
     before_model_callback: list | None = None,
     after_model_callback: list | None = None,
 ) -> Agent:
@@ -298,6 +320,7 @@ def create_memory_agent(
         output_key=output_key,
         disallow_transfer_to_parent=disallow_transfer_to_parent,
         disallow_transfer_to_peers=disallow_transfer_to_peers,
+        before_tool_callback=before_tool_callback,
         before_model_callback=before_model_callback,
         after_model_callback=after_model_callback,
     )
