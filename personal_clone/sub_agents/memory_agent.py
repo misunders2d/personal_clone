@@ -1,84 +1,25 @@
 from google.adk import Agent
-from google.adk.tools.bigquery import BigQueryCredentialsConfig
-from google.adk.tools.bigquery import BigQueryToolset
-from google.adk.tools.bigquery.config import BigQueryToolConfig
-from google.adk.tools.bigquery.config import WriteMode
+
 from google.adk.planners import BuiltInPlanner
 from google.genai import types
 from typing import Literal
-import json
-import tempfile
 
-from pydantic import BaseModel, Field
+from ..tools.search_tools import bigquery_toolset
 
-from google.oauth2 import service_account
 import os
 from dotenv import load_dotenv
 
 dotenv_file_path = os.path.abspath(os.path.join(__file__, os.pardir, ".env"))
 load_dotenv()
 
-with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_json:
-    temp_json.write(os.environ["GCP_SERVICE_ACCOUNT_INFO"])
-    temp_json.flush()
-    GCP_SERVICE_ACCOUNT_INFO = json.load(open(temp_json.name))
 DATASET_PATH = os.environ["MEMORY_DATASET_ID"]
 MEMORY_TABLE = f"{DATASET_PATH}.memories_personal"
 MEMORY_TABLE_PROFESSIONAL = f"{DATASET_PATH}.memories_professional"
 PEOPLE_TABLE = f"{DATASET_PATH}.people"
 EMBEDDING_MODEL = f"{DATASET_PATH}.embedding_model"
-credentials = service_account.Credentials.from_service_account_info(
-    GCP_SERVICE_ACCOUNT_INFO
-)
 
 
-class MemoryOutput(BaseModel):
-    result: str = Field(
-        default="PASS",
-        description="Should be either `SUCCESS` if the relevant memory was found, or `PASS` in any other case",
-        examples=["`SUCCESS`, `PASS`"],
-    )
-    topic: str = Field(
-        description="The main topic of the memory. Set to `PASS` if you can't fulfill the request. Do not put anything else",
-        examples=["`User's pet project`, `PASS`"],
-    )
-    content: str = Field(
-        description="The actual contents of the memory or interaction. Set to `PASS` if you can't fulfill the request. Do not put anything else"
-    )
-    related_memories: list[str] = Field(
-        description="List of related memories IDs from the `linked_memories` field, NOT general list of other memories in the table. Optional",
-        examples=["mem_2025_09_05_2dba5961", "mem_2025_10_08_2ddas661"],
-        default_factory=list,
-    )
-    related_people: list[str] = Field(
-        description="List of related people IDS from the `related_people`. Optional",
-        examples=["per_2025_09_05_26e44a10"],
-        default_factory=list,
-    )
-    additional_notes: str = Field(
-        description="Any additional notes, including your notes about not being able to fulfill the request",
-        examples=[
-            "I apologize but I cannot fulfill this request because the system is read only."
-        ],
-    )
-
-
-RECALL_INSTRUCTION = f"""
-    - Your ONLY mode of operation is SEARCHING MEMORIES, anything beyond that automatically implies "PASS"!
-    <MODE OF OPERATION>
-        1. If you ARE able to perform the task:
-            - use the `bigquery_toolset` to perform search on the database
-            - output your results in JSON format
-            - Follow the output schema PRECISELY: {json.dumps(MemoryOutput.model_json_schema(), indent=2)}.
-        2. If you are UNABLE to perform the task (not enough permissions, read-only mode etc.):
-            - Fill all the output fields with "PASS", nothing else. DO NOT add any thoughts or objections.
-            - You NEVER ask additional questions. If you need to ask any questions, just output "PASS" in all schema fields.
-        3. IMPORTANT!!! If the user's request requires the use of `execute_sql` tool with anything but the `SELECT` statement (UPDATE, INSERT etc), YOU "PASS"!
-    </MODE OF OPERATION>
-"""
-
-
-def create_read_instruction(table):
+def create_memory_agent_instruction(table):
     return f"""
     <GENERAL>
         You are an agent that can interact with specific tables in Google BigQuery to run SQL queries and manage memories and/or experiences.
@@ -100,7 +41,7 @@ def create_read_instruction(table):
             FROM
                 ML.GENERATE_EMBEDDING(
                 MODEL `{EMBEDDING_MODEL}`,
-                (SELECT '<user_query>' AS content),
+                (SELECT "<user_query>" AS content),
                 STRUCT(TRUE AS flatten_json_output)
                 )
             ),
@@ -134,23 +75,20 @@ def create_read_instruction(table):
             LIMIT 5
 
     </SPECIAL INSTRUCTIONS FOR RETRIEVING MEMORIES>
-"""
 
-
-WRITE_INSTRUCTION = f"""
     <SPECIAL INSTRUCTIONS FOR INSERTING NEW MEMORIES>
         When generating a new memory with an INSERT statement, the `memory_id` MUST be generated in the format 'mem_YYYY_MM_DD_xxxxxxxx' where YYYY is the year, MM is the month, DD is the day, and xxxxxxxx is a short unique identifier.
         All records in the table except `full_content` and `short_description` column MUST be in English. Make sure to translate any non-English tags, categories, sentiment etc. to English before inserting, and translate it back to the user's language when retrieving.
         Use the following SQL expression to generate the `memory_id`: `CONCAT('mem_', FORMAT_TIMESTAMP('%Y_%m_%d', CURRENT_TIMESTAMP()), '_', SUBSTR(GENERATE_UUID(), 1, 8))`
         Example:
             
-                INSERT INTO `{MEMORY_TABLE}`
+                INSERT INTO `{table}`
                 (memory_id, user_id, full_content, short_description, embedding, category, sentiment, tags, source, style_influence, visibility, created_at, updated_at)
                 WITH data_to_prepare AS (
                     SELECT
                         CONCAT('mem_', FORMAT_TIMESTAMP('%Y_%m_%d', CURRENT_TIMESTAMP()), '_', SUBSTR(GENERATE_UUID(), 1, 8)) AS memory_id,
-                        'user@example.com' AS user_id,
-                        'My cat Zephyr died last December.' AS full_content, -- Renamed from content
+                        "<current user's id>" AS user_id,
+                        'My cat Zephyr died last December.' AS full_content,
                         'Memory of Zephyr, a cat, who died last December.' AS short_description,
                         'personal' AS category,
                         'bad' AS sentiment,
@@ -167,7 +105,7 @@ WRITE_INSTRUCTION = f"""
                     FROM
                         ML.GENERATE_EMBEDDING(
                             MODEL `{EMBEDDING_MODEL}`,
-                            (SELECT short_description AS content FROM data_to_prepare), -- Input for embedding is short_description, aliased as content
+                            (SELECT short_description AS content FROM data_to_prepare), 
                             STRUCT(TRUE AS flatten_json_output)
                         )
                 )
@@ -198,7 +136,7 @@ WRITE_INSTRUCTION = f"""
         - Make sure NOT to delete the record completely, just modify the relevant information.
         - EXAMPLE:
 
-            UPDATE `{MEMORY_TABLE}`
+            UPDATE `{table}`
             SET
                 full_content = 'My cat Zephyr died last December. This was a very sad event, and I miss him.', -- Update the main content
                 short_description = 'Zephyr, my cat, died last December. This memory is about loss.', -- Update the short description
@@ -221,9 +159,9 @@ WRITE_INSTRUCTION = f"""
     <MEMORY MANAGEMENT WORKFLOW>
         0. FIRST, ALWAYS search the tables you have access to for the exact input the user has submitted. DON'T ASK ANY QUESTIONS.
         1. Understand the user's request and determine the appropriate SQL operation (SELECT, INSERT, UPDATE, DELETE).
-        2. Inspect the schema of the `{MEMORY_TABLE}` table to understand its structure and columns. Pay attention to descriptions.
+        2. Inspect the schema of the `{table}` table to understand its structure and columns. Pay attention to descriptions.
         3. Formulate the SQL query based on the user's request and the fields available in the table. Not all fields need to be used, but try to use as many as possible.
-        4. Execute the SQL query using the BigQuery toolset's `execute_sql` function, do not use `ask_data_insights`:
+        4. Execute the SQL query using the BigQuery toolset:
             - For SELECT queries, retrieve the relevant memories and present them to the user. Use the query that user provided, do not come up with keywords. The vector search is a powerful tool that can search effectively by any queries.
             - For INSERT queries, add new memories to the table. Make sure to apply the logic from the example below to auto-generate the `memory_id`.
             - For UPDATE queries, modify existing memories as per the user's request. Do not overwrite the memory completely. Always make sure to update the `updated_at` field.
@@ -277,51 +215,26 @@ WRITE_INSTRUCTION = f"""
 """
 
 
-def create_bigquery_toolset(
-    write: Literal["blocked", "allowed"] = "blocked",
-) -> BigQueryToolset:
-    write_mode = WriteMode.BLOCKED if write == "blocked" else WriteMode.ALLOWED
-    tool_config = BigQueryToolConfig(write_mode=write_mode, max_query_result_rows=300)
-
-    credentials_config = BigQueryCredentialsConfig(credentials=credentials)
-
-    bigquery_toolset = BigQueryToolset(
-        credentials_config=credentials_config, bigquery_tool_config=tool_config
-    )
-    return bigquery_toolset
-
-
 def create_memory_agent(
+    scope: Literal["personal","professional"] = "personal",
     name: str = "memory_agent",
-    write: Literal["blocked", "allowed"] = "allowed",
-    instruction: str = create_read_instruction(MEMORY_TABLE) + WRITE_INSTRUCTION,
-    output_schema: type[BaseModel] | None = None,
-    output_key: str | None = None,
-    disallow_transfer_to_parent: bool = False,
-    disallow_transfer_to_peers: bool = False,
-    planner: BuiltInPlanner | None = BuiltInPlanner(
-        thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
-    ),
-    before_tool_callback: list | None = None,
-    before_model_callback: list | None = None,
-    after_model_callback: list | None = None,
+    instruction: str = create_memory_agent_instruction(MEMORY_TABLE),
+    output_key: str = "memory_search"
 ) -> Agent:
     memory_agent = Agent(
         name=name,
-        description="""An agent that can handles experience and memory management - creating, retrieving, updating and deleting experiences or memories, based on its toolset.
-            Use it whenever the conversation implies experience or memory management (remembering, recalling etc.).
+        description=f"""An agent that can handles {scope.upper()} experience and memory management - creating, retrieving, updating and deleting experiences or memories, based on its toolset.
+            Use it whenever the conversation implies {scope} experience or memory management (remembering, recalling etc.).
             Also use it to manage people data in the people table.
             """,
         instruction=instruction,
         model="gemini-2.5-flash",
-        planner=planner,
-        tools=[create_bigquery_toolset(write=write)],
-        output_schema=output_schema,
-        output_key=output_key,
-        disallow_transfer_to_parent=disallow_transfer_to_parent,
-        disallow_transfer_to_peers=disallow_transfer_to_peers,
-        before_tool_callback=before_tool_callback,
-        before_model_callback=before_model_callback,
-        after_model_callback=after_model_callback,
+        planner=BuiltInPlanner(
+            thinking_config=types.ThinkingConfig(
+                include_thoughts=True, thinking_budget=-1
+            )
+        ),
+        tools=[bigquery_toolset],
+        output_key=output_key
     )
     return memory_agent

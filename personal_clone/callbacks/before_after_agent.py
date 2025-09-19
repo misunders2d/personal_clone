@@ -1,6 +1,10 @@
 from google.adk.agents.callback_context import CallbackContext
 from typing import Optional
 from google.genai import types
+from concurrent.futures import ThreadPoolExecutor
+
+
+from ..tools.search_tools import search_bq, MEMORY_TABLE, MEMORY_TABLE_PROFESSIONAL
 
 
 def state_setter(
@@ -10,10 +14,7 @@ def state_setter(
 
     current_state = callback_context.state.to_dict()
     current_user = callback_context._invocation_context.user_id
-    # if "memories_combined" not in current_state:
-    #     callback_context.state["memories_combined"] = []
-    # if "vertex_search_combined" not in current_state:
-    #     callback_context.state["vertex_search_combined"] = []
+
     if "user_id" not in current_state:
         callback_context.state["user_id"] = (
             current_user  # TODO change to `current_user` for production
@@ -21,6 +22,12 @@ def state_setter(
         callback_context.state["user_id"] = (
             "2djohar@gmail.com"  # TODO change to `current_user` for production
         )
+    if "memory_context" not in current_state:
+        callback_context.state["memory_context"] = ""
+    if "memory_context_professional" not in current_state:
+        callback_context.state["memory_context_professional"] = ""
+    if "vertex_context" not in current_state:
+        callback_context.state["vertex_context"] = ""
 
 
 def check_if_agent_should_run(
@@ -43,3 +50,35 @@ def check_if_agent_should_run(
         )
     else:
         return None
+
+
+def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Content]:
+    """
+    Logs exit from an agent and checks 'add_concluding_note' in session state.
+    If True, returns new Content to *replace* the agent's original output.
+    If False or not present, returns None, allowing the agent's original output to be used.
+    """
+    last_user_message = ""
+
+    if (
+        callback_context.user_content
+        and callback_context.user_content.parts
+        and callback_context.user_content.parts[0]
+        and callback_context.user_content.parts[0].text
+    ):
+        last_user_message = callback_context.user_content.parts[0].text
+
+    if callback_context.state.get("answer_needed", "").strip() == "TRUE":
+        with ThreadPoolExecutor() as pool:
+            personal_future = pool.submit(search_bq, MEMORY_TABLE, last_user_message)
+            professional_future = pool.submit(
+                search_bq, MEMORY_TABLE_PROFESSIONAL, last_user_message
+            )
+            memory_recall = personal_future.result()
+            memory_recall_professional = professional_future.result()
+
+        callback_context.state["memory_context"] = memory_recall
+        callback_context.state["memory_context_professional"] = (
+            memory_recall_professional
+        )
+        callback_context.state["vertex_context"] = ""  # TODO add vertex search here
