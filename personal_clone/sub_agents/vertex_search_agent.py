@@ -14,10 +14,8 @@ DATASTORE_ID = f"projects/{GOOGLE_CLOUD_PROJECT}/locations/global/collections/de
 vertex_toolset = VertexAiSearchTool(data_store_id=DATASTORE_ID)
 
 
-
 def create_vertex_search_agent(
     name="vertex_search_agent",
-
 ) -> Agent:
     vertex_search_agent = Agent(
         name=name,
@@ -40,6 +38,6 @@ def create_vertex_search_agent(
 
         """,
         tools=[vertex_toolset],
-        output_key="vertex_search"
+        output_key="vertex_search",
     )
     return vertex_search_agent

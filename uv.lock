@@ -164,14 +164,14 @@ wheels = [
 
 [[package]]
 name = "click"
-version = "8.2.1"
+version = "8.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/60/6c/8ca2efa64cf75a977a0d7fac081354553ebe483345c734fb6b6515d96bbc/click-8.2.1.tar.gz", hash = "sha256:27c491cc05d968d271d5a1db13e3b5a184636d9d930f148c50b038f0d0646202", size = 286342, upload-time = "2025-05-20T23:19:49.832Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/46/61/de6cd827efad202d7057d93e0fed9294b96952e188f7384832791c7b2254/click-8.3.0.tar.gz", hash = "sha256:e7b8232224eba16f4ebe410c25ced9f7875cb5f3263ffc93cc3e8da705e229c4", size = 276943, upload-time = "2025-09-18T17:32:23.696Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/85/32/10bb5764d90a8eee674e9dc6f4db6a0ab47c8c4d0d83c27f7c39ac415a4d/click-8.2.1-py3-none-any.whl", hash = "sha256:61a3265b914e850b85317d0b3109c7f8cd35a670f963866005d6ef1d5175a12b", size = 102215, upload-time = "2025-05-20T23:19:47.796Z" },
+    { url = "https://files.pythonhosted.org/packages/db/d3/9dcc0f5797f070ec8edf30fbadfb200e71d9db6b84d211e3b2085a7589a0/click-8.3.0-py3-none-any.whl", hash = "sha256:9b9f285302c6e3064f4330c05f05b81945b2a39544279343e6e7c5f27a9baddc", size = 107295, upload-time = "2025-09-18T17:32:22.42Z" },
 ]
 
 [[package]]
@@ -381,7 +381,7 @@ wheels = [
 
 [[package]]
 name = "google-cloud-aiplatform"
-version = "1.114.0"
+version = "1.115.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "docstring-parser" },
@@ -398,9 +398,9 @@ dependencies = [
     { name = "shapely" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3d/0e/8097231fba8e688993b0b6d371ee298ac3955cdca77fc0731799de1253ca/google_cloud_aiplatform-1.114.0.tar.gz", hash = "sha256:44e5e3da9b23c9316a4d9e7cd6a04258ebf84f3aadf95a725d5d1de179e2c2ce", size = 9650673, upload-time = "2025-09-16T19:47:55.12Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5a/c1/3a4f4d8057d36d5dcf72451b4905140142018e0e14976baa4ea13cb14554/google_cloud_aiplatform-1.115.0.tar.gz", hash = "sha256:ab731c51e8111b93bccb1e56d961787a9896032f04f4b6c33c9f06696d5fc4c0", size = 9653848, upload-time = "2025-09-18T23:19:19.178Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7a/0a/526e70e5cd8e0e96207e201721457dac020d9b8d1bd2ce7326e550b8150d/google_cloud_aiplatform-1.114.0-py2.py3-none-any.whl", hash = "sha256:87386d9364bd0bed4dd33873845afbbe251d1ed83ee25d676c3c0cea630af682", size = 8032171, upload-time = "2025-09-16T19:47:52.725Z" },
+    { url = "https://files.pythonhosted.org/packages/3f/0e/f171be61019f67d30847aab04ae23f016e85af1dc2243509922a78d81908/google_cloud_aiplatform-1.115.0-py2.py3-none-any.whl", hash = "sha256:0a4e47f1d4a7ce74a6afc75d79ddd0469200a39be988238ea4b6ee3c40d23221", size = 8036135, upload-time = "2025-09-18T23:19:16.349Z" },
 ]
 
 [package.optional-dependencies]
@@ -490,21 +490,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d6/b8/2b53838d2acd6ec6168fd284a990c76695e84c65deee79c9f3a4276f6b4f/google_cloud_core-2.4.3.tar.gz", hash = "sha256:1fab62d7102844b278fe6dead3af32408b1df3eb06f5c7e8634cbd40edc4da53", size = 35861, upload-time = "2025-03-10T21:05:38.948Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/40/86/bda7241a8da2d28a754aad2ba0f6776e35b67e37c36ae0c45d49370f1014/google_cloud_core-2.4.3-py2.py3-none-any.whl", hash = "sha256:5130f9f4c14b4fafdff75c79448f9495cfade0d8775facf1b09c3bf67e027f6e", size = 29348, upload-time = "2025-03-10T21:05:37.785Z" },
-]
-
-[[package]]
-name = "google-cloud-discoveryengine"
-version = "0.13.11"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "google-api-core", extra = ["grpc"] },
-    { name = "google-auth" },
-    { name = "proto-plus" },
-    { name = "protobuf" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/37/b8/cd098a76756bad4537e3deb2dc39b401e89e8f8588ebdb579a2a43b42441/google_cloud_discoveryengine-0.13.11.tar.gz", hash = "sha256:0eb7298b163aaa4a281a389a625fa62d0b418682de788d19ed1f561f21ecac7a", size = 3576982, upload-time = "2025-07-28T16:40:27.014Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/40/b5/18d4380eead101c34070f1801f350f0a29cc0947b418996eaa3770c08cf8/google_cloud_discoveryengine-0.13.11-py3-none-any.whl", hash = "sha256:0d0df371bf8c85a3ddf32048ee6b985da6da623cf66701c19d110426c0105f82", size = 3331486, upload-time = "2025-07-28T16:40:18.743Z" },
 ]
 
 [[package]]
@@ -950,6 +935,18 @@ wheels = [
 ]
 
 [[package]]
+name = "neo4j"
+version = "5.28.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pytz" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/50/69/4862fabc082f2447131aada5c91736155349d77ebf443af7f59553b7b789/neo4j-5.28.2.tar.gz", hash = "sha256:7d38e27e4f987a45cc9052500c6ee27325cb23dae6509037fe31dd7ddaed70c7", size = 231874, upload-time = "2025-07-30T06:04:34.669Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/04/00/1f74089c06aec1fac9390e2300a6a6b2381e0dac281783d64ccca9d681fd/neo4j-5.28.2-py3-none-any.whl", hash = "sha256:5c53b5c3eee6dee7e920c9724391aa38d7135a651e71b766da00533b92a91a94", size = 313156, upload-time = "2025-07-30T06:04:31.438Z" },
+]
+
+[[package]]
 name = "numpy"
 version = "2.3.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1087,16 +1084,16 @@ source = { virtual = "." }
 dependencies = [
     { name = "google-adk" },
     { name = "google-cloud-aiplatform" },
-    { name = "google-cloud-discoveryengine" },
     { name = "google-genai" },
+    { name = "neo4j" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "google-adk", specifier = ">=1.14.1" },
-    { name = "google-cloud-aiplatform", specifier = ">=1.114.0" },
-    { name = "google-cloud-discoveryengine", specifier = ">=0.13.11" },
+    { name = "google-cloud-aiplatform", specifier = ">=1.115.0" },
     { name = "google-genai", specifier = ">=1.38.0" },
+    { name = "neo4j", specifier = ">=5.28.2" },
 ]
 
 [[package]]
@@ -1249,6 +1246,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f3/87/f44d7c9f274c7ee665a29b885ec97089ec5dc034c7f3fafa03da9e39a09e/python_multipart-0.0.20.tar.gz", hash = "sha256:8dd0cab45b8e23064ae09147625994d090fa46f5b0d1e13af944c331a7fa9d13", size = 37158, upload-time = "2024-12-16T19:45:46.972Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/45/58/38b5afbc1a800eeea951b9285d3912613f2603bdf897a4ab0f4bd7f405fc/python_multipart-0.0.20-py3-none-any.whl", hash = "sha256:8a62d3a8335e06589fe01f2a3e178cdcc632f3fbe0d492ad9ee0ec35aab1f104", size = 24546, upload-time = "2024-12-16T19:45:44.423Z" },
+]
+
+[[package]]
+name = "pytz"
+version = "2025.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f8/bf/abbd3cdfb8fbc7fb3d4d38d320f2441b1e7cbe29be4f23797b4a2b5d8aac/pytz-2025.2.tar.gz", hash = "sha256:360b9e3dbb49a209c21ad61809c7fb453643e048b38924c765813546746e81c3", size = 320884, upload-time = "2025-03-25T02:25:00.538Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/81/c4/34e93fe5f5429d7570ec1fa436f1986fb1f00c3e0f43a589fe2bbcd22c3f/pytz-2025.2-py2.py3-none-any.whl", hash = "sha256:5ddf76296dd8c44c26eb8f4b6f35488f3ccbf6fbbd7adee0b7262d43f0ec2f00", size = 509225, upload-time = "2025-03-25T02:24:58.468Z" },
 ]
 
 [[package]]

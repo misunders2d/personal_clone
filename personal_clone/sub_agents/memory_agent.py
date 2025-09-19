@@ -216,10 +216,10 @@ def create_memory_agent_instruction(table):
 
 
 def create_memory_agent(
-    scope: Literal["personal","professional"] = "personal",
+    scope: Literal["personal", "professional"] = "personal",
     name: str = "memory_agent",
     instruction: str = create_memory_agent_instruction(MEMORY_TABLE),
-    output_key: str = "memory_search"
+    output_key: str = "memory_search",
 ) -> Agent:
     memory_agent = Agent(
         name=name,
@@ -235,6 +235,6 @@ def create_memory_agent(
             )
         ),
         tools=[bigquery_toolset],
-        output_key=output_key
+        output_key=output_key,
     )
     return memory_agent

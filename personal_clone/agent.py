@@ -11,6 +11,7 @@ from .sub_agents.memory_agent import (
     MEMORY_TABLE_PROFESSIONAL,
 )
 from .sub_agents.vertex_search_agent import create_vertex_search_agent
+from .sub_agents.graph_agent import create_graph_agent
 from .callbacks.before_after_agent import (
     check_if_agent_should_run,
     state_setter,
@@ -85,14 +86,15 @@ main_agent = Agent(
             scope="personal",
             name="memory_agent",
             instruction=create_memory_agent_instruction(table=MEMORY_TABLE),
-            output_key="memory_search"
+            output_key="memory_search",
         ),
         create_memory_agent(
             scope="professional",
             name="memory_agent_professional",
             instruction=create_memory_agent_instruction(MEMORY_TABLE_PROFESSIONAL),
-            output_key="memory_search_professional"
+            output_key="memory_search_professional",
         ),
+        create_graph_agent()
     ],
     before_agent_callback=[check_if_agent_should_run, prefetch_memories],
     planner=BuiltInPlanner(
