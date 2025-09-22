@@ -1,8 +1,6 @@
-
 from google.adk import Agent
 from google.adk.planners import BuiltInPlanner
 from google.genai import types
-from typing import Literal
 
 from ..tools.graph_tools import execute_cypher_query
 
@@ -13,6 +11,7 @@ dotenv_file_path = os.path.abspath(os.path.join(__file__, os.pardir, ".env"))
 load_dotenv(dotenv_path=dotenv_file_path)
 
 NEO4J_DATABASE = os.environ.get("NEO4J_DATABASE")
+
 
 def create_graph_agent_instruction():
     return f"""
@@ -47,6 +46,7 @@ def create_graph_agent_instruction():
         - Use `MERGE` to create a node or relationship only if it doesn't already exist. This is critical for data integrity.
         - Use `ON CREATE SET` to set properties when a new node/relationship is created.
         - Use `ON MATCH SET` to update properties if the node/relationship already exists.
+        - **For bulk operations (creating or updating multiple nodes or relationships at once), use the `UNWIND` clause with a list of parameters. This is much more efficient than running multiple queries.**
         - EXAMPLE - Creating a person and connecting them to a location:
 
             ```cypher
@@ -57,6 +57,15 @@ def create_graph_agent_instruction():
             MERGE (p)-[r:LIVES_IN]->(l)
             ON CREATE SET r.since = $year
             ```
+        - **EXAMPLE - Bulk creating people using `UNWIND`:**
+
+            ```cypher
+            UNWIND $people_data AS person_props
+            MERGE (p:Person {{name: person_props.name}})
+            ON CREATE SET p.created_at = timestamp()
+            SET p += person_props
+            ```
+            *In this case, the `params` argument for `execute_cypher_query` would be `{{'people_data': [{{'name': 'Alice', 'age': 31}}, {{'name': 'Bob', 'age': 32}}]}}`.*
     </SPECIAL INSTRUCTIONS FOR INSERTING/UPDATING DATA>
 
     <KNOWLEDGE GRAPH MANAGEMENT WORKFLOW>
@@ -68,6 +77,7 @@ def create_graph_agent_instruction():
         5. If the user asks to delete information, use a `MATCH` query to find the node, and then `DETACH DELETE` to remove it and its relationships. ALWAYS confirm with the user before deleting.
     </KNOWLEDGE GRAPH MANAGEMENT WORKFLOW>
 """
+
 
 def create_graph_agent(
     name: str = "graph_agent",

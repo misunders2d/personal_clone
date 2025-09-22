@@ -3,7 +3,7 @@ from google.adk.tools import AgentTool
 from google.adk.planners import BuiltInPlanner
 from google.genai import types
 
-
+from .sub_agents.code_executor_agent import create_code_executor_agent
 from .sub_agents.memory_agent import (
     create_memory_agent,
     create_memory_agent_instruction,
@@ -80,7 +80,11 @@ main_agent = Agent(
     </Troubleshooting and Learning>
 
     """,
-    tools=[get_current_datetime, AgentTool(create_vertex_search_agent())],
+    tools=[
+        get_current_datetime,
+        AgentTool(create_vertex_search_agent()),
+        AgentTool(create_code_executor_agent()),
+    ],
     sub_agents=[
         create_memory_agent(
             scope="personal",
@@ -94,7 +98,7 @@ main_agent = Agent(
             instruction=create_memory_agent_instruction(MEMORY_TABLE_PROFESSIONAL),
             output_key="memory_search_professional",
         ),
-        create_graph_agent()
+        create_graph_agent(),
     ],
     before_agent_callback=[check_if_agent_should_run, prefetch_memories],
     planner=BuiltInPlanner(

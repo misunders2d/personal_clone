@@ -78,6 +78,7 @@ def create_memory_agent_instruction(table):
 
     <SPECIAL INSTRUCTIONS FOR INSERTING NEW MEMORIES>
         When generating a new memory with an INSERT statement, the `memory_id` MUST be generated in the format 'mem_YYYY_MM_DD_xxxxxxxx' where YYYY is the year, MM is the month, DD is the day, and xxxxxxxx is a short unique identifier.
+        The user_id field MUST be collected from the {{user_id}} field - make sure to check with the user if you have any discrepancies.
         All records in the table except `full_content` and `short_description` column MUST be in English. Make sure to translate any non-English tags, categories, sentiment etc. to English before inserting, and translate it back to the user's language when retrieving.
         Use the following SQL expression to generate the `memory_id`: `CONCAT('mem_', FORMAT_TIMESTAMP('%Y_%m_%d', CURRENT_TIMESTAMP()), '_', SUBSTR(GENERATE_UUID(), 1, 8))`
         Example:

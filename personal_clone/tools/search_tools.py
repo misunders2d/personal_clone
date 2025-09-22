@@ -44,10 +44,12 @@ bigquery_toolset = BigQueryToolset(
 
 def search_bq(table: str, text_to_search: str) -> dict:
     """A hardcoded function to perform pre-agent run BigQuery search to supply context"""
-    text_to_search = text_to_search.replace('\\', '\\\\').replace('`', '\\`').replace("'","\\'")
+    text_to_search = text_to_search.strip()
     data = {}
     try:
-        client = bigquery.Client(credentials=credentials, project=credentials.project_id)
+        client = bigquery.Client(
+            credentials=credentials, project=credentials.project_id
+        )
         query = f"""
             WITH query_embedding AS (
                 SELECT
@@ -105,5 +107,5 @@ def search_bq(table: str, text_to_search: str) -> dict:
                 "related_people": row[7],
             }
     except Exception as e:
-        return {"status":"FAILED", "error" : str(e)}
+        return {"status": "FAILED", "error": str(e)}
     return data
