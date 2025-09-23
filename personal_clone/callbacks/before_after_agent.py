@@ -42,7 +42,7 @@ def check_if_agent_should_run(
     # invocation_id = callback_context.invocation_id
     current_state = callback_context.state.to_dict()
 
-    if current_state.get("answer_needed", "TRUE").strip() == "FALSE":
+    if not current_state.get("answer_validation", {}).get("answer_needed"):
         return types.Content(
             # parts=[types.Part(text="")],
             parts=None,
@@ -68,7 +68,11 @@ def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Conte
     ):
         last_user_message = callback_context.user_content.parts[0].text
 
-    if callback_context.state.get("answer_needed", "").strip() == "TRUE":
+    if callback_context.state.get("answer_validation", {}).get(
+        "answer_needed"
+    ) and callback_context.state.get("answer_validation", {}).get(
+        "rr"
+    ):
         with ThreadPoolExecutor() as pool:
             personal_future = pool.submit(search_bq, MEMORY_TABLE, last_user_message)
             professional_future = pool.submit(

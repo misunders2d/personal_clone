@@ -21,39 +21,38 @@ vertexai.init(
     staging_bucket=GOOGLE_CLOUD_STORAGE_BUCKET,
 )
 
-# client = vertexai.Client()  # type: ignore
-
-# agent_engine = client.agent_engines.get(
-#     name=f"projects/personal-clone-464511/locations/us-central1/reasoningEngines/{agent_engine_id}"
-# )
-
 
 agent_engine = agent_engines.get(
     resource_name=f"projects/personal-clone-464511/locations/us-central1/reasoningEngines/{agent_engine_id}"
 )
 
 
-# for item in agent_engine.operation_schemas():
-#     print(item, end="\n\n")
-
-
+# print(agent_engine.operation_schemas())
 async def call_agent(query, session, user_id):
 
-    async for event in agent_engine.async_stream_query(
-        user_id=user_id,
-        session_id=session.get("id"),
-        message=query,
+    for i, event in enumerate(
+        agent_engine.stream_query(
+            user_id=user_id,
+            session_id=session.get("id"),
+            message=query,
+        ),
+        start=1,
     ):
-        if (
-            "content" in event
-            and event["content"]
-            and "parts" in event["content"]
-            and event["content"]["parts"]
-            and event["content"]["parts"][0]
-            and "text" in event["content"]["parts"][0]
-        ):
-            final_response = event["content"]["parts"][0]["text"]
-            print("Agent Response: ", final_response)
+
+        print(f"{i} ###" * 20)
+        print(event, end="\n\n\n\n")
+        # if (
+        #     "content" in event
+        #     and event["content"]
+        #     and "parts" in event["content"]
+        #     and event["content"]["parts"]
+        #     and event["content"]["parts"][0]
+        #     and "text" in event["content"]["parts"][0]
+        # ):
+        #     final_response = event["content"]["parts"][0]["text"]
+        #     print("Agent Response: ", final_response)
+        # else:
+        #     print(f"[FULL EVENT]: {event}")
 
 
 async def main():
