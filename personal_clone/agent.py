@@ -50,7 +50,7 @@ answer_validator_agent = Agent(
         - `answer_needed`: whether or not the `personal_clone` agent should reply to the user's query.
             Quite often the user's resonse does not require an answer, like "okay", "bye" etc.
             HOWEVER if the user is explicilty demanding an answer or if the user is asking a question, you ALWAYS reply with `True`.
-            If the user's input ends with a question mark, you always reply with `True`.
+            If the user's input ends with a question mark, you always reply with `True`. If you are in doubt - always defer to `True`.
         - `rr`: whether or not a memory seach should be involved.
             If the user's query or the conversational flow implies that there is some memory or experience involved, you should set the `memory_search_needed` to `True`, otherwise set it to `False`.
 

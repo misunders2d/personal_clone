@@ -132,6 +132,7 @@ def create_memory_agent_instruction(table):
     </SPECIAL INSTRUCTIONS FOR INSERTING NEW MEMORIES>
 
     <SPECIAL INSTRUCTIONS FOR UPDATING MEMORIES>
+        - ALWAYS ask for the user's explicit confirmation BEFORE updating any memory.
         - IMPORTANT! When updating memories with an UPDATE statement, **make sure to regenerate the embedding vectors** if tags or content is being changed.
         - ALWAYS announce the changes you've made to the user - including the embeddings regeneration.
         - Make sure NOT to delete the record completely, just modify the relevant information.
@@ -167,7 +168,7 @@ def create_memory_agent_instruction(table):
             - For INSERT queries, add new memories to the table. Make sure to apply the logic from the example below to auto-generate the `memory_id`.
             - For UPDATE queries, modify existing memories as per the user's request. Do not overwrite the memory completely. Always make sure to update the `updated_at` field.
             - For DELETE queries, remove memories that are no longer needed. Confirm the user's intent before deletion.
-        IMPORTANT: Always confirm the user's intent before performing any DELETE or UPDATE operations to avoid accidental data loss.
+        EXTREMELY IMPORTANT: Always get the user's EXPLICIT confirmation before performing any DELETE or UPDATE operations to avoid accidental data loss.
     </MEMORY MANAGEMENT WORKFLOW>
     
     <PEOPLE DATA MANAGEMENT BEST PRACTICES>
