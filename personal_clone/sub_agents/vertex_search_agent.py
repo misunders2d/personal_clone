@@ -1,29 +1,16 @@
 from google.adk.agents import Agent
 from google.adk.tools import VertexAiSearchTool
-from google.oauth2 import service_account
-import vertexai
-import tempfile
-import json
 import os
 from dotenv import load_dotenv
 
 dotenv_file_path = os.path.abspath(os.path.join(__file__, os.pardir, ".env"))
 load_dotenv()
 
-with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_json:
-    temp_json.write(os.environ["GCP_SERVICE_ACCOUNT_INFO"])
-    temp_json.flush()
-    GCP_SERVICE_ACCOUNT_INFO = json.load(open(temp_json.name))
 
 GOOGLE_CLOUD_PROJECT = os.environ["GOOGLE_CLOUD_PROJECT"]
 GOOGLE_CLOUD_LOCATION = os.environ["GOOGLE_CLOUD_LOCATION"]
 VERTEX_DATASTORE_ID = os.environ["VERTEX_DATASTORE_ID"]
 DATASTORE_ID = f"projects/{GOOGLE_CLOUD_PROJECT}/locations/global/collections/default_collection/dataStores/{VERTEX_DATASTORE_ID}"
-credentials = service_account.Credentials.from_service_account_info(
-    GCP_SERVICE_ACCOUNT_INFO
-)
-
-vertexai.init(project=GOOGLE_CLOUD_PROJECT, location=GOOGLE_CLOUD_LOCATION, credentials=credentials)
 vertex_toolset = VertexAiSearchTool(data_store_id=DATASTORE_ID)
 
 
