@@ -106,7 +106,7 @@ def get_session(user_id=USER_ID, session_id=""):
 def query_agent(user_id: str, message_text: str) -> str:
     """Send a query to the ADK agent and return the full response."""
     # session_id = ensure_session(user_id)
-    session_id = '7151728852648067072'
+    session_id = "7151728852648067072"
 
     url = f"{endpoint}:streamQuery"
     headers = {
@@ -133,7 +133,7 @@ def query_agent(user_id: str, message_text: str) -> str:
             part_block = json.loads(chunk.decode("utf-8"))
         except Exception:
             continue
-        parts = part_block.get("content",{}).get("parts",[])
+        parts = part_block.get("content", {}).get("parts", [])
         for part in parts:
             if part.get("thought"):
                 print(f'Thought: {part.get("text")}')
@@ -144,6 +144,7 @@ def query_agent(user_id: str, message_text: str) -> str:
 
     print()  # newline after streaming output
     return full_response
+
 
 if __name__ == "__main__":
     while True:

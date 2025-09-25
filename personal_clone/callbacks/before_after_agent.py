@@ -70,9 +70,7 @@ def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Conte
 
     if callback_context.state.get("answer_validation", {}).get(
         "answer_needed"
-    ) and callback_context.state.get("answer_validation", {}).get(
-        "rr"
-    ):
+    ) and callback_context.state.get("answer_validation", {}).get("rr"):
         with ThreadPoolExecutor() as pool:
             personal_future = pool.submit(search_bq, MEMORY_TABLE, last_user_message)
             professional_future = pool.submit(

@@ -1,8 +1,12 @@
+from google.oauth2 import service_account
+import google.auth
+
 from google.adk.agents import Agent, SequentialAgent  # , ParallelAgent
 from google.adk.tools import AgentTool
 from google.adk.planners import BuiltInPlanner
 from google.genai import types
 from pydantic import BaseModel, Field
+
 
 from .sub_agents.code_executor_agent import create_code_executor_agent
 from .sub_agents.memory_agent import (
@@ -19,6 +23,8 @@ from .callbacks.before_after_agent import (
     prefetch_memories,
 )
 
+import os
+import json
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -28,6 +34,28 @@ def get_current_datetime():
     from datetime import datetime
 
     return datetime.now().isoformat()
+
+
+# --- Auth ---
+def get_identity_token():
+    """Get identity token from the GCP service account string."""
+    gcp_service_account_info_str = os.environ.get("GCP_SERVICE_ACCOUNT_INFO")
+    if not gcp_service_account_info_str:
+        raise ValueError("GCP_SERVICE_ACCOUNT_INFO environment variable not set.")
+
+    service_info = json.loads(gcp_service_account_info_str)
+    # project_id = service_info.get("project_id")
+
+    credentials = service_account.Credentials.from_service_account_info(
+        service_info,
+        scopes=["https://www.googleapis.com/auth/cloud-platform"],
+    )
+
+    return credentials
+
+
+credentials = get_identity_token()
+google.auth.default = lambda *args, **kwargs: (credentials, credentials.project_id)
 
 
 class ValidatorOutput(BaseModel):
@@ -122,7 +150,7 @@ main_agent = Agent(
         ),
         create_graph_agent(),
     ],
-    before_agent_callback=[check_if_agent_should_run],# prefetch_memories],
+    before_agent_callback=[check_if_agent_should_run],  # prefetch_memories],
     planner=BuiltInPlanner(
         thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
     ),
