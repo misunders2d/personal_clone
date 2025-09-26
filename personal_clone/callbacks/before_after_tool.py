@@ -1,6 +1,12 @@
 from google.adk.tools import ToolContext, BaseTool
 from typing import Optional, Dict, Any
+from dotenv import load_dotenv
 import re
+import os
+
+load_dotenv()
+
+SUPERUSERS = os.getenv('SUPERUSERS','').split(',')
 
 
 def before_memory_callback(
@@ -8,10 +14,6 @@ def before_memory_callback(
 ) -> Optional[Dict]:
     """Checks if the user is authorized to see data in a personal tables"""
 
-    superusers = [
-        "2djohar@gmail.com",
-        "UKU6CV683"
-    ]
     restricted_tables = "personal-clone-464511.memories.memories_personal"
     user = tool_context._invocation_context.user_id
     tool_name = tool.name
@@ -67,7 +69,7 @@ def before_memory_callback(
         dataset_id = table_info["dataset_id"]
         table_id = table_info["table_id"]
 
-        if table_id in restricted_tables and user not in superusers:
+        if table_id in restricted_tables and user not in SUPERUSERS:
             return {
                 "error": f"User {user} does not have access to table `{project_id}.{dataset_id}.{table_id}`. Message Sergey if you need access."
             }
