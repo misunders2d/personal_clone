@@ -5,6 +5,7 @@ from google.genai import types
 from typing import Literal
 
 from ..tools.search_tools import bigquery_toolset
+from ..callbacks.before_after_tool import before_memory_callback
 
 import os
 from dotenv import load_dotenv
@@ -237,6 +238,7 @@ def create_memory_agent(
             )
         ),
         tools=[bigquery_toolset],
+        before_tool_callback=[before_memory_callback],
         output_key=output_key,
     )
     return memory_agent

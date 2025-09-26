@@ -68,6 +68,7 @@ class ValidatorOutput(BaseModel):
         description="True or False depending on whether memory search should be involved",
     )
 
+
 def create_answer_validator_agent():
     answer_validator_agent = Agent(
         name="answer_validator_agent",
@@ -90,6 +91,7 @@ def create_answer_validator_agent():
         output_schema=ValidatorOutput,
     )
     return answer_validator_agent
+
 
 def create_main_agent():
     main_agent = Agent(
@@ -153,10 +155,13 @@ def create_main_agent():
         ],
         before_agent_callback=[check_if_agent_should_run],  # prefetch_memories],
         planner=BuiltInPlanner(
-            thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
+            thinking_config=types.ThinkingConfig(
+                include_thoughts=True, thinking_budget=-1
+            )
         ),
     )
     return main_agent
+
 
 root_agent = SequentialAgent(
     name="root_agent_flow",
