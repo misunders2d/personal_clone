@@ -10,6 +10,7 @@ def before_memory_callback(
 
     superusers = [
         "2djohar@gmail.com",
+        "UKU6CV683"
     ]
     restricted_tables = "personal-clone-464511.memories.memories_personal"
     user = tool_context._invocation_context.user_id
