@@ -6,7 +6,7 @@ import os
 
 load_dotenv()
 
-SUPERUSERS = os.getenv('SUPERUSERS','').split(',')
+SUPERUSERS = os.getenv("SUPERUSERS", "").split(",")
 
 
 def before_memory_callback(
@@ -58,11 +58,6 @@ def before_memory_callback(
                     "table_id": table_id,
                 }
             )
-
-    if tool_name in ("get_table_info", "execute_sql") and len(tables_to_check) == 0:
-        return {
-            "error": "Access to tables could not be identified and required immediate attention"
-        }
 
     for table_info in tables_to_check:
         project_id = table_info["project_id"]
