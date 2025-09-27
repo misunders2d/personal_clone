@@ -15,8 +15,9 @@ def before_memory_callback(
     """Checks if the user is authorized to see data in a personal tables"""
 
     restricted_tables = "personal-clone-464511.memories.memories_personal"
-    user = tool_context._invocation_context.user_id
-    tool_name = tool.name
+    # user = tool_context._invocation_context.user_id
+    user = tool_context.state.get('user_id')
+    # tool_name = tool.name
 
     tables_to_check = []  #
 
