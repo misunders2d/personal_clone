@@ -17,6 +17,7 @@ def before_memory_callback(
     restricted_tables = "personal-clone-464511.memories.memories_personal"
     # user = tool_context._invocation_context.user_id
     user = tool_context.state.get('user_id')
+    print(f'[MEMORY TOOL CALLBACK]: USER IDENTIFIED AS {user}', end = '\n\n\n')
     # tool_name = tool.name
 
     tables_to_check = []  #
@@ -25,7 +26,7 @@ def before_memory_callback(
     if query:
         # Regex to find table names after FROM or JOIN. Handles backticks.
         found_tables = re.findall(
-            r"(?:FROM|JOIN)\s+`?([\w.-]+)`?", query, re.IGNORECASE
+            r"(?:FROM|JOIN|UPDATE|INTO)\s+`?([\w.-]+)`?", query, re.IGNORECASE
         )
         for table_name in found_tables:
             parts = table_name.split(".")
