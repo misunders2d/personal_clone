@@ -6,7 +6,6 @@ from concurrent.futures import ThreadPoolExecutor
 
 from ..tools.search_tools import search_bq, MEMORY_TABLE, MEMORY_TABLE_PROFESSIONAL
 
-
 def state_setter(
     callback_context: CallbackContext,
 ) -> Optional[types.Content]:
@@ -16,9 +15,7 @@ def state_setter(
     current_user = callback_context._invocation_context.user_id
 
     if "user_id" not in current_state:
-        callback_context.state["user_id"] = (
-            current_user  # TODO change to `current_user` for production
-        )
+        callback_context.state["user_id"] = current_user
         # callback_context.state["user_id"] = (
         #     "2djohar@gmail.com"  # TODO change to `current_user` for production
         # )
