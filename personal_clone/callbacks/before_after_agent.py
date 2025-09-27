@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from ..tools.search_tools import search_bq, MEMORY_TABLE, MEMORY_TABLE_PROFESSIONAL
 
+
 def state_setter(
     callback_context: CallbackContext,
 ) -> Optional[types.Content]:
@@ -56,7 +57,7 @@ def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Conte
     If False or not present, returns None, allowing the agent's original output to be used.
     """
     last_user_message = ""
-    user_id = callback_context.state.get('user_id')
+    user_id = callback_context.state.get("user_id")
 
     if (
         callback_context.user_content

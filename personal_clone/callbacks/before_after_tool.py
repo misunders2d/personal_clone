@@ -16,8 +16,8 @@ def before_memory_callback(
 
     restricted_tables = "personal-clone-464511.memories.memories_personal"
     # user = tool_context._invocation_context.user_id
-    user = tool_context.state.get('user_id')
-    print(f'[MEMORY TOOL CALLBACK]: USER IDENTIFIED AS {user}', end = '\n\n\n')
+    user = tool_context.state.get("user_id")
+    print(f"[MEMORY TOOL CALLBACK]: USER IDENTIFIED AS {user}", end="\n\n\n")
     # tool_name = tool.name
 
     tables_to_check = []  #

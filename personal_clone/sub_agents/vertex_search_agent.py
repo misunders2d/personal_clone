@@ -15,8 +15,7 @@ vertex_toolset = VertexAiSearchTool(data_store_id=DATASTORE_ID)
 
 
 def create_vertex_search_agent(
-    name="vertex_search_agent",
-    output_key = "vertex_search"
+    name="vertex_search_agent", output_key="vertex_search"
 ) -> Agent:
     vertex_search_agent = Agent(
         name=name,
