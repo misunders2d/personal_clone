@@ -6,18 +6,12 @@ import vertexai
 from google.adk import Agent
 import re
 
-import os
-from dotenv import load_dotenv
-
-dotenv_file_path = os.path.abspath(os.path.join(__file__, os.pardir, ".env"))
-load_dotenv()
+from .. import config
 
 
-PROJECT_ID = os.environ["GOOGLE_CLOUD_PROJECT"]
-# LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
-LOCATION = "us-east4"  # temporary change as us-central1 is allowlisted
-
-vertexai.init(project=PROJECT_ID, location=LOCATION)
+vertexai.init(
+    project=config.GOOGLE_CLOUD_PROJECT, location=config.GOOGLE_CLOUD_LOCATION
+)  # location needs to be set to "us-east4" until there's enough quota on "us-central1"
 
 
 def create_corpus(display_name: str) -> dict:

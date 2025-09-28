@@ -1,17 +1,10 @@
 from google.adk.agents import Agent
 from google.adk.tools import VertexAiSearchTool
-import os
-from dotenv import load_dotenv
 
-dotenv_file_path = os.path.abspath(os.path.join(__file__, os.pardir, ".env"))
-load_dotenv()
+from .. import config
 
 
-GOOGLE_CLOUD_PROJECT = os.environ["GOOGLE_CLOUD_PROJECT"]
-GOOGLE_CLOUD_LOCATION = os.environ["GOOGLE_CLOUD_LOCATION"]
-VERTEX_DATASTORE_ID = os.environ["VERTEX_DATASTORE_ID"]
-DATASTORE_ID = f"projects/{GOOGLE_CLOUD_PROJECT}/locations/global/collections/default_collection/dataStores/{VERTEX_DATASTORE_ID}"
-vertex_toolset = VertexAiSearchTool(data_store_id=DATASTORE_ID)
+vertex_toolset = VertexAiSearchTool(data_store_id=config.DATASTORE_ID)
 
 
 def create_vertex_search_agent(

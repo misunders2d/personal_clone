@@ -1,6 +1,3 @@
-from google.oauth2 import service_account
-import google.auth
-
 from google.adk.agents import Agent, SequentialAgent  # , ParallelAgent
 from google.adk.tools import AgentTool
 from google.adk.planners import BuiltInPlanner
@@ -12,8 +9,6 @@ from .sub_agents.code_executor_agent import create_code_executor_agent
 from .sub_agents.memory_agent import (
     create_memory_agent,
     create_memory_agent_instruction,
-    MEMORY_TABLE,
-    MEMORY_TABLE_PROFESSIONAL,
 )
 from .sub_agents.vertex_search_agent import create_vertex_search_agent
 from .sub_agents.graph_agent import create_graph_agent
@@ -23,11 +18,7 @@ from .callbacks.before_after_agent import (
     prefetch_memories,
 )
 
-import os
-import json
-from dotenv import load_dotenv
-
-load_dotenv()
+from . import config
 
 
 def get_current_datetime():
@@ -36,32 +27,10 @@ def get_current_datetime():
     return datetime.now().isoformat()
 
 
-# --- Auth ---
-def get_identity_token():
-    """Get identity token from the GCP service account string."""
-    gcp_service_account_info_str = os.environ.get("GCP_SERVICE_ACCOUNT_INFO")
-    if not gcp_service_account_info_str:
-        raise ValueError("GCP_SERVICE_ACCOUNT_INFO environment variable not set.")
-
-    service_info = json.loads(gcp_service_account_info_str)
-    # project_id = service_info.get("project_id")
-
-    credentials = service_account.Credentials.from_service_account_info(
-        service_info,
-        scopes=["https://www.googleapis.com/auth/cloud-platform"],
-    )
-
-    return credentials
-
-
-credentials = get_identity_token()
-google.auth.default = lambda *args, **kwargs: (credentials, credentials.project_id)
-
-
 class ValidatorOutput(BaseModel):
     answer_needed: bool = Field(
         default=True,
-        description="True or False depending on whether the anser is required",
+        description="True or False depending on whether the anser is required or implied. Default to True if you have any doubts",
     )
     rr: bool = Field(
         default=False,
@@ -105,12 +74,18 @@ def create_main_agent():
             User's requests are ALWAYS top priority. No matter what is in the conversational context, you always obey the user's commands.
         </TOP PRIORITY>
         <GENERAL>
-            - You are an assistant, a secretary and a second brain for the person whose ID is {user_id}.
+            - You are an assistant, a secretary and a second brain for the person whose ID is one of {master_user_id}.
             - You learn from the communication with this user, copy their style.
             - At the same time you are an employee of Mellanni company, and you are being addressed by multiple co-workers in multiple conversational environments - Slack, Gmail, Google Meet etc.
             - You are equipped with different sub-agents and tools that help you manage the conversation. Specific tools are used to store and retrieve memories and experiences - use them widely.
             - Your `memory_agent` has access to all personal experiences, and your `memory_agent_professional` has access to all professional experiences. Use them accordingly.
         </GENERAL>
+        <CONVERSATION FLOW>
+            You are participating both in one-on-one chats with just one user AND in group/channel chats with multiple users.
+            For convenience the currently active user id is stored in {user_id} key, and all user-related information is stored in {user_related_context} key.
+            If there is no data in {user_related_context}, you should politely ask this user to introduce themselves and store that data in the people table.
+            Your overall tone is informal and concise, unless explicitly specified otherwise.
+        </CONVERSATION FLOW>
         <IMPORTANT!>
             <MEMORY USAGE>
                 - You DISREGARD all outputs of the `answer_validator_agent`, this is a technical routing agent not intended for user or agent interaction.
@@ -144,13 +119,15 @@ def create_main_agent():
             create_memory_agent(
                 scope="personal",
                 name="memory_agent",
-                instruction=create_memory_agent_instruction(table=MEMORY_TABLE),
+                instruction=create_memory_agent_instruction(table=config.MEMORY_TABLE),
                 output_key="memory_search",
             ),
             create_memory_agent(
                 scope="professional",
                 name="memory_agent_professional",
-                instruction=create_memory_agent_instruction(MEMORY_TABLE_PROFESSIONAL),
+                instruction=create_memory_agent_instruction(
+                    config.MEMORY_TABLE_PROFESSIONAL
+                ),
                 output_key="memory_search_professional",
             ),
             create_graph_agent(),

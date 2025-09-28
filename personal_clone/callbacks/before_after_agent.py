@@ -4,7 +4,12 @@ from google.genai import types
 from concurrent.futures import ThreadPoolExecutor
 
 
-from ..tools.search_tools import search_bq, MEMORY_TABLE, MEMORY_TABLE_PROFESSIONAL
+from ..tools.search_tools import (
+    search_bq,
+    search_people,
+)
+
+from .. import config
 
 
 def state_setter(
@@ -15,17 +20,18 @@ def state_setter(
     current_state = callback_context.state.to_dict()
     current_user = callback_context._invocation_context.user_id
 
+    if "master_user_id" not in current_state:
+        callback_context.state["master_user_id"] = config.SUPERUSERS
     if "user_id" not in current_state:
         callback_context.state["user_id"] = current_user
-        # callback_context.state["user_id"] = (
-        #     "2djohar@gmail.com"  # TODO change to `current_user` for production
-        # )
     if "memory_context" not in current_state:
         callback_context.state["memory_context"] = ""
     if "memory_context_professional" not in current_state:
         callback_context.state["memory_context_professional"] = ""
     if "vertex_context" not in current_state:
         callback_context.state["vertex_context"] = ""
+    if "user_related_context" not in current_state:
+        callback_context.state["user_related_context"] = ""
 
 
 def check_if_agent_should_run(
@@ -52,9 +58,8 @@ def check_if_agent_should_run(
 
 def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Content]:
     """
-    Logs exit from an agent and checks 'add_concluding_note' in session state.
-    If True, returns new Content to *replace* the agent's original output.
-    If False or not present, returns None, allowing the agent's original output to be used.
+    Used to prefetch personal and professional memories based on the user query.
+    Injects records from memories into session state
     """
     last_user_message = ""
     user_id = callback_context.state.get("user_id")
@@ -69,17 +74,35 @@ def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Conte
     if callback_context.state.get("answer_validation", {}).get(
         "answer_needed"
     ) and callback_context.state.get("answer_validation", {}).get("rr"):
+        people_query = f"""
+        SELECT
+            person_id,
+            first_name,
+            last_name,
+            role
+        FROM
+            `personal-clone-464511.memories.people` AS p,
+        UNNEST(p.user_ids) AS user_id_alias
+        WHERE
+            "{user_id}" IN (user_id_alias.id_value)
+        """
         with ThreadPoolExecutor() as pool:
-            personal_future = pool.submit(search_bq, MEMORY_TABLE, last_user_message)
-            professional_future = pool.submit(
-                search_bq, MEMORY_TABLE_PROFESSIONAL, last_user_message
+            personal_future = pool.submit(
+                search_bq, config.MEMORY_TABLE, last_user_message
             )
+            professional_future = pool.submit(
+                search_bq, config.MEMORY_TABLE_PROFESSIONAL, last_user_message
+            )
+            people_future = pool.submit(search_people, people_query)
+
             memory_recall = personal_future.result()
             memory_recall_professional = professional_future.result()
+            people_recall = people_future.result()
 
         callback_context.state["memory_context_professional"] = (
             memory_recall_professional
         )
+        callback_context.state["user_related_context"] = people_recall
 
         if not user_id == "2djohar@gmail.com":
             return

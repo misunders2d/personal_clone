@@ -7,25 +7,15 @@ from typing import Literal
 from ..tools.search_tools import bigquery_toolset
 from ..callbacks.before_after_tool import before_memory_callback
 
-import os
-from dotenv import load_dotenv
-
-dotenv_file_path = os.path.abspath(os.path.join(__file__, os.pardir, ".env"))
-load_dotenv()
-
-DATASET_PATH = os.environ["MEMORY_DATASET_ID"]
-MEMORY_TABLE = f"{DATASET_PATH}.memories_personal"
-MEMORY_TABLE_PROFESSIONAL = f"{DATASET_PATH}.memories_professional"
-PEOPLE_TABLE = f"{DATASET_PATH}.people"
-EMBEDDING_MODEL = f"{DATASET_PATH}.embedding_model"
+from .. import config
 
 
 def create_memory_agent_instruction(table):
     return f"""
     <GENERAL>
         You are an agent that can interact with specific tables in Google BigQuery to run SQL queries and manage memories and/or experiences.
-        The main tables you are working with are `{table}` and `{PEOPLE_TABLE}`.
-        Memories are stored using vector embeddings, obtained from the model `{EMBEDDING_MODEL}`.
+        The main tables you are working with are `{table}` and `{config.PEOPLE_TABLE}`.
+        Memories are stored using vector embeddings, obtained from the model `{config.EMBEDDING_MODEL}`.
 
         Make sure to follow the output schema exactly if it's included.
     </GENERAL>
@@ -41,7 +31,7 @@ def create_memory_agent_instruction(table):
                 ml_generate_embedding_result AS embedding_vector
             FROM
                 ML.GENERATE_EMBEDDING(
-                MODEL `{EMBEDDING_MODEL}`,
+                MODEL `{config.EMBEDDING_MODEL}`,
                 (SELECT "<user_query>" AS content),
                 STRUCT(TRUE AS flatten_json_output)
                 )
@@ -106,7 +96,7 @@ def create_memory_agent_instruction(table):
                         ml_generate_embedding_result AS embedding_vector
                     FROM
                         ML.GENERATE_EMBEDDING(
-                            MODEL `{EMBEDDING_MODEL}`,
+                            MODEL `{config.EMBEDDING_MODEL}`,
                             (SELECT short_description AS content FROM data_to_prepare), 
                             STRUCT(TRUE AS flatten_json_output)
                         )
@@ -148,7 +138,7 @@ def create_memory_agent_instruction(table):
                         ml_generate_embedding_result
                     FROM
                         ML.GENERATE_EMBEDDING(
-                            MODEL `{EMBEDDING_MODEL}`,
+                            MODEL `{config.EMBEDDING_MODEL}`,
                             (SELECT 'Zephyr, my cat, died last December. This memory is about loss.' AS content), -- Embedding based on the new short_description
                             STRUCT(TRUE AS flatten_json_output)
                         )
@@ -221,7 +211,7 @@ def create_memory_agent_instruction(table):
 def create_memory_agent(
     scope: Literal["personal", "professional"] = "personal",
     name: str = "memory_agent",
-    instruction: str = create_memory_agent_instruction(MEMORY_TABLE),
+    instruction: str = create_memory_agent_instruction(config.MEMORY_TABLE),
     output_key: str = "memory_search",
 ) -> Agent:
     memory_agent = Agent(

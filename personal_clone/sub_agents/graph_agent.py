@@ -4,13 +4,7 @@ from google.genai import types
 
 from ..tools.graph_tools import execute_cypher_query
 
-import os
-from dotenv import load_dotenv
-
-dotenv_file_path = os.path.abspath(os.path.join(__file__, os.pardir, ".env"))
-load_dotenv(dotenv_path=dotenv_file_path)
-
-NEO4J_DATABASE = os.environ.get("NEO4J_DATABASE")
+from .. import config
 
 
 def create_graph_agent_instruction():
@@ -18,7 +12,7 @@ def create_graph_agent_instruction():
     <GENERAL>
         You are an agent that interacts with a Neo4j graph database to manage a knowledge graph of entities and their relationships.
         You will use the `execute_cypher_query` tool to run Cypher queries.
-        The database you are working with is `{NEO4J_DATABASE}`.
+        The database you are working with is `{config.NEO4J_DATABASE}`.
 
         Make sure to follow the output schema exactly if it's included.
     </GENERAL>

@@ -4,28 +4,16 @@ from google.adk.tools.bigquery.config import BigQueryToolConfig, WriteMode
 
 from google.cloud import bigquery
 
-
 import json
 import tempfile
 from google.oauth2 import service_account
-import os
-from dotenv import load_dotenv
 
-dotenv_file_path = os.path.abspath(os.path.join(__file__, os.pardir, ".env"))
-load_dotenv()
+from .. import config
 
 with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_json:
-    temp_json.write(os.environ["GCP_SERVICE_ACCOUNT_INFO"])
+    temp_json.write(config.GCP_SERVICE_ACCOUNT_INFO)
     temp_json.flush()
     GCP_SERVICE_ACCOUNT_INFO = json.load(open(temp_json.name))
-DATASET_PATH = os.environ["MEMORY_DATASET_ID"]
-MEMORY_TABLE = f"{DATASET_PATH}.memories_personal"
-MEMORY_TABLE_PROFESSIONAL = f"{DATASET_PATH}.memories_professional"
-PEOPLE_TABLE = f"{DATASET_PATH}.people"
-EMBEDDING_MODEL = f"{DATASET_PATH}.embedding_model"
-GOOGLE_CLOUD_PROJECT = os.environ["GOOGLE_CLOUD_PROJECT"]
-GOOGLE_CLOUD_LOCATION = os.environ["GOOGLE_CLOUD_LOCATION"]
-VERTEX_DATASTORE_ID = os.environ["VERTEX_DATASTORE_ID"]
 
 credentials = service_account.Credentials.from_service_account_info(
     GCP_SERVICE_ACCOUNT_INFO
@@ -56,7 +44,7 @@ def search_bq(table: str, text_to_search: str) -> dict:
                     ml_generate_embedding_result AS embedding_vector
                 FROM
                     ML.GENERATE_EMBEDDING(
-                    MODEL `{EMBEDDING_MODEL}`,
+                    MODEL `{config.EMBEDDING_MODEL}`,
                     (SELECT "{text_to_search}" AS content),
                     STRUCT(TRUE AS flatten_json_output)
                     )
@@ -105,6 +93,25 @@ def search_bq(table: str, text_to_search: str) -> dict:
                 "tags": row[5],
                 "linked_memories": row[6],
                 "related_people": row[7],
+            }
+    except Exception as e:
+        return {"status": "FAILED", "error": str(e)}
+    return data
+
+
+def search_people(query: str) -> dict:
+    """A hardcoded function to perform pre-agent run BigQuery people search to supply context"""
+    data = {}
+    try:
+        client = bigquery.Client(
+            credentials=credentials, project=credentials.project_id
+        )
+        result = client.query(query)
+        for row in result.result():
+            data[row[0]] = {
+                "first_name": row[1],
+                "last_name": row[2],
+                "role": row[3],
             }
     except Exception as e:
         return {"status": "FAILED", "error": str(e)}

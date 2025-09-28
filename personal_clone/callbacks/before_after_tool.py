@@ -1,12 +1,8 @@
 from google.adk.tools import ToolContext, BaseTool
 from typing import Optional, Dict, Any
-from dotenv import load_dotenv
 import re
-import os
 
-load_dotenv()
-
-SUPERUSERS = os.getenv("SUPERUSERS", "").split(",")
+from .. import config
 
 
 def before_memory_callback(
@@ -66,7 +62,7 @@ def before_memory_callback(
         dataset_id = table_info["dataset_id"]
         table_id = table_info["table_id"]
 
-        if table_id in restricted_tables and user not in SUPERUSERS:
+        if table_id in restricted_tables and user not in config.SUPERUSERS:
             return {
                 "error": f"User {user} does not have access to table `{project_id}.{dataset_id}.{table_id}`. Message Sergey if you need access."
             }
