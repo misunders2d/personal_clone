@@ -1,4 +1,5 @@
 from google.adk.agents import Agent, SequentialAgent  # , ParallelAgent
+# from google.adk. models.lite_llm import LiteLlm
 from google.adk.tools import AgentTool
 from google.adk.planners import BuiltInPlanner
 from google.genai import types
@@ -67,6 +68,7 @@ def create_answer_validator_agent():
 def create_main_agent():
     main_agent = Agent(
         model="gemini-2.5-flash",
+        # model  = LiteLlm(model="openai/gpt-4.1"),
         name="personal_clone",
         description="A helpful assistant for user questions.",
         instruction="""

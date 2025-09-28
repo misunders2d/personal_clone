@@ -8,5 +8,6 @@ dependencies = [
     "google-adk>=1.14.1",
     "google-cloud-aiplatform>=1.115.0",
     "google-genai>=1.38.0",
+    "litellm>=1.77.5",
     "neo4j>=5.28.2",
 ]

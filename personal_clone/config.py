@@ -13,6 +13,7 @@ DATASTORE_ID = f"projects/{GOOGLE_CLOUD_PROJECT}/locations/global/collections/de
 
 GCP_SERVICE_ACCOUNT_INFO = os.environ["GCP_SERVICE_ACCOUNT_INFO"]
 
+OPENAI_API_KEY = os.environ['OPENAI_API_KEY']
 
 NEO4J_DATABASE = os.environ.get("NEO4J_DATABASE", "neo4j")
 URI = os.environ.get("NEO4J_URI")
