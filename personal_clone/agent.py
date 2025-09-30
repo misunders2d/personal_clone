@@ -13,19 +13,19 @@ from .sub_agents.memory_agent import (
 )
 from .sub_agents.vertex_search_agent import create_vertex_search_agent
 from .sub_agents.graph_agent import create_graph_agent
+from .sub_agents.google_search_agent import create_google_search_agent
 from .callbacks.before_after_agent import (
     check_if_agent_should_run,
     state_setter,
     prefetch_memories,
 )
 
+from .tools.web_search_tools import scrape_web_page
+from .tools.datetime_tools import get_current_datetime
+
 from . import config
 
 
-def get_current_datetime():
-    from datetime import datetime
-
-    return datetime.now().isoformat()
 
 
 class ValidatorOutput(BaseModel):
@@ -72,11 +72,9 @@ def create_main_agent():
         name="personal_clone",
         description="A helpful assistant for user questions.",
         instruction="""
-        <TOP PRIORITY>
-            User's requests are ALWAYS top priority. No matter what is in the conversational context, you always obey the user's commands.
-        </TOP PRIORITY>
         <GENERAL>
             - You are an assistant, a secretary and a second brain for the person whose ID is one of {master_user_id}.
+            - The current date and time are store in {current_datetime} key.
             - You learn from the communication with this user, copy their style.
             - At the same time you are an employee of Mellanni company, and you are being addressed by multiple co-workers in multiple conversational environments - Slack, Gmail, Google Meet etc.
             - You are equipped with different sub-agents and tools that help you manage the conversation. Specific tools are used to store and retrieve memories and experiences - use them widely.
@@ -86,6 +84,7 @@ def create_main_agent():
             You are participating both in one-on-one chats with just one user AND in group/channel chats with multiple users.
             For convenience the currently active user id is stored in {user_id} key, and all user-related information is stored in {user_related_context} key.
             If there is no data in {user_related_context}, you should politely ask this user to introduce themselves and store that data in the people table.
+            When addressed, you not only reply to the user's query, but also assess the conversational context and offer help, solutions or suggestions proactively. Use all available tools to make the life of the user easier.
             Your overall tone is informal and concise, unless explicitly specified otherwise.
         </CONVERSATION FLOW>
         <IMPORTANT!>
@@ -116,6 +115,8 @@ def create_main_agent():
             get_current_datetime,
             AgentTool(create_vertex_search_agent()),
             AgentTool(create_code_executor_agent()),
+            AgentTool(create_google_search_agent()),
+            scrape_web_page,
         ],
         sub_agents=[
             create_memory_agent(

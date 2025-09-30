@@ -8,6 +8,7 @@ from ..tools.search_tools import (
     search_bq,
     search_people,
 )
+from ..tools.datetime_tools import get_current_datetime
 
 from .. import config
 
@@ -32,6 +33,7 @@ def state_setter(
         callback_context.state["vertex_context"] = ""
     if "user_related_context" not in current_state:
         callback_context.state["user_related_context"] = ""
+    callback_context.state["current_datetime"] = get_current_datetime()
 
 
 def check_if_agent_should_run(
