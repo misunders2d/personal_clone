@@ -33,6 +33,11 @@ def state_setter(
         callback_context.state["vertex_context"] = ""
     if "user_related_context" not in current_state:
         callback_context.state["user_related_context"] = ""
+    if "google_search_grounding" not in current_state:
+        callback_context.state["google_search_grounding"] = {
+            "final_answer": None,
+            "grounding_medadata": {"grounding_chunks": [], "grounding_supports": []},
+        }
     callback_context.state["current_datetime"] = get_current_datetime()
 
 

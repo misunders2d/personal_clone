@@ -1,4 +1,5 @@
 from google.adk.agents import Agent, SequentialAgent  # , ParallelAgent
+
 # from google.adk. models.lite_llm import LiteLlm
 from google.adk.tools import AgentTool
 from google.adk.planners import BuiltInPlanner
@@ -24,8 +25,6 @@ from .tools.web_search_tools import scrape_web_page
 from .tools.datetime_tools import get_current_datetime
 
 from . import config
-
-
 
 
 class ValidatorOutput(BaseModel):
@@ -99,6 +98,11 @@ def create_main_agent():
                 - If you receive an error message from any of the tools or sub-agents - you MUST follow the <MEMORY USAGE> protocol. Only if such an error is not found in memories, should you seek guidance from the user.
                 - After the issue has been successfully resolved - you MUST use the `memory_agent` to remember (save) this experience, so that you can refer to it later.
             </ERROR HANDLING>
+            <GOOGLE SEARCH>
+                - You have access to the `google_search_agent` who can perform Google searches to find relevant information on the web.
+                - Apart from the summary, the agent stores the full text and grounding metadata (including links) in {google_search_grounding} key.
+                    Use this information to support the agent's answers with links, and also to be able to use your `scrape_web_page` tool to extract more information from the linked pages, if needed.
+            </GOOGLE SEARCH>
         </IMPORTANT!> 
         <Troubleshooting and Learning>
             - Whenever you encounter any issues or difficulties (running functions, user's frustration, syntax errors, unexpected outputs, or logical problems),

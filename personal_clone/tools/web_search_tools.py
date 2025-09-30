@@ -7,7 +7,7 @@ from urllib.parse import urljoin, urlparse
 def scrape_web_page(url: str, timeout: float = 10.0) -> dict:
     """
     Scrape a page, capturing headings, paragraphs, and code blocks.
-    
+
     Returns a dict like:
     {
       "url": url,
@@ -23,12 +23,10 @@ def scrape_web_page(url: str, timeout: float = 10.0) -> dict:
           },
           ...
       ],
-      "links": [ ... ]  # absolute URLs 
+      "links": [ ... ]  # absolute URLs
     }
     """
-    headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; MyAgent/1.0)"
-    }
+    headers = {"User-Agent": "Mozilla/5.0 (compatible; MyAgent/1.0)"}
     resp = requests.get(url, headers=headers, timeout=timeout)
     resp.raise_for_status()
     html = resp.text
@@ -39,7 +37,7 @@ def scrape_web_page(url: str, timeout: float = 10.0) -> dict:
     # Collect all links
     links = []
     for a in soup.find_all("a", href=True):
-        href = a["href"].strip() # type: ignore
+        href = a["href"].strip()  # type: ignore
         abs_href = urljoin(url, href)
         parsed = urlparse(abs_href)
         if parsed.scheme in ("http", "https"):
@@ -71,7 +69,14 @@ def scrape_web_page(url: str, timeout: float = 10.0) -> dict:
             next_sibs = []
             for sib in h.next_siblings:
                 # stop if we reach another heading of same/higher level
-                if isinstance(sib, Tag) and sib.name in ["h1","h2","h3","h4","h5","h6"]:
+                if isinstance(sib, Tag) and sib.name in [
+                    "h1",
+                    "h2",
+                    "h3",
+                    "h4",
+                    "h5",
+                    "h6",
+                ]:
                     # Check level
                     if int(sib.name[1]) <= int(h.name[1]):
                         break
@@ -142,4 +147,3 @@ def _collect_node(node, content_list: list, base_url: str):
     # fallback: dive into children
     for child in node.children:
         _collect_node(child, content_list, base_url)
-
