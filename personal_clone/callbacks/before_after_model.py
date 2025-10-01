@@ -1,5 +1,5 @@
 from google.adk.agents.callback_context import CallbackContext
-from google.adk.models import LlmResponse
+from google.adk.models.llm_response import LlmResponse
 
 from typing import Optional
 
