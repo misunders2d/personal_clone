@@ -46,6 +46,7 @@ def create_answer_validator_agent():
         instruction="""You are an agent designed to assess the user's input.
         You need to evaluate TWO parameters:
             - `answer_needed`: whether or not the `personal_clone` agent should reply to the user's query.
+                If the {user_id} starts with "GMAIL:" - you always reply with `True`.
                 Quite often the user's resonse does not require an answer, like "okay", "bye" etc.
                 HOWEVER if the user is explicilty demanding an answer or if the user is asking a question, you ALWAYS reply with `True`.
                 The ONLY scenario when you reply with `False` is when the user's input is a simple acknowledgement, farewell, or similar non-inquisitive statement.
