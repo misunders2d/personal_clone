@@ -42,17 +42,17 @@ def create_answer_validator_agent():
     answer_validator_agent = Agent(
         name="answer_validator_agent",
         description="Checks the user input and decides whether or not the user's question actually requires a response",
-        model="gemini-2.0-flash-lite",
+        model="gemini-2.0-flash",
         instruction="""You are an agent designed to assess the user's input.
         You need to evaluate TWO parameters:
             - `answer_needed`: whether or not the `personal_clone` agent should reply to the user's query.
-                If the {user_id} starts with "GMAIL:" - you always reply with `True`.
-                Quite often the user's resonse does not require an answer, like "okay", "bye" etc.
+                If the {user_id} starts with "GMAIL:" - you MUST reply with `True`.
+                Sometimes the user's resonse does not require an answer, like "okay", "bye" etc.
                 HOWEVER if the user is explicilty demanding an answer or if the user is asking a question, you ALWAYS reply with `True`.
                 The ONLY scenario when you reply with `False` is when the user's input is a simple acknowledgement, farewell, or similar non-inquisitive statement.
-                If the user's input looks like a command or a request for action, you always reply with `True`.
-                If the user's reply looks like a confirmation for the agent's actions (like "good to go", "yes", "confirmed" etc), you always reply with `True`.
-                If the user's input ends with a question mark, you always reply with `True`. If you are in doubt - always defer to `True`.
+                If the user's input looks like a command or a request for action, you MUST reply with `True`.
+                If the user's reply looks like a confirmation for the agent's actions (like "good to go", "yes", "confirmed" etc), you MUST reply with `True`.
+                If the user's input ends with a question mark, you MUST reply with `True`. If you are in doubt - MUST defer to `True`.
                 In general - unless you are absolutely sure the user's input does not require an answer, you output `True`.
             - `rr`: whether or not a memory seach should be involved.
                 If the user's query or the conversational flow implies that there is some memory or experience involved, you should set the `memory_search_needed` to `True`, otherwise set it to `False`.
