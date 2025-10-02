@@ -28,5 +28,3 @@ if "mel_credentials" not in globals():
     mel_bigquery_toolset = BigQueryToolset(
         credentials_config=mel_credentials_config, bigquery_tool_config=mel_tool_config
     )
-
-

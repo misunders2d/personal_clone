@@ -20,6 +20,8 @@ NEO4J_DATABASE = os.environ.get("NEO4J_DATABASE", "neo4j")
 URI = os.environ.get("NEO4J_URI")
 AUTH = (os.environ.get("NEO4J_USERNAME", ""), os.environ.get("NEO4J_PASSWORD", ""))
 
+CLICKUP_API_TOKEN = os.environ.get("CLICKUP_API_TOKEN", "")
+
 
 DATASET_PATH = os.environ["MEMORY_DATASET_ID"]
 MEMORY_TABLE = f"{DATASET_PATH}.memories_personal"

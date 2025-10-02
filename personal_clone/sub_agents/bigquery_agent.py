@@ -16,7 +16,7 @@ from ..data import (
     table_data,
 )
 from ..sub_agents.google_search_agent import create_google_search_agent
-from ..tools.bigquery_tools import (mel_bigquery_toolset)
+from ..tools.bigquery_tools import mel_bigquery_toolset
 
 
 def before_bq_callback(
