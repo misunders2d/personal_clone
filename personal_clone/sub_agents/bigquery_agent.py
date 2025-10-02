@@ -27,16 +27,16 @@ from ..tools.bigquery_tools import (
     save_tool_output_to_artifact,
 )
 
-tool_config = BigQueryToolConfig(
-    write_mode=WriteMode.BLOCKED, max_query_result_rows=10000
-)
+if 'mel_tool_config' not in globals():
+    mel_tool_config = BigQueryToolConfig(
+        write_mode=WriteMode.BLOCKED, max_query_result_rows=10000
+    )
 
+    mel_credentials_config = BigQueryCredentialsConfig(credentials=credentials)
 
-credentials_config = BigQueryCredentialsConfig(credentials=credentials)
-
-# Instantiate a BigQuery toolset
-bigquery_toolset = BigQueryToolset(
-    credentials_config=credentials_config, bigquery_tool_config=tool_config
+    # Instantiate a BigQuery toolset
+    mel_bigquery_toolset = BigQueryToolset(
+        credentials_config=mel_credentials_config, bigquery_tool_config=mel_tool_config
 )
 
 
@@ -146,7 +146,7 @@ def create_bigquery_agent():
         ),
         instruction=create_bq_agent_instruction(),
         tools=[
-            bigquery_toolset,
+            mel_bigquery_toolset,
             AgentTool(
                 agent=create_google_search_agent(name="google_search_for_bq_agent")
             ),

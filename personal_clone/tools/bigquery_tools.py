@@ -19,14 +19,15 @@ from google.genai.types import Part
 bigquery_service_account_info = json.loads(config.MELL_GCP_SERVICE_ACCOUNT_INFO)
 
 # set google application credentials to use BigQuery tools
-with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_json:
-    temp_json.write(config.MELL_GCP_SERVICE_ACCOUNT_INFO)
-    temp_json.flush()
-    MELL_GCP_SERVICE_ACCOUNT_INFO = json.load(open(temp_json.name))
+if 'mel_credentials' not in globals():
+    with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_json:
+        temp_json.write(config.MELL_GCP_SERVICE_ACCOUNT_INFO)
+        temp_json.flush()
+        MELL_GCP_SERVICE_ACCOUNT_INFO = json.load(open(temp_json.name))
 
-credentials = service_account.Credentials.from_service_account_info(
-    MELL_GCP_SERVICE_ACCOUNT_INFO
-)
+    mel_credentials = service_account.Credentials.from_service_account_info(
+        MELL_GCP_SERVICE_ACCOUNT_INFO
+    )
 
 
 def normalize_columns(df):
@@ -247,7 +248,7 @@ async def load_artifact_to_temp_bq(tool_context: ToolContext, filename: str) -> 
     df = normalize_columns(df)
 
     with bigquery.Client(
-        credentials=credentials, project=credentials.project_id
+        credentials=mel_credentials, project=mel_credentials.project_id
     ) as client:
         try:
             # Create unique temp table name
