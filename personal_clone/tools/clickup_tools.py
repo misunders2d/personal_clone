@@ -1,10 +1,7 @@
 import requests
-from google.adk.tools.base_toolset import BaseToolset
-from google.adk.tools import FunctionTool, ToolContext
-from google.adk.agents.readonly_context import ReadonlyContext
+from google.adk.tools import ToolContext
 
 from typing import List, Optional
-import asyncio
 from datetime import datetime, timedelta, timezone
 
 from .. import config
@@ -34,6 +31,7 @@ def get_clickup_user(tool_context: ToolContext):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+
 def get_clickup_user_by_email(email: str):
     """
     Retrieve a ClickUp user object.
@@ -51,7 +49,6 @@ def get_clickup_user_by_email(email: str):
                     return member.get("user")
     except Exception as e:
         return {"status": "error", "message": str(e)}
-
 
 
 def list_teams(tool_context: ToolContext):
@@ -118,14 +115,18 @@ def list_lists(folder_id: str):
 
 
 def list_tasks_for_user(
-    tool_context: ToolContext, team_id: str, status: Optional[str] = None, due: Optional[str] = None
+    tool_context: ToolContext,
+    team_id: str,
+    list_id: Optional[str] = None,
+    status: Optional[str] = None,
+    due: Optional[str] = None,
 ):
     """
-    List all tasks assigned to a specific user across a team,
-    with optional filters for status and due date.
+    List tasks assigned to a specific user, with filters for list, status, and due date.
 
     Args:
-        team_id (str): The ClickUp team ID. Use `list_teams` to get the team ID.
+        team_id (str): The ClickUp team ID (required for team-level queries). Use `list_teams` to get the team ID.
+        list_id (Optional[str]): The ClickUp list ID. If provided, only tasks from this list are returned. Use `list_lists` to get the list ID.
         status (Optional[str]): Task status filter ("open", "closed", or a specific status name).
         due (Optional[str]): Due date filter ("today", "tomorrow", "week", "overdue").
 
@@ -144,18 +145,16 @@ def list_tasks_for_user(
         "subtasks": "true",
     }
 
-    # Handle status filter
+    # Status filter
     if status:
         if status.lower() in ["open", "closed"]:
             params["statuses[]"] = status.lower()
         else:
-            params["statuses[]"] = status  # custom ClickUp status name
+            params["statuses[]"] = status  # custom status name
 
-    # Handle due date filter
+    # Due date filter
     now = datetime.now(timezone.utc)
-    start_ts = None
-    end_ts = None
-
+    start_ts, end_ts = None, None
     if due:
         due = due.lower()
         if due == "today":
@@ -196,8 +195,12 @@ def list_tasks_for_user(
     if end_ts:
         params["due_date_lt"] = end_ts
 
-    # Query API
-    url = f"{API_BASE_URL}/team/{team_id}/task"
+    # Choose endpoint: list-specific or team-wide
+    if list_id:
+        url = f"{API_BASE_URL}/list/{list_id}/task"
+    else:
+        url = f"{API_BASE_URL}/team/{team_id}/task"
+
     resp = requests.get(url, headers=HEADERS, params=params)
     resp.raise_for_status()
     return resp.json().get("tasks", [])
@@ -257,40 +260,13 @@ def get_task_link(task_id: str) -> str:
     return f"https://app.clickup.com/t/{task_id}"
 
 
-# class ClickupToolset(BaseToolset):
-#     name = ("clickup_tools",)
-#     description = ("A set of tools for interacting with the ClickUp API.",)
-
-#     def __init__(self, prefix: str = "clickup_"):
-#         self.prefix = prefix
-#         self.get_user_by_email = FunctionTool(func=get_user_by_email)
-#         self.list_teams = FunctionTool(func=list_teams)
-#         self.list_spaces = FunctionTool(func=list_spaces)
-#         self.list_folders = FunctionTool(func=list_folders)
-#         self.list_lists = FunctionTool(func=list_lists)
-#         self.create_task = FunctionTool(func=create_task)
-#         self.get_task_link = FunctionTool(func=get_task_link)
-#         self.list_tasks_for_user = FunctionTool(func=list_tasks_for_user)
-
-#     async def get_tools( #type: ignore
-#         self, readonly_context: Optional[ReadonlyContext] = None
-#     ) -> List[FunctionTool]:
-#         tools_to_return = [
-#             self.get_user_by_email,
-#             self.list_teams,
-#             self.list_spaces,
-#             self.list_folders,
-#             self.list_lists,
-#             self.create_task,
-#             self.get_task_link,
-#             self.list_tasks_for_user,
-#         ]
-#         return tools_to_return
-
-#     async def close(self) -> None:
-#         await asyncio.sleep(0)
-
-
-# def create_clickup_toolset():
-#     clickup_toolset = ClickupToolset()
-#     return clickup_toolset
+clickup_toolset = [
+    get_clickup_user,
+    list_teams,
+    list_spaces,
+    list_folders,
+    list_lists,
+    list_tasks_for_user,
+    create_task,
+    get_task_link,
+]

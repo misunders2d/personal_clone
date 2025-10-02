@@ -1,6 +1,6 @@
 from google.adk import Agent
 
-from ..tools.clickup_tools import get_clickup_user
+from ..tools.clickup_tools import clickup_toolset
 
 
 def create_clickup_agent(name="clickup_agent"):
@@ -11,6 +11,6 @@ def create_clickup_agent(name="clickup_agent"):
         model="gemini-2.0-flash-lite",
         instruction="""Use the tools available to you to answer user questions and manage tasks in ClickUp.
         """,
-        tools=[get_clickup_user],
+        tools=clickup_toolset,
     )
     return clickup_agent
