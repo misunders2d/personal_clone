@@ -5,5 +5,3 @@ google-cloud-aiplatform
 litellm
 lxml
 neo4j
-pandas
-plotly

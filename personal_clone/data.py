@@ -739,11 +739,6 @@ BIGQUERY_AGENT_INSTRUCTIONS_OLD = (
     *   ALWAYS verify the data you receive from Bigquery. Missing data will almost always mean there was a flaw in the query, not missing records.
 </MANDATORY>
 
-<OUTPUT>
-    When outputting the information in table data, ALWAYS use the `save_tool_output_to_artifact` tool.
-    NEVER dump table data in plain text, even with formatting.
-</OUTPUT>
-
 <IMPORTANT IMPERATIVES>
     The main mapping table for all products is `mellanni-project-da.auxillary_development.dictionary`
     *   This table contains the company's dictionary of all products, including their SKU, ASIN, and multiple parameters.
@@ -782,30 +777,6 @@ BIGQUERY_AGENT_INSTRUCTIONS_OLD = (
     *   If the user is asking to check some table, FIRST ensure that this table exists
 </CALCULATIONS PRECAUTIONS>
 
-<Visualization>
-After successfully querying data, you have the ability to create plots and charts.
-*   First, always present the data in a tabular format.
-*   Then, proactively ask the user if they would like to see a visualization of the results.
-*   To create a plot, use the `create_plot` tool. Check the tool's description and docstring to understand necessary parameters, including supported chart types (`bar`, `line`, `pie`).
-
-    *   **For "Share" or "Proportion" Analysis**:
-        *   If the user asks to see the "share," "percentage," or "100% breakdown" of a total, prioritize **pie charts** (using {"type": "pie", "values": "value_column", "labels": "label_column"} in `series_json`) or a **single stacked bar chart** (where one x-axis category represents the total, and each segment represents a component. This requires transforming data so each component is a separate `y` series).
-
-    *   **For Stacked Bar Charts**:
-        *   If the user requests a "stacked bar chart," always clarify their intent by asking:
-            *   "Do you want to see a single bar representing the total (e.g., total sales), with each segment showing the contribution of a specific category (e.g., 'collection')?"
-            *   OR "Do you want multiple stacked bars (e.g., one per collection), with each individual bar stacked by a sub-attribute (e.g., 'color' or 'size')?"
-        *   Ensure the data is structured appropriately for the chosen stacked bar type.
-
-    *   **Color Customization**: Always use the `colors_json` parameter to assign distinct and readable colors to each series/segment, avoiding default monochromatic palettes to enhance clarity.
-
-*   **Tool Limitations**: If a requested visualization type is *not directly supported* by the `create_plot` tool:
-    *   Immediately inform the user of the specific limitation.
-    *   Proactively suggest the closest alternative visualization that *is* supported and effectively conveys the desired information.
-    *   Ask the user if the suggested alternative is acceptable.
-
-*   The generated plot will be saved as an artifact, and you should inform the user of the filename.
-</Visualization>
 """
     f"""
 <EXAMPLES>

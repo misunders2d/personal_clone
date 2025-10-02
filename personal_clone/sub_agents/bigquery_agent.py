@@ -16,12 +16,7 @@ from ..data import (
     table_data,
 )
 from ..sub_agents.google_search_agent import create_google_search_agent
-from ..tools.bigquery_tools import (
-    mel_bigquery_toolset,
-    create_plot,
-    load_artifact_to_temp_bq,
-    save_tool_output_to_artifact,
-)
+from ..tools.bigquery_tools import (mel_bigquery_toolset)
 
 
 def before_bq_callback(
@@ -101,24 +96,6 @@ def before_bq_callback(
     return None
 
 
-def after_table_save_callback(
-    tool: BaseTool, args: Dict[str, Any], tool_context: ToolContext, tool_response: Dict
-) -> Optional[Dict]:
-    """Checks if the table view was presented to prevent the agent from duplicating the output"""
-
-    tool_name = tool.name
-
-    if (
-        tool_name == "save_tool_output_to_artifact"
-        and tool_response["status"] == "SUCCESS"
-    ):
-        return {
-            "WARNING": "The table data has been presented to the user in downloadable format, DON'T SHOW THIS DATA TO THE USER!!!"
-        }
-
-    return None
-
-
 # Agent Definition
 def create_bigquery_agent():
     bigquery_agent = Agent(
@@ -136,9 +113,6 @@ def create_bigquery_agent():
             ),
             get_current_datetime,
             get_table_data,
-            create_plot,
-            load_artifact_to_temp_bq,
-            save_tool_output_to_artifact,
         ],
         planner=BuiltInPlanner(
             thinking_config=types.ThinkingConfig(
@@ -146,6 +120,5 @@ def create_bigquery_agent():
             )
         ),
         before_tool_callback=before_bq_callback,
-        after_tool_callback=after_table_save_callback,
     )
     return bigquery_agent
