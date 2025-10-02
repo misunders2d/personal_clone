@@ -1,6 +1,7 @@
 from google.adk.agents import Agent
 from google.adk.tools.bigquery import BigQueryCredentialsConfig
 from google.adk.tools.bigquery import BigQueryToolset
+from google.adk.tools import AgentTool
 from google.adk.tools.base_tool import BaseTool
 from google.adk.tools.tool_context import ToolContext
 from google.adk.tools.bigquery.config import BigQueryToolConfig
@@ -12,13 +13,13 @@ from typing import Optional, Dict, Any
 
 import re
 
-from data import (
-    BIGQUERY_AGENT_MODEL,
+from ..data import (
     get_current_datetime,
+    get_table_data,
     create_bq_agent_instruction,
     table_data,
 )
-from .gogle_search_agent import google_search_agent_tool
+from ..sub_agents.google_search_agent import create_google_search_agent
 from ..tools.bigquery_tools import (
     credentials,
     create_plot,
@@ -50,7 +51,8 @@ def before_bq_callback(
         "masao@mellanni.com",
         "neel@mellanni.com",
     ]
-    user = tool_context._invocation_context.user_id
+    user = tool_context.state.get("user_id")
+    # user = tool_context._invocation_context.user_id
     tool_name = tool.name
 
     tables_to_check = []
@@ -136,7 +138,7 @@ def after_table_save_callback(
 # Agent Definition
 def create_bigquery_agent():
     bigquery_agent = Agent(
-        model=BIGQUERY_AGENT_MODEL,
+        model="gemini-2.5-flash",
         name="bigquery_agent",
         description=(
             "Agent to answer questions about the company's business performance (sales, inventory, payments etc)."
@@ -145,8 +147,11 @@ def create_bigquery_agent():
         instruction=create_bq_agent_instruction(),
         tools=[
             bigquery_toolset,
-            google_search_agent_tool(name="bigquery_search_agent"),
+            AgentTool(
+                agent=create_google_search_agent(name="google_search_for_bq_agent")
+            ),
             get_current_datetime,
+            get_table_data,
             create_plot,
             load_artifact_to_temp_bq,
             save_tool_output_to_artifact,

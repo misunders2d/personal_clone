@@ -4,9 +4,9 @@ from google.adk.tools import google_search
 from ..callbacks.before_after_model import google_search_grounding
 
 
-def create_google_search_agent():
+def create_google_search_agent(name="google_search_agent"):
     google_search_agent = Agent(
-        name="google_search_agent",
+        name=name,
         description="An agent that performs Google searches to find relevant information on the web. Grounding data is stored in {google_search_grounding} state key.",
         model="gemini-2.0-flash-lite",
         instruction="""

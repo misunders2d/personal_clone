@@ -1,6 +1,5 @@
 import pandas as pd
 from google.cloud import bigquery
-from modules.gcloud_modules import normalize_columns
 import io
 from datetime import datetime, timedelta
 import uuid
@@ -8,7 +7,6 @@ from io import StringIO
 
 import tempfile
 from .. import config
-import os
 import json
 from google.oauth2 import service_account
 
@@ -26,7 +24,46 @@ with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_json:
     temp_json.flush()
     MELL_GCP_SERVICE_ACCOUNT_INFO = json.load(open(temp_json.name))
 
-credentials = service_account.Credentials.from_service_account_info(MELL_GCP_SERVICE_ACCOUNT_INFO)
+credentials = service_account.Credentials.from_service_account_info(
+    MELL_GCP_SERVICE_ACCOUNT_INFO
+)
+
+
+def normalize_columns(df):
+    import re
+
+    pattern = "^([0-9].)"
+    new_cols = [
+        x.strip()
+        .replace(" ", "_")
+        .replace("-", "_")
+        .replace("?", "")
+        .replace(",", "")
+        .replace(".", "")
+        .replace("/", "_")
+        .replace("(", "")
+        .replace(")", "")
+        .lower()
+        for x in df.columns
+    ]
+    new_cols = [
+        (
+            re.sub(pattern, "_" + re.findall(pattern, x)[0], x)
+            if re.findall(pattern, x)
+            else x
+        )
+        for x in new_cols
+    ]
+    df.columns = new_cols
+    date_cols = [x for x in df.columns if "date" in x.lower()]
+    if date_cols != []:
+        df[date_cols] = df[date_cols].astype("str")
+        df = df.sort_values(date_cols, ascending=True)
+    float_cols = [x for x in df.select_dtypes("float64").columns]
+    int_cols = [x for x in df.select_dtypes("int64").columns]
+    df[float_cols] = df[float_cols].astype("float32")
+    df[int_cols] = df[int_cols].astype("int32")
+    return df
 
 
 async def create_plot(

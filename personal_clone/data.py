@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from tools import bigquery_examples
+from .tools import bigquery_examples
 
 
 def get_current_datetime() -> dict:
@@ -11,6 +11,16 @@ def get_current_datetime() -> dict:
             dict: a status and payload with current datetime
     """
     return {"status": "SUCCESS", "payload": datetime.now()}
+
+
+def get_table_data() -> dict:
+    """
+    A helper function used to retrieve information about available datasets and tables in the personal_clone project.
+        Args: None
+        Returns:
+            dict: a status and payload with datasets and tables information
+    """
+    return {"status": "SUCCESS", "payload": table_data}
 
 
 table_data = {
@@ -703,20 +713,16 @@ table_data = {
 }
 
 
-today = get_current_datetime()["payload"].date()
-
 BIGQUERY_AGENT_INSTRUCTIONS_OLD = (
-    f"""
+    """
 <GENERAL INFORMATION>
     You are a data science agent with access to several BigQuery tools.
     Make use of those tools to answer the user's questions.
     The main datasets you are working with are `mellanni-project-da.reports` and `mellanni-project-da.auxillary_development`.
-    Today's date is {today.strftime("%YYY-%mm-%dd")}.
+    The current date and time are store in {current_datetime} key.
 </GENERAL INFORMATION>
-"""
-    """
 <CORE PRINCIPLES>
-    The list and description of the company data structure in bigquery tables is saved in session state key: {table_data}. Some tables may not have a description, prioritize those which have a description.
+    The list and description of the company data structure in bigquery tables can be obtained using `get_table_data` tool. Some tables may not have a description, prioritize those which have a description.
 
     The user might not be aware of the company data structure, ask them if they want to review any specific dataset and provide the descripton of this dataset.
 
@@ -807,7 +813,6 @@ After successfully querying data, you have the ability to create plots and chart
         - {bigquery_examples.average_sales_amazon}
 
 </EXAMPLES>
-
 """
 )
 

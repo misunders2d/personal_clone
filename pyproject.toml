@@ -12,4 +12,6 @@ dependencies = [
     "litellm>=1.77.5",
     "lxml>=6.0.2",
     "neo4j>=6.0.0",
+    "pandas>=2.3.3",
+    "plotly>=6.3.0",
 ]
