@@ -1,11 +1,7 @@
 from google.adk.agents import Agent
-from google.adk.tools.bigquery import BigQueryCredentialsConfig
-from google.adk.tools.bigquery import BigQueryToolset
 from google.adk.tools import AgentTool
 from google.adk.tools.base_tool import BaseTool
 from google.adk.tools.tool_context import ToolContext
-from google.adk.tools.bigquery.config import BigQueryToolConfig
-from google.adk.tools.bigquery.config import WriteMode
 from google.adk.planners import BuiltInPlanner
 from google.genai import types
 
@@ -21,22 +17,10 @@ from ..data import (
 )
 from ..sub_agents.google_search_agent import create_google_search_agent
 from ..tools.bigquery_tools import (
-    credentials,
+    mel_bigquery_toolset,
     create_plot,
     load_artifact_to_temp_bq,
     save_tool_output_to_artifact,
-)
-
-if 'mel_tool_config' not in globals():
-    mel_tool_config = BigQueryToolConfig(
-        write_mode=WriteMode.BLOCKED, max_query_result_rows=10000
-    )
-
-    mel_credentials_config = BigQueryCredentialsConfig(credentials=credentials)
-
-    # Instantiate a BigQuery toolset
-    mel_bigquery_toolset = BigQueryToolset(
-        credentials_config=mel_credentials_config, bigquery_tool_config=mel_tool_config
 )
 
 
