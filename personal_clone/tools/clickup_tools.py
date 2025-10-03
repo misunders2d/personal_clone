@@ -11,7 +11,7 @@ API_BASE_URL = "https://api.clickup.com/api/v2"
 HEADERS = {"Authorization": config.CLICKUP_API_TOKEN}
 
 
-def create_timestamp_ms_from_local(year, month, day, hour, minute, utc_offset_hours):
+def create_timestamp_ms_from_local(year: int, month: int, day: int, hour: int, minute: int, utc_offset_hours: int) -> int:
     """
         Creates a Unix timestamp in milliseconds for a given local date, time, and UTC offset.
         This function does not automatically handle daylight saving time changes.
