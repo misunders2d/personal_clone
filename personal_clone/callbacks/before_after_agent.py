@@ -38,6 +38,8 @@ def state_setter(
             "final_answer": None,
             "grounding_medadata": {"grounding_chunks": [], "grounding_supports": []},
         }
+    if "clickup_user_info" not in current_state:
+        callback_context.state["clickup_user_info"] = {}
     callback_context.state["current_datetime"] = get_current_datetime()
 
 

@@ -9,7 +9,12 @@ def create_clickup_agent(name="clickup_agent"):
         name=name,
         description="An agent that manages ClickUp tasks. All user requests relating to clickup should be handled by this agent.",
         model="gemini-2.0-flash-lite",
-        instruction="""Use the tools available to you to answer user questions and manage tasks in ClickUp.
+        instruction="""
+        Use the tools available to you to answer user questions and manage tasks in ClickUp. The user info is stored in {clickup_user_info} session key.
+        The user's email is stored in {user_id} session key.
+        Always use the `get_clickup_user` tool if you are missing any crucial ClickUp information.
+        Don't bother the user with technical questions about ClickUp, use the tools to get the information you need.
+        Only engage the user if you are missing information that you cannot get from ClickUp directly.
         """,
         tools=clickup_toolset,
     )
