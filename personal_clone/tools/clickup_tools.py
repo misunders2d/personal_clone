@@ -11,24 +11,26 @@ API_BASE_URL = "https://api.clickup.com/api/v2"
 HEADERS = {"Authorization": config.CLICKUP_API_TOKEN}
 
 
-def create_timestamp_ms_from_local(year: int, month: int, day: int, hour: int, minute: int, utc_offset_hours: int) -> int:
+def create_timestamp_ms_from_local(
+    year: int, month: int, day: int, hour: int, minute: int, utc_offset_hours: int
+) -> int:
     """
-        Creates a Unix timestamp in milliseconds for a given local date, time, and UTC offset.
-        This function does not automatically handle daylight saving time changes.
-        The 'utc_offset_hours' must be provided and should reflect the correct offset
-        (including any daylight saving adjustments if applicable) for the given datetime.
+    Creates a Unix timestamp in milliseconds for a given local date, time, and UTC offset.
+    This function does not automatically handle daylight saving time changes.
+    The 'utc_offset_hours' must be provided and should reflect the correct offset
+    (including any daylight saving adjustments if applicable) for the given datetime.
 
-        Args:
-            year (int): The year (e.g., 2025).
-            month (int): The month (1-12).
-            day (int): The day of the month (1-31).
-            hour (int): The hour (0-23).
-            minute (int): The minute (0-59).
-            utc_offset_hours (int): The fixed offset from UTC in hours.
-                                    (e.g., +3 for UTC+3, -5 for UTC-5).
+    Args:
+        year (int): The year (e.g., 2025).
+        month (int): The month (1-12).
+        day (int): The day of the month (1-31).
+        hour (int): The hour (0-23).
+        minute (int): The minute (0-59).
+        utc_offset_hours (int): The fixed offset from UTC in hours.
+                                (e.g., +3 for UTC+3, -5 for UTC-5).
 
-        Returns:
-            int: The Unix timestamp in milliseconds.
+    Returns:
+        int: The Unix timestamp in milliseconds.
     """
 
     local_dt = datetime(year, month, day, hour, minute)
@@ -58,22 +60,32 @@ def get_clickup_user(tool_context: ToolContext):
 
     email = tool_context.state.get("user_id", "")
 
-    user_info = {"user_email":email, "user_teams": [], "user_spaces": []}
+    user_info = {"user_email": email, "user_teams": [], "user_spaces": []}
 
     try:
         teams = resp.json().get("teams", [])
         for team in teams:
-            team_info = {'id': team['id'], 'name': team['name']}
-            member_info = [{"id":x['user']['id'], "username":x['user']['username'], "email":x['user']['email']} for x in team.get("members", [])]
-            team_info['members'] = member_info
-            user_info['user_teams'].append(team_info)
+            team_info = {"id": team["id"], "name": team["name"]}
+            member_info = [
+                {
+                    "id": x["user"]["id"],
+                    "username": x["user"]["username"],
+                    "email": x["user"]["email"],
+                }
+                for x in team.get("members", [])
+            ]
+            team_info["members"] = member_info
+            user_info["user_teams"].append(team_info)
             space_url = f"{API_BASE_URL}/team/{team['id']}/space"
             space_response = requests.get(space_url, headers=HEADERS)
             space_response.raise_for_status()
             spaces = space_response.json().get("spaces", [])
-            spaces_dict = [{'id': x['id'], 'name': x['name'], 'statuses':x['statuses']} for x in spaces]
-            user_info['user_spaces'].append(spaces_dict)
-        tool_context.state['clickup_user_info'] = user_info
+            spaces_dict = [
+                {"id": x["id"], "name": x["name"], "statuses": x["statuses"]}
+                for x in spaces
+            ]
+            user_info["user_spaces"].append(spaces_dict)
+        tool_context.state["clickup_user_info"] = user_info
         return user_info
 
     except Exception as e:
@@ -115,10 +127,10 @@ def list_folders_and_lists(space_id: str):
     try:
         resp = requests.get(folder_url, headers=HEADERS)
         resp.raise_for_status()
-        result['folders'] = resp.json().get("folders", [])
+        result["folders"] = resp.json().get("folders", [])
         resp = requests.get(list_url, headers=HEADERS)
         resp.raise_for_status()
-        result['lists'] = resp.json().get("lists", [])
+        result["lists"] = resp.json().get("lists", [])
         return result
     except Exception as e:
         return {"status": "error", "message": str(e)}
@@ -140,8 +152,7 @@ def list_tasks_for_user(
         list_id (Optional[str]): Restrict results to a specific list ID. If None, searches across the entire team.
         folder_id (Optional[str]): Restrict results to a specific folder ID. If None, searches across the entire team.
         status (Optional[str]): Task status filter:
-            - "open" or "closed" → maps to ClickUp's `include_closed` param.
-            - Any other value is treated as an exact status name (e.g. "To do", "In progress").
+            - "open" or "done" → maps to ClickUp's `include_closed` param.
         due (Optional[str]): Due date filter:
             - "today" → tasks due before midnight today.
             - "tomorrow" → tasks due tomorrow.
@@ -157,23 +168,35 @@ def list_tasks_for_user(
     """
     email = tool_context.state.get("user_id", "")
     if not email:
-        return {'status': 'failed', 'error': "ToolContext.state['user_id'] is missing (expected user email)."}
+        return {
+            "status": "failed",
+            "error": "ToolContext.state['user_id'] is missing (expected user email).",
+        }
 
     user_info = get_clickup_user(tool_context)
     if not user_info or "user_teams" not in user_info:
-        return {'status': 'failed', 'error': "Could not retrieve user/team info from ClickUp."}
+        return {
+            "status": "failed",
+            "error": "Could not retrieve user/team info from ClickUp.",
+        }
 
     # Locate the team
-    target_team = next((t for t in user_info["user_teams"] if t["id"] == team_id), None) # type: ignore
+    target_team = next((t for t in user_info["user_teams"] if t["id"] == team_id), None)  # type: ignore
     if not target_team:
-        return {'status': 'failed', 'error': f"Team with ID {team_id} not found for this user."}
+        return {
+            "status": "failed",
+            "error": f"Team with ID {team_id} not found for this user.",
+        }
 
     # Locate the user in that team
-    member = next((m for m in target_team["members"] if m["email"] == email), None) # type: ignore
+    member = next((m for m in target_team["members"] if m["email"] == email), None)  # type: ignore
     if not member:
-        return {'status': 'failed', 'error': f"User {email} is not a member of team {team_id}."}
+        return {
+            "status": "failed",
+            "error": f"User {email} is not a member of team {team_id}.",
+        }
 
-    user_id = member["id"] # type: ignore
+    user_id = member["id"]  # type: ignore
 
     params = {
         "assignees[]": user_id,
@@ -198,11 +221,32 @@ def list_tasks_for_user(
     if due:
         due = due.lower()
         if due == "today":
-            start_ts = int(datetime(now.year, now.month, now.day, tzinfo=timezone.utc).timestamp() * 1000)
-            end_ts = int((datetime(now.year, now.month, now.day, tzinfo=timezone.utc) + timedelta(days=1)).timestamp() * 1000)
+            start_ts = int(
+                datetime(now.year, now.month, now.day, tzinfo=timezone.utc).timestamp()
+                * 1000
+            )
+            end_ts = int(
+                (
+                    datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+                    + timedelta(days=1)
+                ).timestamp()
+                * 1000
+            )
         elif due == "tomorrow":
-            start_ts = int((datetime(now.year, now.month, now.day, tzinfo=timezone.utc) + timedelta(days=1)).timestamp() * 1000)
-            end_ts = int((datetime(now.year, now.month, now.day, tzinfo=timezone.utc) + timedelta(days=2)).timestamp() * 1000)
+            start_ts = int(
+                (
+                    datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+                    + timedelta(days=1)
+                ).timestamp()
+                * 1000
+            )
+            end_ts = int(
+                (
+                    datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+                    + timedelta(days=2)
+                ).timestamp()
+                * 1000
+            )
         elif due in ["week", "next week"]:
             start_ts = int(now.timestamp() * 1000)
             end_ts = int((now + timedelta(days=7)).timestamp() * 1000)
@@ -222,9 +266,62 @@ def list_tasks_for_user(
     else:
         url = f"{API_BASE_URL}/team/{team_id}/task"
 
-    resp = requests.get(url, headers=HEADERS, params=params)
+    all_tasks = []
+    page = 0
+    while True:
+        params["page"] = page
+        resp = requests.get(url, headers=HEADERS, params=params)
+        resp.raise_for_status()
+        data = resp.json()
+        tasks_page = data.get("tasks", [])
+        all_tasks.extend(tasks_page)
+
+        if data.get("last_page", False) or not tasks_page:
+            break
+        page += 1
+
+    clean_tasks = [
+        {
+            "id": x.get("id"),
+            "name": x.get("name"),
+            "text_content": x.get("text_content"),
+            "description": x.get("description"),
+            "status": x.get("status", {}).get("status", ""),
+            "status_type": x.get("status", {}).get("type", ""),
+            "date_created": x.get("date_created"),
+            "creator": x.get("creator"),
+            "assignees": x.get("assignees", []),
+            "due_date": x.get("due_date"),
+            "url": x.get("url"),
+        }
+        for x in all_tasks
+    ]
+    if status and status.lower() == "open":
+        return [
+            task
+            for task in clean_tasks
+            if task.get("status_type", "") in ("open", "custom")
+        ]
+    elif status and status.lower() == "closed":
+        return [task for task in clean_tasks if task.get("status_type", "") == "done"]
+    else:
+        return clean_tasks
+
+
+def get_task(task_id: str) -> dict:
+    """
+    Get details for a specific task by its ID.
+
+    Args:
+        task_id (str): The ID of the task (e.g., 'abc-123').
+
+    Returns:
+        dict: The full task object from the ClickUp API.
+    """
+    url = f"{API_BASE_URL}/task/{task_id}"
+    resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
-    return resp.json().get("tasks", [])
+    return resp.json()
 
 
 def create_task(
@@ -286,6 +383,7 @@ clickup_toolset = [
     get_clickup_user,
     list_folders_and_lists,
     list_tasks_for_user,
+    get_task,
     create_task,
     get_task_link,
 ]
