@@ -328,8 +328,8 @@ def create_task(
     list_id: str,
     name: str,
     description: str,
+    due_date: int,
     assignees: Optional[List[str]] = None,
-    due_date: Optional[int] = None,
 ):
     """
     Create a task in a given list.
@@ -338,8 +338,8 @@ def create_task(
         list_id (str): The ID of the list where the task should be created. Use `list_lists` to get the list ID.
         name (str): The name/title of the task.
         description (str): The task description.
+        due_date (int): The due date timestamp in milliseconds (epoch).
         assignees (Optional[List[str]]): A list of user emails to assign the task to.
-        due_date (Optional[int]): The due date timestamp in milliseconds (epoch).
 
     Returns:
         Dict[str, Any]: The created task object as returned by the ClickUp API.
