@@ -362,7 +362,8 @@ def create_task(
     url = f"{API_BASE_URL}/list/{list_id}/task"
     resp = requests.post(url, headers=HEADERS, json=payload)
     resp.raise_for_status()
-    return resp.json()
+    result = resp.json()
+    return {"status": "success", "task_url": result["url"], "task_id": result["id"]}
 
 
 def get_task_link(task_id: str) -> str:

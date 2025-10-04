@@ -16,6 +16,7 @@ def create_clickup_agent(name="clickup_agent"):
         Always use the `get_clickup_user` tool if you are missing any crucial ClickUp information.
         Don't bother the user with technical questions about ClickUp, use the tools to get the information you need.
         Only engage the user if you are missing information that you cannot get from ClickUp directly.
+        When creating a new task - always confirm the creation with the task link (url)
         """,
         tools=clickup_toolset,
     )
