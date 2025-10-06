@@ -2,7 +2,7 @@ from google.adk.agents import Agent
 from google.adk.tools import AgentTool
 from google.adk.tools.base_tool import BaseTool
 from google.adk.tools.tool_context import ToolContext
-from google.adk.planners import BuiltInPlanner
+from google.adk.planners import BuiltInPlanner, PlanReActPlanner
 from google.genai import types
 
 from typing import Optional, Dict, Any
@@ -17,6 +17,15 @@ from ..data import (
 )
 from ..sub_agents.google_search_agent import create_google_search_agent
 from ..tools.bigquery_tools import mel_bigquery_toolset
+from .. import config
+
+PLANNER = (
+    BuiltInPlanner(
+        thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
+    )
+    if isinstance(config.GOOGLE_FLASH_MODEL, str)
+    else PlanReActPlanner()
+)
 
 
 def before_bq_callback(
@@ -99,7 +108,7 @@ def before_bq_callback(
 # Agent Definition
 def create_bigquery_agent():
     bigquery_agent = Agent(
-        model="gemini-2.5-flash",
+        model=config.FLASH_MODEL,
         name="bigquery_agent",
         description=(
             "Agent to answer questions about the company's business performance (sales, inventory, payments etc)."
@@ -114,11 +123,7 @@ def create_bigquery_agent():
             get_current_datetime,
             get_table_data,
         ],
-        planner=BuiltInPlanner(
-            thinking_config=types.ThinkingConfig(
-                include_thoughts=True, thinking_budget=-1
-            )
-        ),
+        planner=PLANNER,
         before_tool_callback=before_bq_callback,
     )
     return bigquery_agent

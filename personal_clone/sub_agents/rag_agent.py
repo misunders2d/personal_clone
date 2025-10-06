@@ -251,6 +251,7 @@ def rag_query(query: str, corpus_name: str) -> dict:
 
 rag_agent = Agent(
     name="rag_agent",
+    model = config.GOOGLE_FLASH_MODEL,
     description="A knowledge agent that uses a RAG corpus to store and retrieve information from documents.",
     instruction="You are a knowledge agent that uses a RAG corpus to store and retrieve information from documents.",
     tools=[

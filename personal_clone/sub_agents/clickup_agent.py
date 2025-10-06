@@ -1,6 +1,17 @@
 from google.adk import Agent
+from google.adk.planners import BuiltInPlanner, PlanReActPlanner
+from google.genai import types
 
 from ..tools.clickup_tools import clickup_toolset
+from .. import config
+
+PLANNER = (
+    BuiltInPlanner(
+        thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
+    )
+    if isinstance(config.FLASH_MODEL, str)
+    else PlanReActPlanner()
+)
 
 
 def create_clickup_agent(name="clickup_agent"):
@@ -8,7 +19,7 @@ def create_clickup_agent(name="clickup_agent"):
     clickup_agent = Agent(
         name=name,
         description="An agent that manages ClickUp tasks. All user requests relating to clickup should be handled by this agent.",
-        model="gemini-2.0-flash-lite",
+        model=config.FLASH_MODEL,
         instruction="""
         Use the tools available to you to answer user questions and manage tasks in ClickUp. The user info is stored in {clickup_user_info} session key.
         The user's email is stored in {user_id} session key.
@@ -19,5 +30,6 @@ def create_clickup_agent(name="clickup_agent"):
         When creating a new task - always confirm the creation with the task link (url)
         """,
         tools=clickup_toolset,
+        planner = PLANNER
     )
     return clickup_agent

@@ -12,7 +12,7 @@ def create_vertex_search_agent(
 ) -> Agent:
     vertex_search_agent = Agent(
         name=name,
-        model="gemini-2.0-flash",
+        model=config.GOOGLE_FLASH_MODEL,
         description="A Vertex AI vector search agent with access to document datastores, containing necessary information.",
         instruction="""
         Answer user questions and fetch relevant data based on user's input using Vertex AI Search to find information from internal documents and notebooks.

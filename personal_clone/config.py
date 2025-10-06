@@ -1,3 +1,4 @@
+from google.adk.models.lite_llm import LiteLlm
 from google.oauth2 import service_account
 import google.auth
 import os
@@ -31,6 +32,32 @@ EMBEDDING_MODEL = f"{DATASET_PATH}.embedding_model"
 
 
 SUPERUSERS = os.getenv("SUPERUSERS", "").split(",")
+
+
+# MODELS MANAGEMENT
+GLOBAL_MODEL_PROVIDER = "OpenAI"
+# OPENAI MODELS
+OPENAI_PRO_MODEL = LiteLlm(model="openai/gpt-5", api_key=OPENAI_API_KEY)  # 1.25 / 10
+OPENAI_FLASH_MODEL = LiteLlm(
+    model="openai/gpt-5-mini", api_key=OPENAI_API_KEY
+)  # 0.25 / 2.00
+OPENAI_LITE_MODEL = LiteLlm(
+    model="openai/gpt-5-nano", api_key=OPENAI_API_KEY
+)  # 0.05 / 0.40
+
+# GOOGLE MODLES
+GOOGLE_PRO_MODEL = "gemini-2.5-pro"
+GOOGLE_FLASH_MODEL = "gemini-2.5-flash"
+GOOGLE_LITE_MODEL = "gemini-2.5-flash-lite"
+
+if GLOBAL_MODEL_PROVIDER == "Google":
+    PRO_MODEL = GOOGLE_PRO_MODEL
+    FLASH_MODEL = GOOGLE_FLASH_MODEL
+    LITE_MODEL = GOOGLE_LITE_MODEL
+elif GLOBAL_MODEL_PROVIDER == "OpenAI":
+    PRO_MODEL = OPENAI_PRO_MODEL
+    FLASH_MODEL = OPENAI_FLASH_MODEL
+    LITE_MODEL = OPENAI_LITE_MODEL
 
 
 # --- Auth ---
