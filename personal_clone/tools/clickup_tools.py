@@ -1,7 +1,7 @@
 import requests
 from google.adk.tools import ToolContext
 
-from typing import List, Optional
+from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta, timezone
 
 from .. import config
@@ -328,42 +328,55 @@ def create_task(
     list_id: str,
     name: str,
     description: str,
-    due_date: int,
+    due_date: Optional[int],
     assignees: Optional[List[str]] = None,
+    due_date_time: Optional[bool] = None,
 ):
     """
     Create a task in a given list.
 
     Args:
-        list_id (str): The ID of the list where the task should be created. Use `list_lists` to get the list ID.
+        list_id (str): The ID of the list where the task should be created.
         name (str): The name/title of the task.
         description (str): The task description.
-        due_date (int): The due date timestamp in milliseconds (epoch).
+        due_date (Optional[int]): Epoch ms (UTC). If None, no due date is set.
         assignees (Optional[List[str]]): A list of user emails to assign the task to.
-
+        due_date_time (Optional[bool]): If True, ClickUp will treat the due_date as including a time.
+            If False, it's an all-day date. If None, function auto-detects based on the epoch-ms:
+            non-zero time component -> True, otherwise False.
     Returns:
-        Dict[str, Any]: The created task object as returned by the ClickUp API.
+        Dict[str, Any]: The created task info as returned by ClickUp.
     """
-    assignee_ids = []
-    if assignees:
-        for email in assignees:
-            user = get_clickup_user_by_email(email)
-            if user:
-                assignee_ids.append(user["id"])
+    try:
+        assignee_ids = []
+        if assignees:
+            for email in assignees:
+                user = get_clickup_user_by_email(email)
+                if user:
+                    assignee_ids.append(user["id"])
 
-    payload = {
-        "name": name,
-        "description": description,
-        "assignees": assignee_ids,
-    }
-    if due_date:
-        payload["due_date"] = due_date
+        payload: Dict[str, Any] = {
+            "name": name,
+            "description": description,
+        }
+        if assignee_ids:
+            payload["assignees"] = assignee_ids
 
-    url = f"{API_BASE_URL}/list/{list_id}/task"
-    resp = requests.post(url, headers=HEADERS, json=payload)
-    resp.raise_for_status()
-    result = resp.json()
-    return {"status": "success", "task_url": result["url"], "task_id": result["id"]}
+        if due_date is not None:
+            payload["due_date"] = due_date
+            if due_date_time is None:
+                has_time = (due_date % 86_400_000) != 0
+                payload["due_date_time"] = bool(has_time)
+            else:
+                payload["due_date_time"] = bool(due_date_time)
+
+        url = f"{API_BASE_URL}/list/{list_id}/task"
+        resp = requests.post(url, headers=HEADERS, json=payload)
+        resp.raise_for_status()
+        result = resp.json()
+        return {"status": "success", "task_url": result["url"], "task_id": result["id"]}
+    except Exception as e:
+        return {"status": "ERROR", "error": str(e)}
 
 
 def get_task_link(task_id: str) -> str:
