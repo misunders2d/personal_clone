@@ -6,6 +6,7 @@ from typing import Literal
 
 from ..tools.search_tools import bigquery_toolset
 from ..callbacks.before_after_tool import before_memory_callback
+from ..callbacks.before_after_agent import personal_agents_checker
 
 from .. import config
 
@@ -232,6 +233,7 @@ def create_memory_agent(
         model=config.FLASH_MODEL,
         planner=PLANNER,
         tools=[bigquery_toolset],
+        before_agent_callback=personal_agents_checker if scope == "personal" else None,
         before_tool_callback=[before_memory_callback],
         output_key=output_key,
     )

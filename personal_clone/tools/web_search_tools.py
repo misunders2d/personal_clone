@@ -27,71 +27,82 @@ def scrape_web_page(url: str, timeout: float = 10.0) -> dict:
     }
     """
     headers = {"User-Agent": "Mozilla/5.0 (compatible; MyAgent/1.0)"}
-    resp = requests.get(url, headers=headers, timeout=timeout)
-    resp.raise_for_status()
-    html = resp.text
+    try:
+        resp = requests.get(url, headers=headers, timeout=timeout)
+        # resp.raise_for_status()
+        if resp.status_code == 200:
+            html = resp.text
 
-    soup = BeautifulSoup(html, "lxml")
-    title = soup.title.string.strip() if (soup.title and soup.title.string) else ""
+            soup = BeautifulSoup(html, "lxml")
+            title = soup.title.string.strip() if (soup.title and soup.title.string) else ""
 
-    # Collect all links
-    links = []
-    for a in soup.find_all("a", href=True):
-        href = a["href"].strip()  # type: ignore
-        abs_href = urljoin(url, href)
-        parsed = urlparse(abs_href)
-        if parsed.scheme in ("http", "https"):
-            links.append(abs_href)
+            # Collect all links
+            links = []
+            for a in soup.find_all("a", href=True):
+                href = a["href"].strip()  # type: ignore
+                abs_href = urljoin(url, href)
+                parsed = urlparse(abs_href)
+                if parsed.scheme in ("http", "https"):
+                    links.append(abs_href)
 
-    # We'll break down into "sections" based on headings <h1>, <h2>, ...
-    # Then inside each section, traverse siblings until next heading of same or higher level.
-    sections = []
-    # Get top-level content container (often <article> or <main> or body)
-    container = soup.find("main") or soup.find("article") or soup.body
+            # We'll break down into "sections" based on headings <h1>, <h2>, ...
+            # Then inside each section, traverse siblings until next heading of same or higher level.
+            sections = []
+            # Get top-level content container (often <article> or <main> or body)
+            container = soup.find("main") or soup.find("article") or soup.body
 
-    if container is None:
-        container = soup  # fallback to full document
+            if container is None:
+                container = soup  # fallback to full document
 
-    # find all headings in that container
-    headings = container.find_all(["h1", "h2", "h3", "h4", "h5", "h6"])
-    # If no headings, treat the entire content as one section
-    if not headings:
-        # single default section
-        sec = {"heading": title or "", "content": []}
-        for el in container.children:
-            _collect_node(el, sec["content"], base_url=url)
-        sections.append(sec)
-    else:
-        # Build sections
-        for idx, h in enumerate(headings):
-            sec = {"heading": h.get_text(strip=True), "content": []}
-            # define boundary: until next heading of same or higher level
-            next_sibs = []
-            for sib in h.next_siblings:
-                # stop if we reach another heading of same/higher level
-                if isinstance(sib, Tag) and sib.name in [
-                    "h1",
-                    "h2",
-                    "h3",
-                    "h4",
-                    "h5",
-                    "h6",
-                ]:
-                    # Check level
-                    if int(sib.name[1]) <= int(h.name[1]):
-                        break
-                next_sibs.append(sib)
-            for el in next_sibs:
-                _collect_node(el, sec["content"], base_url=url)
-            sections.append(sec)
+            # find all headings in that container
+            headings = container.find_all(["h1", "h2", "h3", "h4", "h5", "h6"])
+            # If no headings, treat the entire content as one section
+            if not headings:
+                # single default section
+                sec = {"heading": title or "", "content": []}
+                for el in container.children:
+                    _collect_node(el, sec["content"], base_url=url)
+                sections.append(sec)
+            else:
+                # Build sections
+                for idx, h in enumerate(headings):
+                    sec = {"heading": h.get_text(strip=True), "content": []}
+                    # define boundary: until next heading of same or higher level
+                    next_sibs = []
+                    for sib in h.next_siblings:
+                        # stop if we reach another heading of same/higher level
+                        if isinstance(sib, Tag) and sib.name in [
+                            "h1",
+                            "h2",
+                            "h3",
+                            "h4",
+                            "h5",
+                            "h6",
+                        ]:
+                            # Check level
+                            if int(sib.name[1]) <= int(h.name[1]):
+                                break
+                        next_sibs.append(sib)
+                    for el in next_sibs:
+                        _collect_node(el, sec["content"], base_url=url)
+                    sections.append(sec)
 
-    return {
-        "url": url,
-        "title": title,
-        "sections": sections,
-        "links": links,
-    }
-
+            return {
+                "url": url,
+                "title": title,
+                "sections": sections,
+                "links": links,
+            }
+        else:
+            return {
+                "success":False,
+                "status": resp.status_code
+            }
+    except Exception as e:
+        return {
+            "success":False,
+            "error": str(e)
+        }
 
 def _collect_node(node, content_list: list, base_url: str):
     """

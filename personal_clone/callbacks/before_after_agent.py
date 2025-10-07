@@ -65,6 +65,19 @@ def check_if_agent_should_run(
         return None
 
 
+def personal_agents_checker(
+    callback_context: CallbackContext,
+) -> Optional[types.Content]:
+    """checks if the user is in superusers and prevents agent run with personal memories access"""
+    current_state = callback_context.state.to_dict()
+    user_id = current_state.get("user_id", "")
+    if user_id not in config.SUPERUSERS:
+        return types.Content(
+            parts=[types.Part(text="Sorry, this agent can run only for master user")],
+            role="model",  # Assign model role to the overriding response
+        )
+
+
 def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Content]:
     """
     Used to prefetch personal and professional memories based on the user query.
