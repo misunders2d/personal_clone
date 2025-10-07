@@ -206,7 +206,7 @@ def create_main_agent():
             create_graph_agent(),
             create_bigquery_agent(),
             create_clickup_agent(),
-            create_github_agent()
+            create_github_agent(),
         ],
         before_agent_callback=[check_if_agent_should_run],  # prefetch_memories],
         planner=BuiltInPlanner(
