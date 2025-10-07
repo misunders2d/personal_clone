@@ -1,39 +1,35 @@
-from google.adk.agents import Agent
-from google.adk.tools import AgentTool
+from google.adk import Agent
+from google.adk.planners import BuiltInPlanner, PlanReActPlanner
+from google.genai import types
 
-from ..utils.clickup_utils import ClickUpAPI
-from .rag_agent import create_rag_agent_tool
+from ..tools.clickup_tools import clickup_toolset
+from .. import config
 
-import os
-
-try:
-    import streamlit as st
-
-    MODEL_NAME = st.secrets["MODEL_NAME"]
-except:
-    MODEL_NAME = os.environ["MODEL_NAME"]
-
-
-clickup_api = ClickUpAPI()
+PLANNER = (
+    BuiltInPlanner(
+        thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
+    )
+    if isinstance(config.FLASH_MODEL, str)
+    else PlanReActPlanner()
+)
 
 
-def create_clickup_agent_tool(name="clickup_agent"):
+def create_clickup_agent(name="clickup_agent"):
+    """Creates an agent for interacting with ClickUp."""
     clickup_agent = Agent(
         name=name,
-        description="An agent that manages ClickUp tasks and can link them to experiences.",
+        description="An agent that manages ClickUp tasks. All user requests relating to clickup should be handled by this agent.",
+        model=config.FLASH_MODEL,
         instruction="""
-You are a ClickUp agent. You can create, get, and close tasks in ClickUp.
-You can also create an experience in the RAG system and link it to a ClickUp task.
-To do this, you need to use the `rag_agent` tool.
-First, create the ClickUp task using `create_task`.
-Then, use the `rag_agent.write_to_rag` tool to create the experience, passing the `clickup_task_id` from the created task.
-""",
-        model=MODEL_NAME,
-        tools=[
-            clickup_api.get_tasks,
-            clickup_api.create_task,
-            clickup_api.close_task,
-            create_rag_agent_tool("rag_agent_for_clickup"),
-        ],
+        Use the tools available to you to answer user questions and manage tasks in ClickUp. The user info is stored in {clickup_user_info} session key.
+        The user's email is stored in {user_id} session key.
+        The current date and time are store in {current_datetime} key. Always refer to this key for be aware of the current date and time.
+        Always use the `get_clickup_user` tool if you are missing any crucial ClickUp information.
+        Don't bother the user with technical questions about ClickUp, use the tools to get the information you need.
+        Only engage the user if you are missing information that you cannot get from ClickUp directly.
+        When creating a new task - always confirm the creation with the task link (url)
+        """,
+        tools=clickup_toolset,
+        planner=PLANNER,
     )
-    return AgentTool(agent=clickup_agent)
+    return clickup_agent
