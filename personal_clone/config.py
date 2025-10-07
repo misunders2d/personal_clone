@@ -22,7 +22,8 @@ URI = os.environ.get("NEO4J_URI")
 AUTH = (os.environ.get("NEO4J_USERNAME", ""), os.environ.get("NEO4J_PASSWORD", ""))
 
 CLICKUP_API_TOKEN = os.environ.get("CLICKUP_API_TOKEN", "")
-
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
+DEFAULT_GITHUB_REPO = os.environ.get("DEFAULT_GITHUB_REPO", "")
 
 DATASET_PATH = os.environ["MEMORY_DATASET_ID"]
 MEMORY_TABLE = f"{DATASET_PATH}.memories_personal"

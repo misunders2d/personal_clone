@@ -8,6 +8,7 @@ from ..tools.search_tools import bigquery_toolset
 from ..callbacks.before_after_tool import before_memory_callback
 
 from .. import config
+
 PLANNER = (
     BuiltInPlanner(
         thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
@@ -15,6 +16,7 @@ PLANNER = (
     if isinstance(config.FLASH_MODEL, str)
     else PlanReActPlanner()
 )
+
 
 def create_memory_agent_instruction(table):
     return f"""

@@ -5,6 +5,7 @@ from google.genai import types
 from ..tools.graph_tools import execute_cypher_query
 
 from .. import config
+
 PLANNER = (
     BuiltInPlanner(
         thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
@@ -12,6 +13,7 @@ PLANNER = (
     if isinstance(config.FLASH_MODEL, str)
     else PlanReActPlanner()
 )
+
 
 def create_graph_agent_instruction():
     return f"""

@@ -30,6 +30,6 @@ def create_clickup_agent(name="clickup_agent"):
         When creating a new task - always confirm the creation with the task link (url)
         """,
         tools=clickup_toolset,
-        planner = PLANNER
+        planner=PLANNER,
     )
     return clickup_agent
