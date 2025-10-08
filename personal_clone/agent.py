@@ -208,7 +208,7 @@ def create_main_agent():
             create_clickup_agent(),
             create_github_agent(),
         ],
-        before_agent_callback=[check_if_agent_should_run],  # prefetch_memories],
+        before_agent_callback=[check_if_agent_should_run],
         planner=BuiltInPlanner(
             thinking_config=types.ThinkingConfig(
                 include_thoughts=True, thinking_budget=-1

@@ -65,6 +65,26 @@ def check_if_agent_should_run(
         return None
 
 
+def professional_agents_checker(
+    callback_context: CallbackContext,
+) -> Optional[types.Content]:
+    """checks if the user is in superusers and prevents agent run with personal memories access"""
+    current_state = callback_context.state.to_dict()
+    user_id = current_state.get("user_id", "")
+    if (
+        not user_id.lower().endswith(config.TEAM_DOMAIN)
+        and user_id not in config.SUPERUSERS
+    ):
+        return types.Content(
+            parts=[
+                types.Part(
+                    text=f"Sorry, this agent can run only for {config.TEAM_DOMAIN} users"
+                )
+            ],
+            role="model",  # Assign model role to the overriding response
+        )
+
+
 def personal_agents_checker(
     callback_context: CallbackContext,
 ) -> Optional[types.Content]:
@@ -93,9 +113,8 @@ def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Conte
         and callback_context.user_content.parts[0].text
     ):
         last_user_message = callback_context.user_content.parts[0].text
-    if callback_context.state.get("answer_validation", {}).get(
-        "answer_needed"
-    ) and callback_context.state.get("answer_validation", {}).get("rr"):
+    if callback_context.state.get("answer_validation", {}).get("answer_needed"):
+
         people_query = f"""
         SELECT
             person_id,
@@ -108,26 +127,44 @@ def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Conte
         WHERE
             "{user_id}" IN (user_id_alias.id_value)
         """
+
+        if (
+            not user_id.lower().endswith(config.TEAM_DOMAIN)
+            and user_id not in config.SUPERUSERS
+        ):
+            return
+
         with ThreadPoolExecutor() as pool:
-            personal_future = pool.submit(
-                search_bq, config.MEMORY_TABLE, last_user_message
-            )
-            professional_future = pool.submit(
-                search_bq, config.MEMORY_TABLE_PROFESSIONAL, last_user_message
-            )
+
+            if user_id in config.SUPERUSERS and callback_context.state.get(
+                "answer_validation", {}
+            ).get("rr"):
+                personal_future = pool.submit(
+                    search_bq, config.MEMORY_TABLE, last_user_message
+                )
+            else:
+                personal_future = None
+            if (
+                user_id.lower().endswith(config.TEAM_DOMAIN)
+                or user_id in config.SUPERUSERS
+            ) and callback_context.state.get("answer_validation", {}).get("rr"):
+                professional_future = pool.submit(
+                    search_bq, config.MEMORY_TABLE_PROFESSIONAL, last_user_message
+                )
+            else:
+                professional_future = None
+
             people_future = pool.submit(search_people, people_query)
 
-            memory_recall = personal_future.result()
-            memory_recall_professional = professional_future.result()
+            memory_recall = personal_future.result() if personal_future else None
+            memory_recall_professional = (
+                professional_future.result() if professional_future else None
+            )
             people_recall = people_future.result()
 
         callback_context.state["memory_context_professional"] = (
             memory_recall_professional
         )
-        callback_context.state["user_related_context"] = people_recall
-
-        if not user_id == "2djohar@gmail.com":
-            return
-
         callback_context.state["memory_context"] = memory_recall
+        callback_context.state["user_related_context"] = people_recall
         callback_context.state["vertex_context"] = ""  # TODO add vertex search here

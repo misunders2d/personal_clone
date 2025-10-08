@@ -33,7 +33,7 @@ EMBEDDING_MODEL = f"{DATASET_PATH}.embedding_model"
 
 
 SUPERUSERS = os.getenv("SUPERUSERS", "").split(",")
-
+TEAM_DOMAIN = os.getenv("TEAM_DOMAIN", "")
 
 # MODELS MANAGEMENT
 GLOBAL_MODEL_PROVIDER = "OpenAI"

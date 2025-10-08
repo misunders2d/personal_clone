@@ -3,6 +3,8 @@ from google.adk.planners import BuiltInPlanner, PlanReActPlanner
 from google.genai import types
 
 from ..tools.clickup_tools import clickup_toolset
+from ..callbacks.before_after_agent import professional_agents_checker
+
 from .. import config
 
 PLANNER = (
@@ -31,5 +33,6 @@ def create_clickup_agent(name="clickup_agent"):
         """,
         tools=clickup_toolset,
         planner=PLANNER,
+        before_agent_callback=professional_agents_checker
     )
     return clickup_agent

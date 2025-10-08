@@ -17,6 +17,8 @@ from ..data import (
 )
 from ..sub_agents.google_search_agent import create_google_search_agent
 from ..tools.bigquery_tools import mel_bigquery_toolset
+from ..callbacks.before_after_agent import professional_agents_checker
+
 from .. import config
 
 PLANNER = (
@@ -124,6 +126,7 @@ def create_bigquery_agent():
             get_table_data,
         ],
         planner=PLANNER,
+        before_agent_callback=professional_agents_checker,
         before_tool_callback=before_bq_callback,
     )
     return bigquery_agent

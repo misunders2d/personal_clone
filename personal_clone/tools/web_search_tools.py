@@ -34,7 +34,9 @@ def scrape_web_page(url: str, timeout: float = 10.0) -> dict:
             html = resp.text
 
             soup = BeautifulSoup(html, "lxml")
-            title = soup.title.string.strip() if (soup.title and soup.title.string) else ""
+            title = (
+                soup.title.string.strip() if (soup.title and soup.title.string) else ""
+            )
 
             # Collect all links
             links = []
@@ -94,15 +96,10 @@ def scrape_web_page(url: str, timeout: float = 10.0) -> dict:
                 "links": links,
             }
         else:
-            return {
-                "success":False,
-                "status": resp.status_code
-            }
+            return {"success": False, "status": resp.status_code}
     except Exception as e:
-        return {
-            "success":False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
+
 
 def _collect_node(node, content_list: list, base_url: str):
     """
