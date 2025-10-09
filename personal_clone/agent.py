@@ -33,8 +33,8 @@ PLANNER = (
     BuiltInPlanner(
         thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
     )
-    if isinstance(config.FLASH_MODEL, str)
-    else PlanReActPlanner()
+    # if isinstance(config.FLASH_MODEL, str)
+    # else PlanReActPlanner()
 )
 
 
@@ -80,6 +80,8 @@ def create_answer_validator_agent():
         before_agent_callback=[state_setter],
         after_agent_callback=[prefetch_memories],
         output_schema=ValidatorOutput,
+        disallow_transfer_to_parent=True,
+        disallow_transfer_to_peers=True,
     )
     return answer_validator_agent
 

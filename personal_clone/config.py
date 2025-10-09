@@ -3,6 +3,7 @@ from google.oauth2 import service_account
 import google.auth
 import os
 import json
+from typing import Literal
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -54,7 +55,7 @@ SUPERUSERS = os.getenv("SUPERUSERS", "").split(",")
 TEAM_DOMAIN = os.getenv("TEAM_DOMAIN", "")
 
 # MODELS MANAGEMENT
-GLOBAL_MODEL_PROVIDER = "OpenAI"
+GLOBAL_MODEL_PROVIDER: Literal["Google", "OpenAI"] = "OpenAI"
 # OPENAI MODELS
 OPENAI_PRO_MODEL = LiteLlm(model="openai/gpt-5", api_key=OPENAI_API_KEY)  # 1.25 / 10
 OPENAI_FLASH_MODEL = LiteLlm(

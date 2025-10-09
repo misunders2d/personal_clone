@@ -1,11 +1,14 @@
 from google.adk import Agent
 
-from google.adk.planners import BuiltInPlanner, PlanReActPlanner
+from google.adk.planners import BuiltInPlanner#, PlanReActPlanner
 from google.genai import types
 from typing import Literal
 
-from ..tools.search_tools import bigquery_toolset
-from ..callbacks.before_after_tool import before_memory_callback
+from ..tools.search_tools import create_bigquery_toolset
+from ..callbacks.before_after_tool import (
+    before_personal_memory_callback,
+    before_professional_memory_callback,
+)
 from ..callbacks.before_after_agent import (
     personal_agents_checker,
     professional_agents_checker,
@@ -13,12 +16,13 @@ from ..callbacks.before_after_agent import (
 
 from .. import config
 
+MODEL = config.GOOGLE_FLASH_MODEL
 PLANNER = (
     BuiltInPlanner(
         thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
     )
-    if isinstance(config.FLASH_MODEL, str)
-    else PlanReActPlanner()
+    # if isinstance(MODEL, str)
+    # else PlanReActPlanner()
 )
 
 
@@ -234,15 +238,18 @@ def create_memory_agent(
             Also use it to manage people data in the people table.
             """,
         instruction=instruction,
-        model=config.FLASH_MODEL,
+        model=MODEL,
         planner=PLANNER,
-        tools=[bigquery_toolset],
+        tools=[create_bigquery_toolset()],
         before_agent_callback=(
             personal_agents_checker
             if scope == "personal"
             else professional_agents_checker
         ),
-        before_tool_callback=[before_memory_callback],
+        before_tool_callback=[
+            before_personal_memory_callback,
+            before_professional_memory_callback,
+        ],
         output_key=output_key,
     )
     return memory_agent

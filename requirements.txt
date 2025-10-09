@@ -2,6 +2,7 @@ bs4
 google-adk
 google-genai
 google-cloud-aiplatform
+google-cloud-bigquery-storage
 litellm
 lxml
 neo4j

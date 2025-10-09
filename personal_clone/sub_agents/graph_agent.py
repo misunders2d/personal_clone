@@ -1,17 +1,18 @@
 from google.adk import Agent
-from google.adk.planners import BuiltInPlanner, PlanReActPlanner
+from google.adk.planners import BuiltInPlanner#, PlanReActPlanner
 from google.genai import types
 
 from ..tools.graph_tools import create_neo4j_toolset
 
 from .. import config
 
+MODEL = config.FLASH_MODEL
 PLANNER = (
     BuiltInPlanner(
         thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
     )
-    if isinstance(config.FLASH_MODEL, str)
-    else PlanReActPlanner()
+    # if isinstance(MODEL, str)
+    # else PlanReActPlanner()
 )
 
 
@@ -90,7 +91,7 @@ def create_graph_agent(
         name=name,
         description="""An agent that manages a knowledge graph in a Neo4j database. It can create, retrieve, update, and delete entities and their relationships using Cypher queries. Use it for any tasks involving structured knowledge, relationships between concepts, or graph-based data analysis.""",
         instruction=instruction,
-        model=config.FLASH_MODEL,
+        model=MODEL,
         planner=PLANNER,
         tools=[create_neo4j_toolset()],  # execute_cypher_query],
     )
