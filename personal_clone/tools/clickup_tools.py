@@ -1,6 +1,11 @@
 import requests
 from google.adk.tools import ToolContext
 
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+from mcp import StdioServerParameters
+
+
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta, timezone
 
@@ -401,3 +406,23 @@ clickup_toolset = [
     create_task,
     get_task_link,
 ]
+
+
+def create_clickup_toolset():
+    clickup_toolset = MCPToolset(
+        connection_params=StdioConnectionParams(
+            server_params=StdioServerParameters(
+                command="npx",
+                args=[
+                    "-y",
+                    "@taazkareem/clickup-mcp-server@latest",
+                ],
+                env={
+                    "CLICKUP_API_KEY": config.CLICKUP_API_TOKEN,
+                    "CLICKUP_TEAM_ID": config.CLICKUP_TEAM_ID,
+                    # "DOCUMENT_SUPPORT": "true",
+                },
+            ),
+        ),
+    )
+    return clickup_toolset

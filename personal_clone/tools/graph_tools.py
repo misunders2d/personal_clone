@@ -1,9 +1,15 @@
 from neo4j import GraphDatabase
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+from mcp import StdioServerParameters
+
 
 from .. import config
 
 
-def execute_cypher_query(query: str, params: dict) -> dict:
+def execute_cypher_query(
+    query: str, params: dict
+) -> dict:  # currently unused in favor of MCP toolset
     """
     Executes a Cypher query against the Neo4j graph knowledge database.
 
@@ -26,12 +32,12 @@ def execute_cypher_query(query: str, params: dict) -> dict:
         A list of records, where each record is a dictionary representing a row in the result.
     """
     parameters = params or {}
-    if not config.URI or not config.AUTH[0] or not config.AUTH[1]:
+    if not config.NEO4J_URI or not config.NEO4J_AUTH[0] or not config.NEO4J_AUTH[1]:
         raise ValueError(
             "Neo4j credentials (NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD) are not set in the environment."
         )
     try:
-        with GraphDatabase.driver(config.URI, auth=config.AUTH) as driver:
+        with GraphDatabase.driver(config.NEO4J_URI, auth=config.NEO4J_AUTH) as driver:
             driver.verify_connectivity()
 
             records, summary, _ = driver.execute_query(  # type: ignore
@@ -45,3 +51,24 @@ def execute_cypher_query(query: str, params: dict) -> dict:
         return {"status": "SUCCESS", "result": [record.data() for record in records]}
     except Exception as e:
         return {"status": "SUCCESS", "result": str(e)}
+
+
+def create_neo4j_toolset():
+    neo4j_toolset = MCPToolset(
+        connection_params=StdioConnectionParams(
+            server_params=StdioServerParameters(
+                command="npx",
+                args=[
+                    "-y",
+                    "@alanse/mcp-neo4j-server",
+                ],
+                env={
+                    "NEO4J_URI": config.NEO4J_URI,
+                    "NEO4J_USERNAME": config.NEO4J_AUTH[0],
+                    "NEO4J_PASSWORD": config.NEO4J_AUTH[1],
+                    "NEO4J_DATABASE": config.NEO4J_DATABASE,
+                },
+            ),
+        ),
+    )
+    return neo4j_toolset

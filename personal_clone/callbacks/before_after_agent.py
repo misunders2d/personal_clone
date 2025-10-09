@@ -47,7 +47,7 @@ def check_if_agent_should_run(
     callback_context: CallbackContext,
 ) -> Optional[types.Content]:
     """
-    Logs entry and checks 'answer_needed' in session state.
+    Logs entry and checks 'reply' in session state.
     If True, returns Content to skip the agent's execution.
     If False or not present, returns None to allow execution.
     """
@@ -55,7 +55,7 @@ def check_if_agent_should_run(
     # invocation_id = callback_context.invocation_id
     current_state = callback_context.state.to_dict()
 
-    if not current_state.get("answer_validation", {}).get("answer_needed"):
+    if not current_state.get("answer_validation", {}).get("reply"):
         return types.Content(
             # parts=[types.Part(text="")],
             parts=None,
@@ -113,7 +113,7 @@ def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Conte
         and callback_context.user_content.parts[0].text
     ):
         last_user_message = callback_context.user_content.parts[0].text
-    if callback_context.state.get("answer_validation", {}).get("answer_needed"):
+    if callback_context.state.get("answer_validation", {}).get("reply"):
 
         people_query = f"""
         SELECT
@@ -138,7 +138,7 @@ def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Conte
 
             if user_id in config.SUPERUSERS and callback_context.state.get(
                 "answer_validation", {}
-            ).get("rr"):
+            ).get("recall"):
                 personal_future = pool.submit(
                     search_bq, config.MEMORY_TABLE, last_user_message
                 )
@@ -147,7 +147,7 @@ def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Conte
             if (
                 user_id.lower().endswith(config.TEAM_DOMAIN)
                 or user_id in config.SUPERUSERS
-            ) and callback_context.state.get("answer_validation", {}).get("rr"):
+            ) and callback_context.state.get("answer_validation", {}).get("recall"):
                 professional_future = pool.submit(
                     search_bq, config.MEMORY_TABLE_PROFESSIONAL, last_user_message
                 )

@@ -1,7 +1,7 @@
 from google.adk.agents import Agent, SequentialAgent  # , ParallelAgent
 
 from google.adk.tools import AgentTool
-from google.adk.planners import BuiltInPlanner
+from google.adk.planners import BuiltInPlanner, PlanReActPlanner
 from google.genai import types
 from pydantic import BaseModel, Field
 
@@ -12,7 +12,8 @@ from .sub_agents.memory_agent import (
     create_memory_agent_instruction,
 )
 from .sub_agents.vertex_search_agent import create_vertex_search_agent
-from .sub_agents.graph_agent import create_graph_agent
+
+# from .sub_agents.graph_agent import create_graph_agent
 from .sub_agents.google_search_agent import create_google_search_agent
 from .sub_agents.clickup_agent import create_clickup_agent
 from .sub_agents.github_agent import create_github_agent
@@ -28,15 +29,27 @@ from .tools.datetime_tools import get_current_datetime
 
 from . import config
 
+PLANNER = (
+    BuiltInPlanner(
+        thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
+    )
+    if isinstance(config.FLASH_MODEL, str)
+    else PlanReActPlanner()
+)
+
 
 class ValidatorOutput(BaseModel):
-    answer_needed: bool = Field(
+    reply: bool = Field(
         default=True,
         description="True or False depending on whether the anser is required or implied. Default to True if you have any doubts",
     )
-    rr: bool = Field(
+    recall: bool = Field(
         default=False,
         description="True or False depending on whether memory search should be involved",
+    )
+    reasoning: bool = Field(
+        default=False,
+        description="True or False depending on whether or not an agent should activate reasoning/deeper thinking",
     )
 
 
@@ -47,7 +60,7 @@ def create_answer_validator_agent():
         model="gemini-2.0-flash",
         instruction="""You are an agent designed to assess the user's input.
         You need to evaluate TWO parameters:
-            - `answer_needed`: whether or not the `personal_clone` agent should reply to the user's query.
+            - `reply`: whether or not the `personal_clone` agent should reply to the user's query.
                 If the {user_id} starts with "GMAIL:" - you MUST reply with `True`.
                 Sometimes the user's resonse does not require an answer, like "okay", "bye" etc.
                 HOWEVER if the user is explicilty demanding an answer or if the user is asking a question, you ALWAYS reply with `True`.
@@ -56,8 +69,10 @@ def create_answer_validator_agent():
                 If the user's reply looks like a confirmation for the agent's actions (like "good to go", "yes", "confirmed" etc), you MUST reply with `True`.
                 If the user's input ends with a question mark, you MUST reply with `True`. If you are in doubt - MUST defer to `True`.
                 In general - unless you are absolutely sure the user's input does not require an answer, you output `True`.
-            - `rr`: whether or not a memory seach should be involved.
-                If the user's query or the conversational flow implies that there is some memory or experience involved, you should set the `memory_search_needed` to `True`, otherwise set it to `False`.
+            - `recall`: whether or not a memory seach should be involved.
+                If the user's query or the conversational flow implies that there is some memory or experience involved, you should set the `recall` to `True`, otherwise set it to `False`.
+            - `reasoning`: whether or not an agent should use Planner/Reasoning mode.
+                If the user's query or the conversational flow implies that there is a need of a longer thinking or deep research (complex questions, multi-step procedures, etc.) or the use explicitly asks to think deeper, do a research or plan, you should set the `reasoning` to `True`, otherwise set it to `False`.
 
         You do not output anything except `True` or `False` for each of those fields.
         """,
@@ -163,7 +178,7 @@ def create_main_agent():
         </CORE_LOGIC>
         <IMPORTANT>
             <MEMORY_USAGE>
-                - You DISREGARD all outputs of the `answer_validator_agent`, this is a technical routing agent not intended for user or agent interaction.
+                - You DISREGARD all outputs of the `answer_validator_agent`, this is a technical routing agent not intended for user or agent interaction. Do not mention it to the user.
                 - You are equipped with a system of agents who fetch knowledge and memories based on the user's input BEFORE you start your communication.
                     Before you utilize your memory agents, refer to {memory_context}, {memory_context_professional} and {vertex_context} to make your conversation as context-aware, as possible.
                     Don't use memory agents if there is enough information in the session state, or unless the user expicitly asks to use memory tools or agents.
@@ -203,17 +218,13 @@ def create_main_agent():
                 ),
                 output_key="memory_search_professional",
             ),
-            create_graph_agent(),
+            # create_graph_agent(),
             create_bigquery_agent(),
             create_clickup_agent(),
             create_github_agent(),
         ],
         before_agent_callback=[check_if_agent_should_run],
-        planner=BuiltInPlanner(
-            thinking_config=types.ThinkingConfig(
-                include_thoughts=True, thinking_budget=-1
-            )
-        ),
+        planner=PLANNER,
     )
     return main_agent
 

@@ -2,7 +2,7 @@ from google.adk import Agent
 from google.adk.planners import BuiltInPlanner, PlanReActPlanner
 from google.genai import types
 
-from ..tools.graph_tools import execute_cypher_query
+from ..tools.graph_tools import create_neo4j_toolset
 
 from .. import config
 
@@ -83,7 +83,8 @@ def create_graph_agent_instruction():
 
 def create_graph_agent(
     name: str = "graph_agent",
-    instruction: str = create_graph_agent_instruction(),
+    # instruction: str = create_graph_agent_instruction(),
+    instruction: str = "You are a knowledge database management agent designed to work with Neo4j database using Cypher language and available tools.",
 ) -> Agent:
     graph_agent = Agent(
         name=name,
@@ -91,6 +92,6 @@ def create_graph_agent(
         instruction=instruction,
         model=config.FLASH_MODEL,
         planner=PLANNER,
-        tools=[execute_cypher_query],
+        tools=[create_neo4j_toolset()],  # execute_cypher_query],
     )
     return graph_agent

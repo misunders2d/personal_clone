@@ -33,7 +33,7 @@ def create_memory_agent_instruction(table):
     </GENERAL>
 
     <SPECIAL INSTRUCTIONS FOR RETRIEVING MEMORIES>
-        When retrieving memories with a SELECT statement, you can try to use simple keyword matching on the `short_description`, `category`, `sentiment`, `tags`, and `source` fields to find relevant memories.
+        When retrieving memories with a SELECT statement, you can try to use simple keyword matching on the `short_description`, `category` (one of {config.MEMORY_CATEGORIES}), `sentiment`, `tags`, and `source` fields to find relevant memories.
         However, for more complex queries that require semantic understanding, use vector similarity search on the `embedding` field.
         IMPORTANT! Always fetch the `memory_id`, `related_people` and `linked_memories` when doing the search and there are results.
         EXAMPLE - Use the following SQL expression to perform vector similarity search:
@@ -82,6 +82,7 @@ def create_memory_agent_instruction(table):
     <SPECIAL INSTRUCTIONS FOR INSERTING NEW MEMORIES>
         When generating a new memory with an INSERT statement, the `memory_id` MUST be generated in the format 'mem_YYYY_MM_DD_xxxxxxxx' where YYYY is the year, MM is the month, DD is the day, and xxxxxxxx is a short unique identifier.
         The user_id field MUST be collected from the {{user_id}} field - make sure to check with the user if you have any discrepancies.
+        Make sure to map the memory to ONE of these categories: {config.MEMORY_CATEGORIES}. If none of the categories apply - you MUST escalate this to the user.
         All records in the table except `full_content` and `short_description` column MUST be in English. Make sure to translate any non-English tags, categories, sentiment etc. to English before inserting, and translate it back to the user's language when retrieving.
         Use the following SQL expression to generate the `memory_id`: `CONCAT('mem_', FORMAT_TIMESTAMP('%Y_%m_%d', CURRENT_TIMESTAMP()), '_', SUBSTR(GENERATE_UUID(), 1, 8))`
         Example:

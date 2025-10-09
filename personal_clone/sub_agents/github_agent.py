@@ -412,7 +412,7 @@ def create_github_agent_instruction():
     return instruction
 
 
-def create_github_tollset():
+def create_github_toolset():
     github_toolset = MCPToolset(
         connection_params=StdioConnectionParams(
             server_params=StdioServerParameters(
@@ -434,7 +434,7 @@ def create_github_agent():
         name="github_agent",
         instruction=create_github_agent_instruction(),
         sub_agents=[create_memory_agent(scope="personal", name="github_memory_agent")],
-        tools=[create_github_tollset(), scrape_web_page],
+        tools=[create_github_toolset(), scrape_web_page],
         before_agent_callback=personal_agents_checker,
         planner=PLANNER,
     )
