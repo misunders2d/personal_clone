@@ -15,6 +15,7 @@ from .sub_agents.vertex_search_agent import create_vertex_search_agent
 from .sub_agents.google_search_agent import create_google_search_agent
 from .sub_agents.clickup_agent import create_clickup_agent
 from .sub_agents.github_agent import create_github_agent
+# from .sub_agents.pinecone_agent import create_pinecone_agent
 
 from .callbacks.before_after_agent import (
     check_if_agent_should_run,
@@ -168,6 +169,13 @@ def create_main_agent():
                 </PHASE>
             </ALGORITHM>
         </CORE_LOGIC>
+        <AMAZON>
+            Quite often you'll be asked various questions about Selling on Amazon - Amazon Seller Central issues, hints, guidelines etc.
+            Refer to this starting webpage for the full catalog of Amazon Sellers' help documents:
+            `https://sellercentral.amazon.com/help/hub/reference/external/G2`
+            Use your web scraping tools to correctly identify page structure and necessary links, and fetch relevant information to answer user's questions.
+            Always support your information with direct links.
+        </AMAZON>
         <IMPORTANT>
             <MEMORY_USAGE>
                 - You DISREGARD all outputs of the `answer_validator_agent`, this is a technical routing agent not intended for user or agent interaction. Do not mention it to the user.
@@ -214,6 +222,7 @@ def create_main_agent():
             create_bigquery_agent(),
             create_clickup_agent(),
             create_github_agent(),
+            # create_pinecone_agent(),
         ],
         before_agent_callback=[check_if_agent_should_run],
         planner=config.AGENT_PLANNER,

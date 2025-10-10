@@ -7,3 +7,5 @@ litellm
 lxml
 neo4j
 requests
+selenium
+webdriver-manager
