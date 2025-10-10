@@ -1,22 +1,12 @@
 # Efficient but expensive service, use for enterprise-level data
 
-from google.adk.planners import BuiltInPlanner#, PlanReActPlanner
 from vertexai import rag
 import vertexai
 from google.adk import Agent
-from google.genai import types
 import re
 
 from .. import config
 
-MODEL = config.GOOGLE_FLASH_MODEL
-PLANNER = (
-    BuiltInPlanner(
-        thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
-    )
-    # if isinstance(MODEL, str)
-    # else PlanReActPlanner()
-)
 vertexai.init(
     project=config.GOOGLE_CLOUD_PROJECT, location=config.GOOGLE_CLOUD_LOCATION
 )  # location needs to be set to "us-east4" until there's enough quota on "us-central1"
@@ -259,7 +249,7 @@ def rag_query(query: str, corpus_name: str) -> dict:
 
 rag_agent = Agent(
     name="rag_agent",
-    model=MODEL,
+    model=config.RAG_AGENT_MODEL,
     description="A knowledge agent that uses a RAG corpus to store and retrieve information from documents.",
     instruction="You are a knowledge agent that uses a RAG corpus to store and retrieve information from documents.",
     tools=[
@@ -271,4 +261,5 @@ rag_agent = Agent(
         list_files_in_corpus,
         rag_query,
     ],
+    planner=config.RAG_AGENT_PLANNER,
 )

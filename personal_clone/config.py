@@ -1,3 +1,6 @@
+from google.adk.planners import BuiltInPlanner, PlanReActPlanner
+from google.genai import types
+
 from google.adk.models.lite_llm import LiteLlm
 from google.oauth2 import service_account
 import google.auth
@@ -54,8 +57,19 @@ EMBEDDING_MODEL = f"{DATASET_PATH}.embedding_model"
 SUPERUSERS = os.getenv("SUPERUSERS", "").split(",")
 TEAM_DOMAIN = os.getenv("TEAM_DOMAIN", "")
 
+
 # MODELS MANAGEMENT
-GLOBAL_MODEL_PROVIDER: Literal["Google", "OpenAI"] = "OpenAI"
+def create_planner(mode: Literal["built-in", "react"] | None = None):
+    if mode == "built-in":
+        return BuiltInPlanner(
+            thinking_config=types.ThinkingConfig(
+                include_thoughts=True, thinking_budget=-1
+            )
+        )
+    elif mode == "react":
+        return PlanReActPlanner()
+
+
 # OPENAI MODELS
 OPENAI_PRO_MODEL = LiteLlm(model="openai/gpt-5", api_key=OPENAI_API_KEY)  # 1.25 / 10
 OPENAI_FLASH_MODEL = LiteLlm(
@@ -70,6 +84,9 @@ GOOGLE_PRO_MODEL = "gemini-2.5-pro"
 GOOGLE_FLASH_MODEL = "gemini-2.5-flash"
 GOOGLE_LITE_MODEL = "gemini-2.5-flash-lite"
 
+GLOBAL_MODEL_PROVIDER: Literal["Google", "OpenAI"] = "OpenAI"
+GLOBAL_PLANNER = create_planner("built-in")
+
 if GLOBAL_MODEL_PROVIDER == "Google":
     PRO_MODEL = GOOGLE_PRO_MODEL
     FLASH_MODEL = GOOGLE_FLASH_MODEL
@@ -78,6 +95,37 @@ elif GLOBAL_MODEL_PROVIDER == "OpenAI":
     PRO_MODEL = OPENAI_PRO_MODEL
     FLASH_MODEL = OPENAI_FLASH_MODEL
     LITE_MODEL = OPENAI_LITE_MODEL
+
+# AGENT-SPECIFIC MODELS
+AGENT_MODEL = FLASH_MODEL
+AGENT_PLANNER = GLOBAL_PLANNER
+
+BIGQUERY_AGENT_MODEL = FLASH_MODEL
+BIGQUERY_AGENT_PLANNER = create_planner("built-in")
+
+CLICKUP_AGENT_MODEL = FLASH_MODEL
+CLICKUP_AGENT_PLANNER = GLOBAL_PLANNER
+
+CODE_EXECUTOR_AGENT_MODEL = FLASH_MODEL
+CODE_EXECUTOR_AGENT_PLANNER = GLOBAL_PLANNER
+
+GITHUB_AGENT_MODEL = FLASH_MODEL
+GITHUB_AGENT_PLANNER = GLOBAL_PLANNER
+
+GOOGLE_SEARCH_AGENT_MODEL = GOOGLE_FLASH_MODEL
+GOOGLE_SEARCH_AGENT_PLANNER = create_planner("built-in")
+
+GRAPH_AGENT_MODEL = FLASH_MODEL
+GRAPH_AGENT_PLANNER = GLOBAL_PLANNER
+
+MEMORY_AGENT_MODEL = FLASH_MODEL
+MEMORY_AGENT_PLANNER = GLOBAL_PLANNER
+
+RAG_AGENT_MODEL = GOOGLE_FLASH_MODEL
+RAG_AGENT_PLANNER = create_planner("built-in")
+
+VERTEX_SEARCH_AGENT_MODEL = GOOGLE_FLASH_MODEL
+VERTEX_SEARCH_AGENT_PLANNER = create_planner("built-in")
 
 
 # --- Auth ---

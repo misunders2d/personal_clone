@@ -11,7 +11,8 @@ def create_code_executor_agent(
         name=name,
         description="""An agent that can execute Python code.""",
         instruction=instruction,
-        model=config.GOOGLE_FLASH_MODEL,
+        model=config.CODE_EXECUTOR_AGENT_MODEL,
         code_executor=BuiltInCodeExecutor(),
+        planner=config.CODE_EXECUTOR_AGENT_PLANNER,
     )
     return graph_agent

@@ -1,7 +1,5 @@
 from google.adk import Agent
 
-from google.adk.planners import BuiltInPlanner#, PlanReActPlanner
-from google.genai import types
 from typing import Literal
 
 from ..tools.search_tools import create_bigquery_toolset
@@ -15,15 +13,6 @@ from ..callbacks.before_after_agent import (
 )
 
 from .. import config
-
-MODEL = config.GOOGLE_FLASH_MODEL
-PLANNER = (
-    BuiltInPlanner(
-        thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
-    )
-    # if isinstance(MODEL, str)
-    # else PlanReActPlanner()
-)
 
 
 def create_memory_agent_instruction(table):
@@ -238,8 +227,8 @@ def create_memory_agent(
             Also use it to manage people data in the people table.
             """,
         instruction=instruction,
-        model=MODEL,
-        planner=PLANNER,
+        model=config.MEMORY_AGENT_MODEL,
+        planner=config.MEMORY_AGENT_PLANNER,
         tools=[create_bigquery_toolset()],
         before_agent_callback=(
             personal_agents_checker

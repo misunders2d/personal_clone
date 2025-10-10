@@ -1,8 +1,6 @@
 from google.adk.agents import Agent, SequentialAgent  # , ParallelAgent
 
 from google.adk.tools import AgentTool
-from google.adk.planners import BuiltInPlanner, PlanReActPlanner
-from google.genai import types
 from pydantic import BaseModel, Field
 
 from .sub_agents.bigquery_agent import create_bigquery_agent
@@ -28,14 +26,6 @@ from .tools.web_search_tools import scrape_web_page
 from .tools.datetime_tools import get_current_datetime
 
 from . import config
-
-PLANNER = (
-    BuiltInPlanner(
-        thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
-    )
-    # if isinstance(config.FLASH_MODEL, str)
-    # else PlanReActPlanner()
-)
 
 
 class ValidatorOutput(BaseModel):
@@ -88,7 +78,7 @@ def create_answer_validator_agent():
 
 def create_main_agent():
     main_agent = Agent(
-        model=config.FLASH_MODEL,
+        model=config.AGENT_MODEL,
         name="personal_clone",
         description="A helpful assistant for user questions.",
         instruction="""
@@ -226,7 +216,7 @@ def create_main_agent():
             create_github_agent(),
         ],
         before_agent_callback=[check_if_agent_should_run],
-        planner=PLANNER,
+        planner=config.AGENT_PLANNER,
     )
     return main_agent
 

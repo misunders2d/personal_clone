@@ -1,8 +1,6 @@
 from google.adk import Agent
-from google.adk.planners import BuiltInPlanner#, PlanReActPlanner
 from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-from google.genai import types
 from mcp import StdioServerParameters
 
 from ..tools.web_search_tools import scrape_web_page
@@ -10,15 +8,6 @@ from ..sub_agents.memory_agent import create_memory_agent
 from ..callbacks.before_after_agent import personal_agents_checker
 
 from .. import config
-
-MODEL = config.FLASH_MODEL
-PLANNER = (
-    BuiltInPlanner(
-        thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
-    )
-    # if isinstance(MODEL, str)
-    # else PlanReActPlanner()
-)
 
 
 def create_github_agent_instruction():
@@ -431,12 +420,12 @@ def create_github_toolset():
 
 def create_github_agent():
     github_agent = Agent(
-        model=MODEL,
+        model=config.GITHUB_AGENT_MODEL,
         name="github_agent",
         instruction=create_github_agent_instruction(),
         sub_agents=[create_memory_agent(scope="personal", name="github_memory_agent")],
         tools=[create_github_toolset(), scrape_web_page],
         before_agent_callback=personal_agents_checker,
-        planner=PLANNER,
+        planner=config.GITHUB_AGENT_PLANNER,
     )
     return github_agent

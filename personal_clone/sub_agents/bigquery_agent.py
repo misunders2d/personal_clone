@@ -2,8 +2,6 @@ from google.adk.agents import Agent
 from google.adk.tools import AgentTool
 from google.adk.tools.base_tool import BaseTool
 from google.adk.tools.tool_context import ToolContext
-from google.adk.planners import BuiltInPlanner#, PlanReActPlanner
-from google.genai import types
 
 from typing import Optional, Dict, Any
 
@@ -20,15 +18,6 @@ from ..tools.bigquery_tools import create_mel_bigquery_toolset
 from ..callbacks.before_after_agent import professional_agents_checker
 
 from .. import config
-
-MODEL = config.FLASH_MODEL
-PLANNER = (
-    BuiltInPlanner(
-        thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1)
-    )
-    # if isinstance(MODEL, str)
-    # else PlanReActPlanner()
-)
 
 
 def before_bq_callback(
@@ -111,7 +100,7 @@ def before_bq_callback(
 # Agent Definition
 def create_bigquery_agent():
     bigquery_agent = Agent(
-        model=MODEL,
+        model=config.BIGQUERY_AGENT_MODEL,
         name="bigquery_agent",
         description=(
             "Agent to answer questions about the company's business performance (sales, inventory, payments etc)."
@@ -126,7 +115,7 @@ def create_bigquery_agent():
             get_current_datetime,
             get_table_data,
         ],
-        planner=PLANNER,
+        planner=config.BIGQUERY_AGENT_PLANNER,
         before_agent_callback=professional_agents_checker,
         before_tool_callback=before_bq_callback,
     )
