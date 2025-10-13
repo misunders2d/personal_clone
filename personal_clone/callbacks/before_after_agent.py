@@ -122,7 +122,7 @@ def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Conte
             last_name,
             role
         FROM
-            `personal-clone-464511.memories.people` AS p,
+            `{config.PEOPLE_TABLE}` AS p,
         UNNEST(p.user_ids) AS user_id_alias
         WHERE
             "{user_id}" IN (user_id_alias.id_value)

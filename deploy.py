@@ -1,6 +1,7 @@
 import os
 
 from google.adk.memory import VertexAiMemoryBankService
+from google.adk.artifacts import GcsArtifactService
 import vertexai
 from absl import app, flags
 from personal_clone.agent import root_agent
@@ -66,10 +67,14 @@ def update(resource_id: str) -> None:
             agent_engine_id=agent_engine_id,
         )
 
+    def artifact_service_builder() -> GcsArtifactService:
+        return GcsArtifactService(bucket_name="gs://personal-clone")
+
     adk_app = AdkApp(
         agent=root_agent,
         enable_tracing=True,
         memory_service_builder=memory_bank_service_builder,
+        # artifact_service_builder=artifact_service_builder
     )
 
     remote_agent = agent_engines.update(

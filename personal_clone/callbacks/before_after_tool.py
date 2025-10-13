@@ -110,3 +110,26 @@ def before_professional_memory_callback(
         return {
             "error": f"You ({user}) cannot modify the following memories `{str(missing_permissions)}`. They were created by other users."
         }
+
+
+def before_rag_edit_callback(
+    tool: BaseTool, args: Dict[str, Any], tool_context: ToolContext
+) -> Optional[Dict]:
+    """Checks if the user is authorized to modify data in RAG storage"""
+
+    user = tool_context.state.get("user_id")
+    tool_name = tool.name
+    if (
+        tool_name
+        in (
+            "create_corpus",
+            "upload_files_to_corpus",
+            "delete_files_from_corpus",
+            "delete_corpus",
+        )
+        and user not in config.SUPERUSERS
+    ):
+
+        return {
+            "error": f"You ({user}) cannot modify the existing rag corpora. Please ask Sergey."
+        }

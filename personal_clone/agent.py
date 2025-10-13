@@ -10,11 +10,13 @@ from .sub_agents.memory_agent import (
     create_memory_agent_instruction,
 )
 from .sub_agents.vertex_search_agent import create_vertex_search_agent
+from .sub_agents.rag_agent import create_rag_agent
 
 # from .sub_agents.graph_agent import create_graph_agent
 from .sub_agents.google_search_agent import create_google_search_agent
 from .sub_agents.clickup_agent import create_clickup_agent
 from .sub_agents.github_agent import create_github_agent
+
 # from .sub_agents.pinecone_agent import create_pinecone_agent
 
 from .callbacks.before_after_agent import (
@@ -222,6 +224,7 @@ def create_main_agent():
             create_bigquery_agent(),
             create_clickup_agent(),
             create_github_agent(),
+            create_rag_agent(),
             # create_pinecone_agent(),
         ],
         before_agent_callback=[check_if_agent_should_run],

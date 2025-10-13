@@ -43,9 +43,7 @@ def scrape_web_page(url: str, timeout: float = 10.0) -> dict:
         html = driver.page_source
 
         soup = BeautifulSoup(html, "lxml")
-        title = (
-            soup.title.string.strip() if (soup.title and soup.title.string) else ""
-        )
+        title = soup.title.string.strip() if (soup.title and soup.title.string) else ""
 
         # Collect all links
         links = []

@@ -14,9 +14,7 @@ def create_pinecone_toolset():
                     "-y",
                     "@pinecone-database/mcp",
                 ],
-                env={
-                    "PINECONE_API_KEY": config.PINECONE_API_KEY
-                },
+                env={"PINECONE_API_KEY": config.PINECONE_API_KEY},
             ),
         ),
     )

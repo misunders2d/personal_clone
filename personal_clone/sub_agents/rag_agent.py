@@ -7,8 +7,12 @@ import re
 
 from .. import config
 
+from ..callbacks.before_after_tool import before_rag_edit_callback
+
 vertexai.init(
-    project=config.GOOGLE_CLOUD_PROJECT, location=config.GOOGLE_CLOUD_LOCATION
+    project=config.GOOGLE_CLOUD_PROJECT,
+    location=config.GOOGLE_CLOUD_LOCATION,
+    # credentials=rag_credentials
 )  # location needs to be set to "us-east4" until there's enough quota on "us-central1"
 
 
@@ -209,57 +213,67 @@ def rag_query(query: str, corpus_name: str) -> dict:
         text=query,
         rag_retrieval_config=rag_retrieval_config,
     )
+    try:
+        results = []
+        if hasattr(response, "contexts") and response.contexts:
+            for ctx_group in response.contexts.contexts:
+                result = {
+                    "source_uri": (
+                        ctx_group.source_uri if hasattr(ctx_group, "source_uri") else ""
+                    ),
+                    "source_name": (
+                        ctx_group.source_display_name
+                        if hasattr(ctx_group, "source_display_name")
+                        else ""
+                    ),
+                    "text": ctx_group.text if hasattr(ctx_group, "text") else "",
+                    "score": ctx_group.score if hasattr(ctx_group, "score") else 0.0,
+                }
+                results.append(result)
 
-    results = []
-    if hasattr(response, "contexts") and response.contexts:
-        for ctx_group in response.contexts.contexts:
-            result = {
-                "source_uri": (
-                    ctx_group.source_uri if hasattr(ctx_group, "source_uri") else ""
-                ),
-                "source_name": (
-                    ctx_group.source_display_name
-                    if hasattr(ctx_group, "source_display_name")
-                    else ""
-                ),
-                "text": ctx_group.text if hasattr(ctx_group, "text") else "",
-                "score": ctx_group.score if hasattr(ctx_group, "score") else 0.0,
+        if not results:
+            return {
+                "status": "warning",
+                "message": f"No results found in corpus '{corpus_name}' for query: '{query}'",
+                "query": query,
+                "corpus_name": corpus_name,
+                "results": [],
+                "results_count": 0,
             }
-            results.append(result)
 
-    if not results:
         return {
-            "status": "warning",
-            "message": f"No results found in corpus '{corpus_name}' for query: '{query}'",
+            "status": "success",
+            "message": f"Successfully queried corpus '{corpus_name}'",
             "query": query,
             "corpus_name": corpus_name,
-            "results": [],
-            "results_count": 0,
+            "results": results,
+            "results_count": len(results),
+        }
+    except Exception as e:
+        return {
+            "status": "failed",
+            "message": f"Ran into an error while running a query: '{e}'",
         }
 
-    return {
-        "status": "success",
-        "message": f"Successfully queried corpus '{corpus_name}'",
-        "query": query,
-        "corpus_name": corpus_name,
-        "results": results,
-        "results_count": len(results),
-    }
 
-
-rag_agent = Agent(
-    name="rag_agent",
-    model=config.RAG_AGENT_MODEL,
-    description="A knowledge agent that uses a RAG corpus to store and retrieve information from documents.",
-    instruction="You are a knowledge agent that uses a RAG corpus to store and retrieve information from documents.",
-    tools=[
-        create_corpus,
-        upload_files_to_corpus,
-        delete_files_from_corpus,
-        delete_corpus,
-        list_corpora,
-        list_files_in_corpus,
-        rag_query,
-    ],
-    planner=config.RAG_AGENT_PLANNER,
-)
+def create_rag_agent():
+    rag_agent = Agent(
+        name="rag_agent",
+        model=config.RAG_AGENT_MODEL,
+        description="A knowledge agent that uses a RAG corpus to store and retrieve information from documents.",
+        instruction="""You are a knowledge agent that uses a RAG corpus to create/upload, store and retrieve information from documents in RAG store.
+        If the user is asking you to upload documents to RAG storage - make sure to first list all avalable corpora and ask the user which corpus to save the document to.
+        """,
+        tools=[
+            create_corpus,
+            upload_files_to_corpus,
+            delete_files_from_corpus,
+            delete_corpus,
+            list_corpora,
+            list_files_in_corpus,
+            rag_query,
+        ],
+        planner=config.RAG_AGENT_PLANNER,
+        before_tool_callback=before_rag_edit_callback,
+    )
+    return rag_agent

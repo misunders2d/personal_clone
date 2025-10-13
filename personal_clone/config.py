@@ -14,7 +14,7 @@ load_dotenv()
 GOOGLE_CLOUD_PROJECT = os.environ["GOOGLE_CLOUD_PROJECT"]
 GOOGLE_CLOUD_LOCATION = os.environ["GOOGLE_CLOUD_LOCATION"]
 VERTEX_DATASTORE_ID = os.environ["VERTEX_DATASTORE_ID"]
-DATASTORE_ID = f"projects/{GOOGLE_CLOUD_PROJECT}/locations/global/collections/default_collection/dataStores/{VERTEX_DATASTORE_ID}"
+DATASTORE_ID = f"projects/{GOOGLE_CLOUD_PROJECT}/locations/us/collections/default_collection/dataStores/{VERTEX_DATASTORE_ID}"
 
 GCP_SERVICE_ACCOUNT_INFO = os.environ["GCP_SERVICE_ACCOUNT_INFO"]
 MELL_GCP_SERVICE_ACCOUNT_INFO = os.environ["MELL_GCP_SERVICE_ACCOUNT_INFO"]
@@ -53,7 +53,7 @@ MEMORY_CATEGORIES = {
     "policy": "sk — Policy issues or compliance / legal risks and guidance.",
     "operational": "Short operational updates (inventory, event-day notes) — for quick operational status.",
 }
-EMBEDDING_MODEL = f"{DATASET_PATH}.embedding_model"
+EMBEDDING_MODEL = f"{DATASET_PATH}.google_embedding_model"
 
 
 SUPERUSERS = os.getenv("SUPERUSERS", "").split(",")
@@ -134,11 +134,15 @@ VERTEX_SEARCH_AGENT_PLANNER = create_planner("built-in")
 
 
 # --- Auth ---
-def get_identity_token():
+def get_identity_token(
+    account: Literal[
+        "GCP_SERVICE_ACCOUNT_INFO", "MELL_GCP_SERVICE_ACCOUNT_INFO"
+    ] = "GCP_SERVICE_ACCOUNT_INFO",
+):
     """Get identity token from the GCP service account string."""
-    gcp_service_account_info_str = os.environ.get("GCP_SERVICE_ACCOUNT_INFO")
+    gcp_service_account_info_str = os.environ.get(account)
     if not gcp_service_account_info_str:
-        raise ValueError("GCP_SERVICE_ACCOUNT_INFO environment variable not set.")
+        raise ValueError(f"{account} environment variable not set.")
 
     service_info = json.loads(gcp_service_account_info_str)
     # project_id = service_info.get("project_id")
