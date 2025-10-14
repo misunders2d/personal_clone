@@ -80,15 +80,15 @@ def before_professional_memory_callback(
     if tool_name != "execute_sql":
         return
     query = args.get("query", "")
-    if restricted_tables not in query.lower():
+    if restricted_tables not in query.lower() or user in config.SUPERUSERS:
         return
     is_read_only = search_tools.is_read_only(query).get("result")
     if "memory_id" not in query and not is_read_only:
         return {"status": "error", "message": "missing required parameter `memory_id`"}
 
-    elif is_read_only and (isinstance(user, str) and user.endswith(config.TEAM_DOMAIN) or user in config.SUPERUSERS):
+    elif is_read_only and isinstance(user, str) and user.endswith(config.TEAM_DOMAIN):
         return
-    
+
     pattern = re.compile(
         r"memory_id\s*=\s*'([^']*)'|memory_id\s+in\s*\(([^)]+)\)", re.IGNORECASE
     )

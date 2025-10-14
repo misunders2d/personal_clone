@@ -275,6 +275,6 @@ def create_rag_agent():
         ],
         planner=config.RAG_AGENT_PLANNER,
         before_tool_callback=before_rag_edit_callback,
-        output_key="rag_context"
+        output_key="rag_context",
     )
     return rag_agent
