@@ -86,6 +86,9 @@ def before_professional_memory_callback(
     if "memory_id" not in query and not is_read_only:
         return {"status": "error", "message": "missing required parameter `memory_id`"}
 
+    elif is_read_only:
+        return
+    
     pattern = re.compile(
         r"memory_id\s*=\s*'([^']*)'|memory_id\s+in\s*\(([^)]+)\)", re.IGNORECASE
     )

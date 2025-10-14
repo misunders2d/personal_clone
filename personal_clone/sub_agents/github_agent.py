@@ -52,7 +52,7 @@ def create_github_agent_instruction():
                 </STEP>
                 <STEP>
                     <ACTION>
-                        Search professional memories (use memory_agent_professional) for prior decisions, related designs, or existing plans that affect this change.
+                        Search personal memories (use memory_agent_personal) for prior decisions, related designs, or existing plans that affect this change.
                         If relevant memories exist, include their summary in the plan.
                     </ACTION>
                 </STEP>
@@ -158,7 +158,7 @@ def create_github_agent_instruction():
                 </STEP>
                 <STEP>
                     <ACTION>
-                        Record the PR URL and metadata to memory_agent_professional (so future plans can reference it).
+                        Record the PR URL and metadata to memory_agent_personal (so future plans can reference it).
                     </ACTION>
                 </STEP>
             </PHASE>
@@ -175,7 +175,7 @@ def create_github_agent_instruction():
                 </STEP>
                 <STEP>
                     <ACTION>
-                        After merge is performed by a human, update professional memories with the final status and any deployment details or post-merge verification steps completed.
+                        After merge is performed by a human, update personal memories with the final status and any deployment details or post-merge verification steps completed.
                     </ACTION>
                 </STEP>
             </PHASE>
@@ -283,7 +283,7 @@ def create_github_agent_instruction():
                     GitHub API (branch, commits, create/update file, create PR)
                 </tool>
                 <tool>
-                    memory_agent_professional (for storing PR metadata and related design decisions)
+                    memory_agent_personal (for storing PR metadata and related design decisions)
                 </tool>
                 <tool>
                     code_executor_agent (only if safe, strictly sandboxed; prefer not to execute arbitrary code without user confirmation)
