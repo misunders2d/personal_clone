@@ -2,10 +2,10 @@ from google.adk.planners import BuiltInPlanner, PlanReActPlanner
 from google.genai import types
 
 from google.adk.models.lite_llm import LiteLlm
-from google.oauth2 import service_account
-import google.auth
+# from google.oauth2 import service_account
+# import google.auth
 import os
-import json
+# import json
 from typing import Literal
 from dotenv import load_dotenv
 
@@ -133,28 +133,28 @@ VERTEX_SEARCH_AGENT_MODEL = GOOGLE_FLASH_MODEL
 VERTEX_SEARCH_AGENT_PLANNER = create_planner("built-in")
 
 
-# --- Auth ---
-def get_identity_token(
-    account: Literal[
-        "GCP_SERVICE_ACCOUNT_INFO", "MELL_GCP_SERVICE_ACCOUNT_INFO"
-    ] = "GCP_SERVICE_ACCOUNT_INFO",
-):
-    """Get identity token from the GCP service account string."""
-    gcp_service_account_info_str = os.environ.get(account)
-    if not gcp_service_account_info_str:
-        raise ValueError(f"{account} environment variable not set.")
+# # --- Auth ---
+# def get_identity_token(
+#     account: Literal[
+#         "GCP_SERVICE_ACCOUNT_INFO", "MELL_GCP_SERVICE_ACCOUNT_INFO"
+#     ] = "GCP_SERVICE_ACCOUNT_INFO",
+# ):
+#     """Get identity token from the GCP service account string."""
+#     gcp_service_account_info_str = os.environ.get(account)
+#     if not gcp_service_account_info_str:
+#         raise ValueError(f"{account} environment variable not set.")
 
-    service_info = json.loads(gcp_service_account_info_str)
-    # project_id = service_info.get("project_id")
+#     service_info = json.loads(gcp_service_account_info_str)
+#     # project_id = service_info.get("project_id")
 
-    credentials = service_account.Credentials.from_service_account_info(
-        service_info,
-        scopes=["https://www.googleapis.com/auth/cloud-platform"],
-    )
+#     credentials = service_account.Credentials.from_service_account_info(
+#         service_info,
+#         scopes=["https://www.googleapis.com/auth/cloud-platform"],
+#     )
 
-    return credentials
+#     return credentials
 
 
-if "credentials" not in globals():
-    credentials = get_identity_token()
-    google.auth.default = lambda *args, **kwargs: (credentials, credentials.project_id)
+# if "credentials" not in globals():
+#     credentials = get_identity_token()
+#     google.auth.default = lambda *args, **kwargs: (credentials, credentials.project_id)

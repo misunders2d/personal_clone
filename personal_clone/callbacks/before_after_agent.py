@@ -31,6 +31,8 @@ def state_setter(
         callback_context.state["memory_context_professional"] = ""
     if "vertex_context" not in current_state:
         callback_context.state["vertex_context"] = ""
+    if "rag_context" not in current_state:
+        callback_context.state["rag_context"] = ""
     if "user_related_context" not in current_state:
         callback_context.state["user_related_context"] = ""
     if "google_search_grounding" not in current_state:

@@ -9,7 +9,7 @@ from .sub_agents.memory_agent import (
     create_memory_agent,
     create_memory_agent_instruction,
 )
-from .sub_agents.vertex_search_agent import create_vertex_search_agent
+# from .sub_agents.vertex_search_agent import create_vertex_search_agent
 from .sub_agents.rag_agent import create_rag_agent
 
 # from .sub_agents.graph_agent import create_graph_agent
@@ -182,7 +182,7 @@ def create_main_agent():
             <MEMORY_USAGE>
                 - You DISREGARD all outputs of the `answer_validator_agent`, this is a technical routing agent not intended for user or agent interaction. Do not mention it to the user.
                 - You are equipped with a system of agents who fetch knowledge and memories based on the user's input BEFORE you start your communication.
-                    Before you utilize your memory agents, refer to {memory_context}, {memory_context_professional} and {vertex_context} to make your conversation as context-aware, as possible.
+                    Before you utilize your memory agents, refer to {memory_context}, {memory_context_professional}, {rag_context} and {vertex_context} to make your conversation as context-aware, as possible.
                     Don't use memory agents if there is enough information in the session state, or unless the user expicitly asks to use memory tools or agents.
                 - If the information in the state is not enough or if the user is explicitly asking to recall something, modify or update some memory, or create a new one - you ALWAYS use your memory agents to handle that request.
             </MEMORY_USAGE>
@@ -200,7 +200,7 @@ def create_main_agent():
         """,
         tools=[
             get_current_datetime,
-            AgentTool(create_vertex_search_agent()),
+            # AgentTool(create_vertex_search_agent()),
             AgentTool(create_code_executor_agent()),
             AgentTool(create_google_search_agent()),
             scrape_web_page,
