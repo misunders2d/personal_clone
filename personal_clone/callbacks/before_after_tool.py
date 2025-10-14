@@ -86,7 +86,7 @@ def before_professional_memory_callback(
     if "memory_id" not in query and not is_read_only:
         return {"status": "error", "message": "missing required parameter `memory_id`"}
 
-    elif is_read_only:
+    elif is_read_only and (isinstance(user, str) and user.endswith(config.TEAM_DOMAIN) or user in config.SUPERUSERS):
         return
     
     pattern = re.compile(
