@@ -1,0 +1,7 @@
+{
+    "requirements" : "requirements.txt",
+    "display_name": "personal_clone",
+    "gcs_dir_name":"gs://personalclone",
+    "extra_packages" : ["personal_clone/", "installation_scripts/install.sh"],
+    "build_options":{"installation_scripts": ["installation_scripts/install.sh"]}
+}
