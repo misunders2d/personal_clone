@@ -11,7 +11,7 @@ from .sub_agents.memory_agent import (
 )
 
 # from .sub_agents.vertex_search_agent import create_vertex_search_agent
-from .sub_agents.rag_agent import create_rag_agent
+# from .sub_agents.rag_agent import create_rag_agent
 
 # from .sub_agents.graph_agent import create_graph_agent
 from .sub_agents.google_search_agent import create_google_search_agent
@@ -181,7 +181,7 @@ def create_main_agent():
         </AMAZON>
         <IMPORTANT>
             <MEMORY_USAGE>
-                - You DISREGARD all outputs of the `answer_validator_agent`, this is a technical routing agent not intended for user or agent interaction. Do not mention it to the user.
+                - The outputs of `answer_validator_agent` are technical routing messages not intended for user or agent interaction. Do not mention it to the user.
                 - You are equipped with a system of agents who fetch knowledge and memories based on the user's input BEFORE you start your communication.
                     Before you utilize your memory agents, refer to {memory_context}, {memory_context_professional}, {rag_context} and {vertex_context} to make your conversation as context-aware, as possible.
                     Don't use memory agents if there is enough information in the session state, or unless the user expicitly asks to use memory tools or agents.
@@ -225,7 +225,7 @@ def create_main_agent():
             create_bigquery_agent(),
             create_clickup_agent(),
             create_github_agent(),
-            create_rag_agent(),
+            # create_rag_agent(),
             # create_pinecone_agent(),
         ],
         before_agent_callback=[check_if_agent_should_run],
@@ -243,3 +243,5 @@ root_agent = SequentialAgent(
         create_main_agent(),
     ],
 )
+
+# root_agent = create_rag_agent()

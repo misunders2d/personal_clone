@@ -1,5 +1,3 @@
-# Efficient but expensive service, use for enterprise-level data
-
 from vertexai import rag
 import vertexai
 from google.adk import Agent
@@ -12,7 +10,7 @@ from ..callbacks.before_after_tool import before_rag_edit_callback
 vertexai.init(
     project=config.GOOGLE_CLOUD_PROJECT,
     location=config.GOOGLE_CLOUD_LOCATION,
-    # credentials=rag_credentials
+    credentials=config.get_identity_token(),
 )  # location needs to be set to "us-east4" until there's enough quota on "us-central1"
 
 
@@ -29,11 +27,19 @@ def create_corpus(display_name: str) -> dict:
             )
         )
 
+        # pinecone_config = rag.Pinecone(
+        #     index_name="rag-agent", api_key="projects/131221610297/secrets/pinecone/versions/1"
+        #     # index_name="rag-agent", api_key=f"projects/.{config.GOOGLE_CLOUD_PROJECT}/secrets/pinecone/versions/.1"
+        # )
         rag_corpus = rag.create_corpus(
             display_name=display_name,
             backend_config=rag.RagVectorDbConfig(
                 rag_embedding_model_config=embedding_model_config
             ),
+            # backend_config=rag.RagVectorDbConfig(
+            #     vector_db=pinecone_config,
+            #     rag_embedding_model_config=embedding_model_config,
+            # ),
         )
         return {
             "status": "created",
@@ -274,7 +280,7 @@ def create_rag_agent():
             rag_query,
         ],
         planner=config.RAG_AGENT_PLANNER,
-        before_tool_callback=before_rag_edit_callback,
+        # before_tool_callback=before_rag_edit_callback,
         output_key="rag_context",
     )
     return rag_agent
