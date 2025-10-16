@@ -10,7 +10,8 @@ from .sub_agents.memory_agent import (
     create_memory_agent_instruction,
 )
 
-# from .sub_agents.vertex_search_agent import create_vertex_search_agent
+from .sub_agents.vertex_search_agent import create_vertex_search_agent
+
 # from .sub_agents.rag_agent import create_rag_agent
 
 # from .sub_agents.graph_agent import create_graph_agent
@@ -51,7 +52,7 @@ def create_answer_validator_agent():
     answer_validator_agent = Agent(
         name="answer_validator_agent",
         description="Checks the user input and decides whether or not the user's question actually requires a response",
-        model="gemini-2.0-flash",
+        model=config.ANSER_VALIDATOR_AGENT_MODEL,
         instruction="""You are an agent designed to assess the user's input.
         You need to evaluate TWO parameters:
             - `reply`: whether or not the `personal_clone` agent should reply to the user's query.
@@ -201,7 +202,7 @@ def create_main_agent():
         """,
         tools=[
             get_current_datetime,
-            # AgentTool(create_vertex_search_agent()),
+            AgentTool(create_vertex_search_agent()),
             AgentTool(create_code_executor_agent()),
             AgentTool(create_google_search_agent()),
             scrape_web_page,
