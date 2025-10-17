@@ -14,11 +14,8 @@ load_dotenv()
 GOOGLE_CLOUD_PROJECT = os.environ["GOOGLE_CLOUD_PROJECT"]
 GOOGLE_CLOUD_LOCATION = os.environ["GOOGLE_CLOUD_LOCATION"]
 GOOGLE_CLOUD_STORAGE_BUCKET = os.environ["GOOGLE_CLOUD_STORAGE_BUCKET"]
-GOOGLE_CLIENT_ID = os.environ["GOOGLE_CLIENT_ID"]
-GOOGLE_CLIENT_SECRET = os.environ["GOOGLE_CLIENT_SECRET"]
 VERTEX_DATASTORE_ID = os.environ["VERTEX_DATASTORE_ID"]
 DATASTORE_ID = f"projects/{GOOGLE_CLOUD_PROJECT}/locations/us/collections/default_collection/dataStores/{VERTEX_DATASTORE_ID}"
-
 GCP_SERVICE_ACCOUNT_INFO = os.environ["GCP_SERVICE_ACCOUNT_INFO"]
 MELL_GCP_SERVICE_ACCOUNT_INFO = os.environ["MELL_GCP_SERVICE_ACCOUNT_INFO"]
 
@@ -46,10 +43,10 @@ MEMORY_CATEGORIES = {
     "idea": "New opportunities, proposals, brainstorms, pilots (not yet executed).",
     "memory": "Time-stamped events/decisions that record what happened (e.g., “we increased prices on X on Y”).",
     "knowledge": "Reference material, rules, pro-tips, or evergreen guidance (how-tos, best practices).",
-    "procedure": "Step-by-step or operational playbooks to be followed (operational SOPs).",
+    "procedure": "Step-by-step or operational playbooks (operational SOPs).",
     "experiment": "Tests/experimental runs with results and conclusions.",
     "incident": "Problems/complaints requiring follow up (IP theft, outages, bugs).",
-    "project": "Ongoing initiatives, plans, or requests requiring work/tracking.",
+    "project": "Initiatives, plans, or requests requiring work/tracking.",
     "technical": "Engineering or platform changes, debug notes, ML/SQL specifics.",
     "strategy": "High-level plans, promotional strategy, positioning (longer horizon).",
     "communication_style": "Templates / tone/style examples for messaging.",
