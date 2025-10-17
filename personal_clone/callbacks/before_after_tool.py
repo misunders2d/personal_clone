@@ -105,7 +105,7 @@ def before_professional_memory_callback(
 
     user_ids = search_tools.search_user_id(found_memory_ids)
 
-    user_valid = all([user == x for x in user_ids.values()])
+    user_valid = any([user == x for x in user_ids.values()])
     if not user_valid:
         missing_permissions = {
             memory: creator for memory, creator in user_ids.items() if creator != user

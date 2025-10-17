@@ -53,7 +53,7 @@ MEMORY_CATEGORIES = {
     "policy": "sk — Policy issues or compliance / legal risks and guidance.",
     "operational": "Short operational updates (inventory, event-day notes) — for quick operational status.",
 }
-EMBEDDING_MODEL = f"{DATASET_PATH}.google_embedding_model"
+EMBEDDING_MODEL = f"{DATASET_PATH}.embedding_model"
 
 SUPERUSERS = os.getenv("SUPERUSERS", "").split(",")
 TEAM_DOMAIN = os.getenv("TEAM_DOMAIN", "")
