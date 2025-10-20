@@ -20,6 +20,7 @@ GCP_SERVICE_ACCOUNT_INFO = os.environ["GCP_SERVICE_ACCOUNT_INFO"]
 MELL_GCP_SERVICE_ACCOUNT_INFO = os.environ["MELL_GCP_SERVICE_ACCOUNT_INFO"]
 
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
+GROK_API_KEY = os.environ["GROK_API_KEY"]
 
 NEO4J_DATABASE = os.environ.get("NEO4J_DATABASE", "neo4j")
 NEO4J_URI = os.environ.get("NEO4J_URI", "")
@@ -71,6 +72,11 @@ def create_planner(mode: Literal["built-in", "react"] | None = None):
         return PlanReActPlanner()
 
 
+# GROK MODELS
+GROK_PRO_MODEL = LiteLlm(model='xai/grok-4-fast-reasoning', api_key = GROK_API_KEY) # 0.20 / 0.50
+GROK_FLASH_MODEL = LiteLlm(model='xai/grok-4-fast-reasoning', api_key = GROK_API_KEY) # 0.20 / 0.50
+GROK_LITE_MODEL = LiteLlm(model='xai/grok-4-fast-non-reasoning-latest', api_key = GROK_API_KEY) # 0.20 / 0.50
+
 # OPENAI MODELS
 OPENAI_PRO_MODEL = LiteLlm(model="openai/gpt-5", api_key=OPENAI_API_KEY)  # 1.25 / 10
 OPENAI_FLASH_MODEL = LiteLlm(
@@ -85,7 +91,7 @@ GOOGLE_PRO_MODEL = "gemini-2.5-pro"
 GOOGLE_FLASH_MODEL = "gemini-2.5-flash"
 GOOGLE_LITE_MODEL = "gemini-2.5-flash-lite"
 
-GLOBAL_MODEL_PROVIDER: Literal["Google", "OpenAI"] = "OpenAI"
+GLOBAL_MODEL_PROVIDER: Literal["Google", "OpenAI", "Grok"] = "Grok"
 GLOBAL_PLANNER = create_planner("built-in")
 
 if GLOBAL_MODEL_PROVIDER == "Google":
@@ -96,6 +102,10 @@ elif GLOBAL_MODEL_PROVIDER == "OpenAI":
     PRO_MODEL = OPENAI_PRO_MODEL
     FLASH_MODEL = OPENAI_FLASH_MODEL
     LITE_MODEL = OPENAI_LITE_MODEL
+elif GLOBAL_MODEL_PROVIDER == "Grok":
+    PRO_MODEL = GROK_PRO_MODEL
+    FLASH_MODEL = GROK_FLASH_MODEL
+    LITE_MODEL = GROK_LITE_MODEL
 
 # AGENT-SPECIFIC MODELS
 ANSER_VALIDATOR_AGENT_MODEL = GOOGLE_LITE_MODEL
