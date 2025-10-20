@@ -6,7 +6,7 @@ from google.adk.tools import ToolContext
 
 from .. import config
 
-from github import Github, Repository, InputFileContent
+from github import Github, Repository
 from github.GithubException import GithubException
 
 
@@ -390,10 +390,10 @@ def create_github_toolset():
 
 
 def return_github_toolset():
-    github_toolset = create_github_mcp_toolset()
-    if isinstance(github_toolset, dict) and github_toolset["status"] == "error":
-        github_toolset = create_github_toolset()
-        if isinstance(github_toolset, dict) and github_toolset["status"] == "error":
-            return None
-
+    # github_toolset = create_github_mcp_toolset()
+    # if isinstance(github_toolset, dict) and github_toolset["status"] == "error":
+    #     github_toolset = create_github_toolset()
+    #     if isinstance(github_toolset, dict) and github_toolset["status"] == "error":
+    #         return None
+    github_toolset = create_github_toolset()
     return github_toolset
