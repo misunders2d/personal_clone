@@ -1,9 +1,7 @@
 from google.adk import Agent
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
-from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-from mcp import StdioServerParameters
 
 from ..tools.web_search_tools import scrape_web_page
+from ..tools.github_tools import return_github_toolset
 from ..sub_agents.memory_agent import create_memory_agent
 from ..callbacks.before_after_agent import personal_agents_checker
 
@@ -402,29 +400,22 @@ def create_github_agent_instruction():
     return instruction
 
 
-def create_github_toolset():
-    github_toolset = MCPToolset(
-        connection_params=StdioConnectionParams(
-            server_params=StdioServerParameters(
-                command="npx",
-                args=[
-                    "-y",
-                    "@modelcontextprotocol/server-github",
-                ],
-                env={"GITHUB_PERSONAL_ACCESS_TOKEN": config.GITHUB_TOKEN},
-            ),
-        ),
-    )
-    return github_toolset
-
-
 def create_github_agent():
+    github_tools = return_github_toolset()
+    tools = []
+    if isinstance(github_tools, list):
+        tools.extend(github_tools)
+    elif github_tools:
+        tools.append(github_tools)
+
+    tools.append(scrape_web_page)
+
     github_agent = Agent(
         model=config.GITHUB_AGENT_MODEL,
         name="github_agent",
         instruction=create_github_agent_instruction(),
         sub_agents=[create_memory_agent(scope="personal", name="github_memory_agent")],
-        tools=[create_github_toolset(), scrape_web_page],
+        tools=tools,
         before_agent_callback=personal_agents_checker,
         planner=config.GITHUB_AGENT_PLANNER,
     )

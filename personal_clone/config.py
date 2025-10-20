@@ -73,9 +73,15 @@ def create_planner(mode: Literal["built-in", "react"] | None = None):
 
 
 # GROK MODELS
-GROK_PRO_MODEL = LiteLlm(model='xai/grok-4-fast-reasoning', api_key = GROK_API_KEY) # 0.20 / 0.50
-GROK_FLASH_MODEL = LiteLlm(model='xai/grok-4-fast-reasoning', api_key = GROK_API_KEY) # 0.20 / 0.50
-GROK_LITE_MODEL = LiteLlm(model='xai/grok-4-fast-non-reasoning-latest', api_key = GROK_API_KEY) # 0.20 / 0.50
+GROK_PRO_MODEL = LiteLlm(
+    model="xai/grok-4-fast-reasoning", api_key=GROK_API_KEY
+)  # 0.20 / 0.50
+GROK_FLASH_MODEL = LiteLlm(
+    model="xai/grok-4-fast-reasoning", api_key=GROK_API_KEY
+)  # 0.20 / 0.50
+GROK_LITE_MODEL = LiteLlm(
+    model="xai/grok-4-fast-non-reasoning-latest", api_key=GROK_API_KEY
+)  # 0.20 / 0.50
 
 # OPENAI MODELS
 OPENAI_PRO_MODEL = LiteLlm(model="openai/gpt-5", api_key=OPENAI_API_KEY)  # 1.25 / 10
