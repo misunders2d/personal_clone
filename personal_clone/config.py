@@ -97,7 +97,7 @@ GOOGLE_PRO_MODEL = "gemini-2.5-pro"
 GOOGLE_FLASH_MODEL = "gemini-2.5-flash"
 GOOGLE_LITE_MODEL = "gemini-2.5-flash-lite"
 
-GLOBAL_MODEL_PROVIDER: Literal["Google", "OpenAI", "Grok"] = "Grok"
+GLOBAL_MODEL_PROVIDER: Literal["Google", "OpenAI", "Grok"] = "OpenAI"
 GLOBAL_PLANNER = create_planner("built-in")
 
 if GLOBAL_MODEL_PROVIDER == "Google":

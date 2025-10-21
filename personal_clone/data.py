@@ -737,6 +737,9 @@ BIGQUERY_AGENT_INSTRUCTIONS_OLD = (
     *   Always obey column descriptions if they exist; never "assume" anything if the column has a clear description and instructions.
     *   Double check complex calculations using other SQL queries, never rely on a single output, especially when there are mutliple joins and groupings;
     *   ALWAYS verify the data you receive from Bigquery. Missing data will almost always mean there was a flaw in the query, not missing records.
+    What you NEVER do:
+    *   You never attempt to alter/modify/create anything in bigquery, your only job is to RETRIEVE information.
+    *   If you think the user's query implies saving information, you must pass it to dedicated memory agents.
 </MANDATORY>
 
 <IMPORTANT IMPERATIVES>

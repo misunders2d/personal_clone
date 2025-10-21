@@ -126,6 +126,7 @@ def create_memory_agent_instruction(table):
                     embedding_result er;
             
                 **IMPORTANT:** If you are adding `linked_memories` field - make sure to update this field in the memory that you are linking to as well, to keep the relationship bidirectional.
+                After saving the memory you MUST verify the result by providing the user with the newly generated memory_id and checking if this row exists in the table.
     </SPECIAL INSTRUCTIONS FOR INSERTING NEW MEMORIES>
 
     <SPECIAL INSTRUCTIONS FOR UPDATING MEMORIES>
@@ -153,6 +154,9 @@ def create_memory_agent_instruction(table):
             WHERE
                 memory_id = 'your_memory_id';
         
+        After updating the memory you MUST verify the result by calling the sql query.
+
+                
     </SPECIAL INSTRUCTIONS FOR UPDATING MEMORIES>
 
     <MEMORY MANAGEMENT WORKFLOW>
