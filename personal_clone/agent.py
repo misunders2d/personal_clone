@@ -1,4 +1,9 @@
 from google.adk.agents import Agent, SequentialAgent  # , ParallelAgent
+from google.adk.apps import App
+from google.adk.apps import ResumabilityConfig
+from google.adk.tools.load_memory_tool import load_memory_tool
+from google.adk.tools.preload_memory_tool import preload_memory_tool
+
 
 from google.adk.tools import AgentTool
 from pydantic import BaseModel, Field
@@ -18,8 +23,7 @@ from .sub_agents.vertex_search_agent import create_vertex_search_agent
 from .sub_agents.google_search_agent import create_google_search_agent
 from .sub_agents.clickup_agent import create_clickup_agent
 from .sub_agents.github_agent import create_github_agent
-
-# from .sub_agents.pinecone_agent import create_pinecone_agent
+from .sub_agents.pinecone_agent import create_pinecone_agent
 
 from .callbacks.before_after_agent import (
     check_if_agent_should_run,
@@ -201,6 +205,8 @@ def create_main_agent():
 
         """,
         tools=[
+            load_memory_tool,
+            preload_memory_tool,
             get_current_datetime,
             AgentTool(create_vertex_search_agent()),
             AgentTool(create_code_executor_agent()),
@@ -227,7 +233,7 @@ def create_main_agent():
             create_clickup_agent(),
             create_github_agent(),
             # create_rag_agent(),
-            # create_pinecone_agent(),
+            create_pinecone_agent(),
         ],
         before_agent_callback=[check_if_agent_should_run],
         planner=config.AGENT_PLANNER,
@@ -245,4 +251,11 @@ root_agent = SequentialAgent(
     ],
 )
 
-# root_agent = create_rag_agent()
+
+app = App(
+    name="personal_clone",
+    root_agent=root_agent,
+    resumability_config=ResumabilityConfig(
+        is_resumable=True,
+    ),
+)

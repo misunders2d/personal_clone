@@ -35,6 +35,9 @@ GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 DEFAULT_GITHUB_REPO = os.environ.get("DEFAULT_GITHUB_REPO", "")
 
 PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY", "")
+PINECONE_INDEX_NAME = os.environ.get("PINECONE_INDEX_NAME", "")
+PINECONE_PERSONAL_NAMESPACE = "personal"
+PINECONE_PROFESSIONAL_NAMESPACE = "professional"
 
 DATASET_PATH = os.environ["MEMORY_DATASET_ID"]
 MEMORY_TABLE = f"{DATASET_PATH}.memories_personal"
