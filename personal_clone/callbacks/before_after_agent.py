@@ -1,13 +1,16 @@
 from google.adk.agents.callback_context import CallbackContext
+from google.adk.tools import ToolContext
 from typing import Optional
 from google.genai import types
 from concurrent.futures import ThreadPoolExecutor
 
 
-from ..tools.search_tools import (
-    search_bq,
-    search_people,
-)
+# from ..tools.search_tools import (
+#     search_bq,
+#     search_people,
+# )
+
+from ..tools.pinecone_tools import search_memories
 from ..tools.datetime_tools import get_current_datetime
 
 from .. import config
@@ -108,6 +111,8 @@ def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Conte
     last_user_message = ""
     user_id = callback_context.state.get("user_id")
 
+    tool_context = ToolContext(invocation_context=callback_context._invocation_context)
+
     if (
         callback_context.user_content
         and callback_context.user_content.parts
@@ -117,19 +122,6 @@ def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Conte
         last_user_message = callback_context.user_content.parts[0].text
     if callback_context.state.get("answer_validation", {}).get("reply"):
 
-        people_query = f"""
-        SELECT
-            person_id,
-            first_name,
-            last_name,
-            role
-        FROM
-            `{config.PEOPLE_TABLE}` AS p,
-        UNNEST(p.user_ids) AS user_id_alias
-        WHERE
-            "{user_id}" IN (user_id_alias.id_value)
-        """
-
         if (
             not user_id.lower().endswith(config.TEAM_DOMAIN)
             and user_id not in config.SUPERUSERS
@@ -138,25 +130,25 @@ def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Conte
 
         with ThreadPoolExecutor() as pool:
 
-            if user_id in config.SUPERUSERS and callback_context.state.get(
-                "answer_validation", {}
-            ).get("recall"):
+            if user_id in config.SUPERUSERS:
                 personal_future = pool.submit(
-                    search_bq, config.MEMORY_TABLE, last_user_message
+                    search_memories, tool_context, "personal", last_user_message, 1
                 )
             else:
                 personal_future = None
             if (
                 user_id.lower().endswith(config.TEAM_DOMAIN)
                 or user_id in config.SUPERUSERS
-            ) and callback_context.state.get("answer_validation", {}).get("recall"):
+            ):
                 professional_future = pool.submit(
-                    search_bq, config.MEMORY_TABLE_PROFESSIONAL, last_user_message
+                    search_memories, tool_context, "professional", last_user_message, 1
                 )
             else:
                 professional_future = None
 
-            people_future = pool.submit(search_people, people_query)
+            people_future = pool.submit(
+                search_memories, tool_context, "people", user_id, 1
+            )
 
             memory_recall = personal_future.result() if personal_future else None
             memory_recall_professional = (
@@ -165,8 +157,15 @@ def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Conte
             people_recall = people_future.result()
 
         callback_context.state["memory_context_professional"] = (
-            memory_recall_professional
+            memory_recall_professional.get("search_results")
+            if memory_recall_professional
+            else None
         )
-        callback_context.state["memory_context"] = memory_recall
-        callback_context.state["user_related_context"] = people_recall
+
+        callback_context.state["memory_context"] = (
+            memory_recall.get("search_results") if memory_recall else None
+        )
+        callback_context.state["user_related_context"] = (
+            people_recall.get("search_results") if people_recall else None
+        )
         callback_context.state["vertex_context"] = ""  # TODO add vertex search here

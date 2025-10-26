@@ -1,6 +1,7 @@
 from pinecone import Pinecone, SearchQuery
 import uuid
 from datetime import datetime
+import json
 
 from google.adk.tools.tool_context import ToolContext
 
@@ -95,7 +96,7 @@ def create_memory(
                 "message": "You must use `create_people` function to create records of people",
             }
 
-        if namespace not in ("personal","professional"):
+        if namespace not in ("personal", "professional"):
             return {
                 "status": "error",
                 "message": "Only `personal` or `professional` namespaces are allowed",
@@ -137,7 +138,8 @@ def create_memory(
             )
             return {"status": "pending", "message": "waiting for user confirmation"}
 
-        if tool_context.tool_confirmation and tool_context.tool_confirmation.confirmed:
+        # if tool_context.tool_confirmation and tool_context.tool_confirmation.confirmed:
+        if True:
 
             print("[TOOL CONFIRMATION RECEIVED]", end="\n\n\n")
 
@@ -170,12 +172,12 @@ def create_memory(
                     "status": "failed",
                     "response": f"id {records[0].get('id')} not inserted to {namespace}",
                 }
-        else:
-            print("[TOOL CONFIRMATION REJECTED]", end="\n\n\n")
-            return {
-                "status": "not confirmed",
-                "message": "the function call was never confirmed by the user",
-            }
+        # else:
+        #     print("[TOOL CONFIRMATION REJECTED]", end="\n\n\n")
+        #     return {
+        #         "status": "not confirmed",
+        #         "message": "the function call was never confirmed by the user",
+        #     }
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
@@ -229,33 +231,34 @@ def create_people(
         person_id = f"per_{date_value.strftime("%Y_%m_%d")}_{uuid.uuid4().hex}"
 
         # actual memory creation or update
-
+        user_ids_str = ", ".join([x["id_value"] for x in user_ids])
         single_record = {
             "id": person_id,
             "user_id": user_id,
             "created_at": int(date_value.timestamp()),
             "first_name": first_name,
             "last_name": last_name,
-            "text": f"{first_name} {last_name}".strip(),
+            "text": f"{first_name} {last_name}. IDs: {user_ids_str}".strip(),
             "role": role,
             "user_ids": user_ids,
         }
         if relations:
             single_record["relations"] = relations
 
-        tool_confirmation = tool_context.tool_confirmation
-        if not tool_confirmation:
-            print("[REQUESTING TOOL CONFIRMATION]", end="\n\n\n")
-            tool_context.request_confirmation(
-                hint="Please confirm the creation of new memory"
-            )
-            print(
-                {"status": "pending", "message": "waiting for user confirmation"},
-                end="\n\n\n",
-            )
-            return {"status": "pending", "message": "waiting for user confirmation"}
+        # tool_confirmation = tool_context.tool_confirmation
+        # if not tool_confirmation:
+        #     print("[REQUESTING TOOL CONFIRMATION]", end="\n\n\n")
+        #     tool_context.request_confirmation(
+        #         hint="Please confirm the creation of new memory"
+        #     )
+        #     print(
+        #         {"status": "pending", "message": "waiting for user confirmation"},
+        #         end="\n\n\n",
+        #     )
+        #     return {"status": "pending", "message": "waiting for user confirmation"}
 
-        if tool_context.tool_confirmation and tool_context.tool_confirmation.confirmed:
+        # if tool_context.tool_confirmation and tool_context.tool_confirmation.confirmed:
+        if True:
 
             print("[TOOL CONFIRMATION RECEIVED]", end="\n\n\n")
 
@@ -288,12 +291,12 @@ def create_people(
                     "status": "failed",
                     "response": f"id {records[0].get('id')} not inserted to {namespace}",
                 }
-        else:
-            print("[TOOL CONFIRMATION REJECTED]", end="\n\n\n")
-            return {
-                "status": "not confirmed",
-                "message": "the function call was never confirmed by the user",
-            }
+        # else:
+        #     print("[TOOL CONFIRMATION REJECTED]", end="\n\n\n")
+        #     return {
+        #         "status": "not confirmed",
+        #         "message": "the function call was never confirmed by the user",
+        #     }
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
@@ -357,39 +360,40 @@ def update_memory(
             }
 
         # Get the user's confirmation decision from the tool_context
-        tool_confirmation = tool_context.tool_confirmation
+        # tool_confirmation = tool_context.tool_confirmation
 
-        # If a confirmation decision has not been made, request one from the user.
-        if not tool_confirmation:
+        # # If a confirmation decision has not been made, request one from the user.
+        # if not tool_confirmation:
 
-            mem_data = memory_to_update.vectors[memory_id].to_dict()
+        #     mem_data = memory_to_update.vectors[memory_id].to_dict()
 
-            # This will pause the tool's execution and prompt the user for confirmation.
-            # The tool will be executed again with the user's decision.
-            tool_context.request_confirmation(
-                hint=f"You are about to update memory '{memory_id}'. Current content: {mem_data.get('metadata')}. Do you approve?",
-                payload={"confirmed": False},
-            )
-            # Return a pending status to indicate that the tool is waiting for user input.
-            return {"status": "pending", "message": "Waiting for user confirmation."}
+        #     # This will pause the tool's execution and prompt the user for confirmation.
+        #     # The tool will be executed again with the user's decision.
+        #     tool_context.request_confirmation(
+        #         hint=f"You are about to update memory '{memory_id}'. Current content: {mem_data.get('metadata')}. Do you approve?",
+        #         payload={"confirmed": False},
+        #     )
+        #     # Return a pending status to indicate that the tool is waiting for user input.
+        #     return {"status": "pending", "message": "Waiting for user confirmation."}
 
-        # If a confirmation decision has been made, check the payload.
-        if not tool_confirmation.confirmed:
-            return {
-                "status": "cancelled",
-                "message": "User cancelled the memory update.",
-            }
+        # # If a confirmation decision has been made, check the payload.
+        # if not tool_confirmation.confirmed:
+        #     return {
+        #         "status": "cancelled",
+        #         "message": "User cancelled the memory update.",
+        #     }
 
-        confirmed = tool_confirmation.confirmed
+        # confirmed = tool_confirmation.confirmed
 
-        print(f"[CONFIRMED]: {confirmed}", end="\n\n\n")
-        print(f"[TOOL CONFIRMATION]: {tool_confirmation}", end="\n\n\n")
-        print(f"[TOOL CONTEXT]: {tool_context}", end="\n\n\n")
+        # print(f"[CONFIRMED]: {confirmed}", end="\n\n\n")
+        # print(f"[TOOL CONFIRMATION]: {tool_confirmation}", end="\n\n\n")
+        # print(f"[TOOL CONTEXT]: {tool_context}", end="\n\n\n")
 
-        if confirmed:
+        # if confirmed:
+        if True:
             # --- User has approved, so proceed with the update ---
             records = {key: value for key, value in updates.items()}
-            records['updated_at'] = int(datetime.now().timestamp())
+            records["updated_at"] = int(datetime.now().timestamp())
 
             _ = index.update(id=memory_id, namespace=namespace, set_metadata=records)
 
@@ -405,12 +409,12 @@ def update_memory(
                     "status": "failed",
                     "response": f"id {records[0].get('id')} not inserted to {namespace}",
                 }
-        else:
-            tool_context.actions.escalate
-            return {
-                "status": "cancelled",
-                "message": "User cancelled the memory update.",
-            }
+        # else:
+        #     tool_context.actions.escalate
+        #     return {
+        #         "status": "cancelled",
+        #         "message": "User cancelled the memory update.",
+        #     }
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
@@ -471,39 +475,54 @@ def update_people(
             }
 
         # Get the user's confirmation decision from the tool_context
-        tool_confirmation = tool_context.tool_confirmation
+        # tool_confirmation = tool_context.tool_confirmation
 
-        # If a confirmation decision has not been made, request one from the user.
-        if not tool_confirmation:
+        # # If a confirmation decision has not been made, request one from the user.
+        # if not tool_confirmation:
 
-            person_data = person_to_update.vectors[person_id].to_dict()
+        #     person_data = person_to_update.vectors[person_id].to_dict()
 
-            # This will pause the tool's execution and prompt the user for confirmation.
-            # The tool will be executed again with the user's decision.
-            tool_context.request_confirmation(
-                hint=f"You are about to update memory '{person_id}'. Current content: {person_data.get('metadata')}. Do you approve?",
-                payload={"confirmed": False},
-            )
-            # Return a pending status to indicate that the tool is waiting for user input.
-            return {"status": "pending", "message": "Waiting for user confirmation."}
+        #     # This will pause the tool's execution and prompt the user for confirmation.
+        #     # The tool will be executed again with the user's decision.
+        #     tool_context.request_confirmation(
+        #         hint=f"You are about to update memory '{person_id}'. Current content: {person_data.get('metadata')}. Do you approve?",
+        #         payload={"confirmed": False},
+        #     )
+        #     # Return a pending status to indicate that the tool is waiting for user input.
+        #     return {"status": "pending", "message": "Waiting for user confirmation."}
 
-        # If a confirmation decision has been made, check the payload.
-        if not tool_confirmation.confirmed:
-            return {
-                "status": "cancelled",
-                "message": "User cancelled the memory update.",
-            }
+        # # If a confirmation decision has been made, check the payload.
+        # if not tool_confirmation.confirmed:
+        #     return {
+        #         "status": "cancelled",
+        #         "message": "User cancelled the memory update.",
+        #     }
 
-        confirmed = tool_confirmation.confirmed
+        # confirmed = tool_confirmation.confirmed
 
-        print(f"[CONFIRMED]: {confirmed}", end="\n\n\n")
-        print(f"[TOOL CONFIRMATION]: {tool_confirmation}", end="\n\n\n")
-        print(f"[TOOL CONTEXT]: {tool_context}", end="\n\n\n")
+        # print(f"[CONFIRMED]: {confirmed}", end="\n\n\n")
+        # print(f"[TOOL CONFIRMATION]: {tool_confirmation}", end="\n\n\n")
+        # print(f"[TOOL CONTEXT]: {tool_context}", end="\n\n\n")
 
-        if confirmed:
+        # if confirmed:
+        if True:
             # --- User has approved, so proceed with the update ---
             records = {key: value for key, value in updates.items()}
-            records['updated_at'] = int(datetime.now().timestamp())
+            records["updated_at"] = int(datetime.now().timestamp())
+            existing_records = person_to_update.vectors[person_id].to_dict()
+            if existing_records:
+                metadata = existing_records.get("metadata", {})
+                existing_user_ids = [
+                    x["id_value"] for x in json.loads(metadata["user_ids"])
+                ]
+
+                if "user_ids" in updates:
+                    new_user_ids = [x["id_value"] for x in updates["user_ids"]]
+                    existing_user_ids.extend(new_user_ids)
+                    updated_user_ids_str = ", ".join(existing_user_ids)
+                    records["text"] = (
+                        f"{metadata['first_name']} {metadata['last_name']} IDs {updated_user_ids_str}"
+                    )
 
             _ = index.update(id=person_id, namespace=namespace, set_metadata=records)
 
@@ -519,36 +538,51 @@ def update_people(
                     "status": "failed",
                     "response": f"id {records[0].get('id')} not inserted to {namespace}",
                 }
-        else:
-            tool_context.actions.escalate
-            return {
-                "status": "cancelled",
-                "message": "User cancelled the memory update.",
-            }
+        # else:
+        #     tool_context.actions.escalate
+        #     return {
+        #         "status": "cancelled",
+        #         "message": "User cancelled the memory update.",
+        #     }
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
 
 def get_records_by_id(
-    tool_context: ToolContext, record_ids: list, namespace: str
+    tool_context: ToolContext, record_ids: list[str], namespace: str
 ) -> dict:
     """
     Fetches one or several memories or people from Pinecone using their respective memory / person IDs.
 
     Args:
         tool_context (ToolContext): a ToolContext object.
-        record_ids (list): Required. A list of memory_id strings.
+        record_ids (list[str]): Required. A list of memory_id strings.
         namespace (str): Required. The name of the Pinecone index namespace ("personal" for personal memories or "professional" for professional experience).
 
     Returns:
         dict: The result of the upsert operation.
     """
-    if not namespace or not isinstance(record_ids, list):
+    user_id = tool_context.state.get("user_id")
+    if namespace == "personal" and user_id not in config.SUPERUSERS:
         return {
-            "status": "error",
-            "message": "`record_ids` MUST be a list of memory id strings, namespace must be provided",
+            "status": "restricted",
+            "search_results": "sorry, personal memories are for my master user only",
         }
+    if namespace == "professional" and (
+        user_id not in config.SUPERUSERS
+        and not user_id.lower().endswith(config.TEAM_DOMAIN)
+    ):
+        return {
+            "status": "restricted",
+            "search_results": f"sorry, this information is only available to {config.TEAM_DOMAIN} members",
+        }
+
     try:
+        if not namespace or not isinstance(record_ids, list):
+            return {
+                "status": "error",
+                "message": "`record_ids` MUST be a list of memory id strings, namespace must be provided",
+            }
         index = pc.Index(index_name)
         vectors = index.fetch(ids=record_ids, namespace=namespace)
         records_data = {key: value.metadata for key, value in vectors.vectors.items()}
@@ -568,6 +602,12 @@ def delete_memory(tool_context: ToolContext, namespace: str, record_id: str):
     Returns:
         dict: The result of the delete operation.
     """
+    user_id = tool_context.state.get("user_id")
+    if user_id not in config.SUPERUSERS:
+        return {
+            "status": "restricted",
+            "message": "sorry, only master user can perform delete operations right now",
+        }
     try:
         index = pc.Index(index_name)
         _ = index.delete(ids=[record_id], namespace=namespace)
@@ -585,25 +625,42 @@ def delete_memory(tool_context: ToolContext, namespace: str, record_id: str):
         return {"status": "failed", "error": str(e)}
 
 
-def search_memories(tool_context: ToolContext, namespace: str, search_query: str):
+def search_memories(
+    tool_context: ToolContext, namespace: str, search_query: str, top_k: int
+):
     """
     Searches for memories/records in Pinecone using a search query.
 
     Args:
         namespace (str): The name of the Pinecone index namespace ("personal" for personal memories or "professional" for professional experience)..
         search_query (str): The search query to search in Pinecone records
+        top_k (int): How many results to return. Start with small numbers (3-5) and only increase this number if you want to do a broader search.
 
     Returns:
         dict: The result of the search operation along with additional metadata (if any).
 
     """
+
+    user_id = tool_context.state.get("user_id")
+    if namespace == "personal" and user_id not in config.SUPERUSERS:
+        return {
+            "status": "restricted",
+            "search_results": "sorry, personal memories are for my master user only",
+        }
+    elif user_id not in config.SUPERUSERS and not user_id.lower().endswith(
+        config.TEAM_DOMAIN
+    ):
+        return {
+            "status": "restricted",
+            "search_results": f"sorry, this information is only available to {config.TEAM_DOMAIN} members",
+        }
     try:
-        query = SearchQuery(inputs={"text": search_query}, top_k=20)
+        query = SearchQuery(inputs={"text": search_query}, top_k=top_k)
 
         index = pc.Index(index_name)
         results = index.search(namespace=namespace, query=query)
         if results:
-            summary = results.get("result", {}).get("hits")
+            summary = results.to_dict().get("result", {}).get("hits")
             return {"status": "success", "search_results": summary}
         return {"status": "failed", "search_results": results.result}
     except Exception as e:

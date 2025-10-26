@@ -414,7 +414,7 @@ def create_github_agent():
         model=config.GITHUB_AGENT_MODEL,
         name="github_agent",
         instruction=create_github_agent_instruction(),
-        sub_agents=[create_memory_agent(scope="personal", name="github_memory_agent")],
+        sub_agents=[create_memory_agent(name="github_memory_agent")],
         tools=tools,
         before_agent_callback=personal_agents_checker,
         planner=config.GITHUB_AGENT_PLANNER,

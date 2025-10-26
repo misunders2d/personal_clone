@@ -22,12 +22,13 @@ def create_pinecone_agent(name="pinecone_agent"):
         description="An agent that manages Pinecone requests. All user requests relating to Pinecone should be handled by this agent.",
         model=config.PINECONE_AGENT_MODEL,
         instruction="""
-        Use the tools available to you to answer user questions and manage tasks in Pinecone. The user info is stored in {clickup_user_info} session key.
+        Use the tools available to you to answer user questions and manage tasks in Pinecone.
         The user's email is stored in {user_id} session key.
         The current date and time are store in {current_datetime} key. Always refer to this key for be aware of the current date and time.
         """,
         tools=tools,
         planner=config.PINECONE_AGENT_PLANNER,
         # before_agent_callback=[personal_agents_checker, professional_agents_checker],
+        output_key="memory_search",
     )
     return pinecone_agent
