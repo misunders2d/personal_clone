@@ -683,6 +683,33 @@ def search_memories(
         return {"status": "failed", "error": str(e)}
 
 
+def run_tool_confirmation_test(tool_context: ToolContext) -> dict:
+    """
+    A test function to verify the tool confirmation flow
+    """
+
+    tool_confirmation = tool_context.tool_confirmation
+    if not tool_confirmation:
+        print("[REQUESTING TOOL CONFIRMATION]", end="\n\n\n")
+        tool_context.request_confirmation(
+            hint=f"Please confirm the execution of {tool_context.agent_name} tool call",
+            # payload={"approve": False},
+        )
+
+        print(
+            {"status": "pending", "message": "waiting for user confirmation"},
+            end="\n\n\n",
+        )
+        return {"status": "pending", "message": "waiting for user confirmation"}
+
+    if tool_context.tool_confirmation and tool_context.tool_confirmation.confirmed:
+        print("[CONFIRMED TOOL CONFIRMATION]", end="\n\n\n")
+        return {"status": "completed", "message": "user confirmation received"}
+
+    else:
+        return {"status": "incomplete", "message": "confirmation was never requested"}
+
+
 def create_pinecone_toolset():
     # pinecone_toolset = MCPToolset(
     #     connection_params=StdioConnectionParams(
@@ -706,4 +733,5 @@ def create_pinecone_toolset():
         delete_memory,
         get_records_by_id,
         search_memories,
+        run_tool_confirmation_test
     ]  # , search_records, delete_record]
