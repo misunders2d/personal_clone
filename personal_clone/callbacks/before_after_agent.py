@@ -130,7 +130,9 @@ def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Conte
 
         with ThreadPoolExecutor() as pool:
 
-            if user_id in config.SUPERUSERS:
+            if user_id in config.SUPERUSERS and callback_context.state.get(
+                "answer_validation", {}
+            ).get("recall"):
                 personal_future = pool.submit(
                     search_memories, tool_context, "personal", last_user_message, 1
                 )
@@ -139,7 +141,7 @@ def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Conte
             if (
                 user_id.lower().endswith(config.TEAM_DOMAIN)
                 or user_id in config.SUPERUSERS
-            ):
+            ) and callback_context.state.get("answer_validation", {}).get("recall"):
                 professional_future = pool.submit(
                     search_memories, tool_context, "professional", last_user_message, 1
                 )

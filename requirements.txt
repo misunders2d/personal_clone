@@ -5,7 +5,7 @@ google-cloud-aiplatform
 google-cloud-bigquery-storage
 litellm
 lxml
-neo4j
+# neo4j
 PyGitHub
 requests
 pinecone

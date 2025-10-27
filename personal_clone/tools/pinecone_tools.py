@@ -1,7 +1,8 @@
-from pinecone import Pinecone, SearchQuery
+from pinecone import Pinecone, SearchQuery, FetchResponse
 import uuid
 from datetime import datetime
 import json
+import time
 
 from google.adk.tools.tool_context import ToolContext
 
@@ -36,7 +37,7 @@ def create_memory(
     category: str,
     tags: list[str],
     related_people: list[str] = [],
-    related_memories: list[dict] = [],
+    related_memories: str = "[]",
 ) -> dict:
     """
     Creates a record in a specific Pinecone index.
@@ -49,14 +50,13 @@ def create_memory(
         category (str): Required. one of the allowed categories (e.g., "project", "memory", "strategy", "note", "task", "professional").
         tags (list[str]): Required. list of keyword tags.
         related_people (list[str]): Optional. list of person ids (e.g., "per_2025_09_05_8909994f") referenced by this memory.
-        related_memories (list[dict]): Optional. references to other memories:
-            [{"related_memory_id": "mem_...", "relation_type": "related_to"}]
+        related_memories (str): Optional. A JSON string representing a list of references to other memories. Example: '''[{"related_memory_id": "mem_...", "relation_type": "related_to"}]'''. Defaults to an empty list string "[]".
 
     Returns:
         dict: The result of the upsert operation.
 
     Example:
-        records = [
+        records = '''[
             {
                 "memory_id": None,
                 "short_description": "Call with Bernard about promotion",
@@ -66,7 +66,7 @@ def create_memory(
                 "related_people": ["per_2025_09_16_c08e0ed4", "per_2025_10_02_41c37001"],
                 "related_memories": None,
             }
-        ]
+        ]'''
     """
     try:
 
@@ -103,7 +103,7 @@ def create_memory(
             }
 
         related_people = related_people or []
-        related_memories = related_memories or []
+        related_memories_list = json.loads(related_memories) if related_memories else []
 
         index = pc.Index(index_name)
 
@@ -123,51 +123,55 @@ def create_memory(
         }
         if related_people:
             single_record["related_people"] = related_people
-        if related_memories:
-            single_record["related_memories"] = related_memories
+        if related_memories_list:
+            single_record["related_memories"] = json.dumps(related_memories_list)
 
-        tool_confirmation = tool_context.tool_confirmation
-        if not tool_confirmation:
-            print("[REQUESTING TOOL CONFIRMATION]", end="\n\n\n")
-            tool_context.request_confirmation(
-                hint="Please confirm the creation of new memory"
-            )
-            print(
-                {"status": "pending", "message": "waiting for user confirmation"},
-                end="\n\n\n",
-            )
-            return {"status": "pending", "message": "waiting for user confirmation"}
+        # tool_confirmation = tool_context.tool_confirmation
+        # if not tool_confirmation:
+        #     print("[REQUESTING TOOL CONFIRMATION]", end="\n\n\n")
+        #     tool_context.request_confirmation(
+        #         hint="Please confirm the creation of new memory"
+        #     )
+        #     print(
+        #         {"status": "pending", "message": "waiting for user confirmation"},
+        #         end="\n\n\n",
+        #     )
+        #     return {"status": "pending", "message": "waiting for user confirmation"}
 
         # if tool_context.tool_confirmation and tool_context.tool_confirmation.confirmed:
         if True:
 
-            print("[TOOL CONFIRMATION RECEIVED]", end="\n\n\n")
+            # print("[TOOL CONFIRMATION RECEIVED]", end="\n\n\n")
 
             records = [single_record]
             _ = index.upsert_records(namespace=namespace, records=records)
 
             # verifying that memory was updated/created
-            check = index.fetch(ids=[x["id"] for x in records], namespace=namespace)
+            attempts = 0
+            check = FetchResponse(namespace=namespace, vectors={}, usage=0)
+            while attempts < 10 and not check.vectors:  # type: ignore
+                check = index.fetch(ids=[x["id"] for x in records], namespace=namespace)
+                time.sleep(1.5)
             if check and check.vectors:
-                print(
-                    {
-                        "status": "success",
-                        "response": f"id {records[0].get('id')} successfully updated in {namespace} namespace",
-                    },
-                    end="\n\n\n",
-                )
+                # print(
+                #     {
+                #         "status": "success",
+                #         "response": f"id {records[0].get('id')} successfully updated in {namespace} namespace",
+                #     },
+                #     end="\n\n\n",
+                # )
                 return {
                     "status": "success",
                     "response": f"id {records[0].get('id')} successfully updated in {namespace} namespace",
                 }
             else:
-                print(
-                    {
-                        "status": "failed",
-                        "response": f"id {records[0].get('id')} not inserted to {namespace}",
-                    },
-                    end="\n\n\n",
-                )
+                # print(
+                #     {
+                #         "status": "failed",
+                #         "response": f"id {records[0].get('id')} not inserted to {namespace}",
+                #     },
+                #     end="\n\n\n",
+                # )
                 return {
                     "status": "failed",
                     "response": f"id {records[0].get('id')} not inserted to {namespace}",
@@ -187,8 +191,8 @@ def create_people(
     first_name: str,
     last_name: str,
     role: str,
-    user_ids: list[dict[str, str]],
-    relations: list[dict[str, str]] = [],
+    user_ids: str,
+    relations: str = "[]",
 ) -> dict:
     """
     A dedicated function to create records about people, one person at a time.
@@ -198,8 +202,8 @@ def create_people(
         - first_name (str): Required. Person's first name.
         - last_name (str): Required. Person's last name. Use an empty string ("") if last name is unknown, but it is highly recommended to find out the user's last name to avoid ambiguity.
         - role (str): Required. Short description of the role or how this person is perceived and related to the "owner" user. Example: 'friend', 'mentor', 'colleague'.
-        - user_ids (list[dict[str, str]]): Required. Identifiers that can be used to recognize this person, with type labels. Example: [{'id_type':'personal email','id_value':'user@example.com'},{'id_type':'telegram handle','id_value':'@tg_user'}]..
-        - relations (list[dict[str, str]]): Optional. Connections to other people in the table. Example: [{'related_person_id':'per_abc123','relation_type':'son'}]..
+        - user_ids (str): Required. A JSON string of identifiers for the person. Example: '''[{"id_type":"personal email","id_value":"user@example.com"},{"id_type":"telegram handle","id_value":"@tg_user"}]'''.
+        - relations (str): Optional. A JSON string of connections to other people. Example: '''[{"related_person_id":"per_abc123","relation_type":"son"}]'''. Defaults to an empty list string "[]".
 
     Returns:
         dict: The result of the upsert operation.
@@ -207,7 +211,7 @@ def create_people(
     """
     try:
         namespace = "people"
-        user_id = tool_context.state.get("user_id", "unknown_user")
+        # user_id = tool_context.state.get("user_id", "unknown_user")
 
         missing = []
         if not first_name:
@@ -230,20 +234,22 @@ def create_people(
         date_value = datetime.now()
         person_id = f"per_{date_value.strftime("%Y_%m_%d")}_{uuid.uuid4().hex}"
 
+        user_ids_list = json.loads(user_ids) if user_ids else []
+        relations_list = json.loads(relations) if relations else []
+
         # actual memory creation or update
-        user_ids_str = ", ".join([x["id_value"] for x in user_ids])
+        user_ids_str = ", ".join([x["id_value"] for x in user_ids_list])
         single_record = {
             "id": person_id,
-            "user_id": user_id,
             "created_at": int(date_value.timestamp()),
             "first_name": first_name,
             "last_name": last_name,
             "text": f"{first_name} {last_name}. IDs: {user_ids_str}".strip(),
             "role": role,
-            "user_ids": user_ids,
+            "user_ids": json.dumps(user_ids_list),
         }
-        if relations:
-            single_record["relations"] = relations
+        if relations_list:
+            single_record["relations"] = json.dumps(relations_list)
 
         # tool_confirmation = tool_context.tool_confirmation
         # if not tool_confirmation:
@@ -260,36 +266,40 @@ def create_people(
         # if tool_context.tool_confirmation and tool_context.tool_confirmation.confirmed:
         if True:
 
-            print("[TOOL CONFIRMATION RECEIVED]", end="\n\n\n")
+            # print("[TOOL CONFIRMATION RECEIVED]", end="\n\n\n")
 
             records = [single_record]
             _ = index.upsert_records(namespace=namespace, records=records)
 
             # verifying that memory was updated/created
-            check = index.fetch(ids=[x["id"] for x in records], namespace=namespace)
+            attempts = 0
+            check = FetchResponse(namespace=namespace, vectors={}, usage=0)
+            while attempts < 10 and not check.vectors:  # type: ignore
+                check = index.fetch(ids=[x["id"] for x in records], namespace=namespace)
+                time.sleep(1.5)
             if check and check.vectors:
-                print(
-                    {
-                        "status": "success",
-                        "response": f"id {records[0].get('id')} successfully updated in {namespace} namespace",
-                    },
-                    end="\n\n\n",
-                )
+                # print(
+                #     {
+                #         "status": "success",
+                #         "response": f"id {records[0].get('id')} successfully updated in {namespace} namespace",
+                #     },
+                #     end="\n\n\n",
+                # )
                 return {
                     "status": "success",
-                    "response": f"id {records[0].get('id')} successfully updated in {namespace} namespace",
+                    "response": f"person {records[0].get('id')} ({first_name} {last_name}) successfully updated in {namespace} namespace",
                 }
             else:
-                print(
-                    {
-                        "status": "failed",
-                        "response": f"id {records[0].get('id')} not inserted to {namespace}",
-                    },
-                    end="\n\n\n",
-                )
+                # print(
+                #     {
+                #         "status": "failed",
+                #         "response": f"id {records[0].get('id')} not inserted to {namespace}",
+                #     },
+                #     end="\n\n\n",
+                # )
                 return {
                     "status": "failed",
-                    "response": f"id {records[0].get('id')} not inserted to {namespace}",
+                    "response": f"person {records[0].get('id')} ({first_name} {last_name}) not inserted to {namespace}",
                 }
         # else:
         #     print("[TOOL CONFIRMATION REJECTED]", end="\n\n\n")
@@ -302,7 +312,7 @@ def create_people(
 
 
 def update_memory(
-    tool_context: ToolContext, namespace: str, memory_id: str, updates: dict = {}
+    tool_context: ToolContext, namespace: str, memory_id: str, updates: str = "{}"
 ) -> dict:
     """
     Modifies/updates a specific record in a specific Pinecone namespace.
@@ -311,29 +321,33 @@ def update_memory(
         tool_context (ToolContext): a ToolContext object.
         namespace (str): Required. The name of the Pinecone index namespace ("personal" for personal memories or "professional" for professional experience).
         memory_id (str): Required. memory_id string.
-        updates: (dict): Required. a dict of updates applied to the specific memory. MUST CONTAIN AT LEAST ONE OF THE FOLLOWING:
-            - text (str): the main content/body of the memory to update.
-            - short_description (str): short summary/title for the memory to update.
-            - category (str): one of the allowed categories (e.g., "project", "memory", "strategy", "note", "task", "professional") to update.
-            - tags (list[str]): list of keyword tags to update.
-            - user_id (str): A unique user_id of the user who created this memory. Can be changed within the existing list of user_ids of the same user.
-            - related_people (Optional [list[str]]): list of person ids (e.g., "per_2025_09_05_8909994f") referenced by this memory to update.
-            - related_memories (Optional [list[dict]]) to update: references to other memories:
-                [{"related_memory_id": "mem_...", "relation_type": "related_to"}]
+        updates (str): Required. A JSON string representing a dictionary of updates to apply. The dictionary MUST CONTAIN AT LEAST ONE OF THE FOLLOWING keys:
+            - "text" (str): the main content/body of the memory to update.
+            - "short_description" (str): short summary/title for the memory to update.
+            - "category" (str): one of the allowed categories (e.g., "project", "memory", "strategy", "note", "task", "professional").
+            - "tags" (list[str]): list of keyword tags to update.
+            - "related_people" (list[str]): list of person ids (e.g., "per_2025_09_05_8909994f") referenced by this memory to update.
+            - "related_memories" (list of objects): references to other memories, e.g., '''[{"related_memory_id": "mem_...", "relation_type": "related_to"}]'''.
+
 
     Returns:
         dict: The result of the upsert operation.
 
     Example (update):
-        records = [
+        records = '''[
             {
                 "short_description": "Call with Bernard about promotion (updated)",
                 "text": "Updated notes: Bernard suggested a raise...",
                 "tags": ["career", "raise", "promotion"]
             }
-        ]
+        ]'''
 
     """
+    try:
+        updates_dict = json.loads(updates)
+    except json.JSONDecodeError:
+        return {"status": "error", "message": "Invalid JSON string for `updates`."}
+
     allowed_fields = (
         "text",
         "short_description",
@@ -342,12 +356,12 @@ def update_memory(
         "related_people",
         "related_memories",
     )
-    if not isinstance(updates, dict) or not updates:
+    if not isinstance(updates_dict, dict) or not updates_dict:
         return {
             "status": "error",
             "message": f"`updates` must be a dict with at least one of the allowed values: {allowed_fields}",
         }
-    if any(key not in allowed_fields for key in updates.keys()):
+    if any(key not in allowed_fields for key in updates_dict.keys()):
         return {"status": "error", "message": "forbidden keys in the `updates` dict"}
 
     try:
@@ -392,23 +406,19 @@ def update_memory(
         # if confirmed:
         if True:
             # --- User has approved, so proceed with the update ---
-            records = {key: value for key, value in updates.items()}
+            records = {key: value for key, value in updates_dict.items()}
             records["updated_at"] = int(datetime.now().timestamp())
+            if "related_memories" in updates_dict:
+                records["related_memories"] = json.dumps(
+                    updates_dict["related_memories"]
+                )
 
             _ = index.update(id=memory_id, namespace=namespace, set_metadata=records)
 
-            # Verifying that memory was updated/created
-            check = index.fetch(ids=[x["id"] for x in records], namespace=namespace)
-            if check and check.vectors:
-                return {
-                    "status": "success",
-                    "response": f"id {records[0].get('id')} successfully updated in {namespace} namespace",
-                }
-            else:
-                return {
-                    "status": "failed",
-                    "response": f"id {records[0].get('id')} not inserted to {namespace}",
-                }
+            return {
+                "status": "success",
+                "message": f"Make sure to verify the updates to memory {memory_id}",
+            }
         # else:
         #     tool_context.actions.escalate
         #     return {
@@ -420,7 +430,7 @@ def update_memory(
 
 
 def update_people(
-    tool_context: ToolContext, person_id: str, updates: dict = {}
+    tool_context: ToolContext, person_id: str, updates: str = "{}"
 ) -> dict:
     """
     Modifies/updates a specific person in "people" Pinecone namespace.
@@ -428,28 +438,31 @@ def update_people(
     Args:
         tool_context (ToolContext): a ToolContext object.
         person_id (str): Required. `person_id` string of a specific person to modify.
-        updates: (dict): Required. a dict of updates applied to the specific memory. MUST CONTAIN AT LEAST ONE OF THE FOLLOWING:
-            - first_name (str): Person's first name.
-            - last_name (str): Person's last name. Use an empty string ("") if last name is unknown, but it is highly recommended to find out the user's last name to avoid ambiguity.
-            - role (str): Short description of the role or how this person is perceived and related to the "owner" user. Example: 'friend', 'mentor', 'colleague'.
-            - user_ids (list[dict[str, str]]): Required. Identifiers that can be used to recognize this person, with type labels. Example: [{'id_type':'personal email','id_value':'user@example.com'},{'id_type':'telegram handle','id_value':'@tg_user'}]..
-            - relations (list[dict[str, str]]): Optional. Connections to other people in the table. Example: [{'related_person_id':'per_abc123','relation_type':'son'}]..
+        updates (str): Required. A JSON string representing a dictionary of updates to apply. The dictionary MUST CONTAIN AT LEAST ONE OF THE FOLLOWING keys:
+            - "first_name" (str): Person's first name.
+            - "last_name" (str): Person's last name. Use an empty string ("") if last name is unknown, but it is highly recommended to find out the user's last name to avoid ambiguity.
+            - "role" (str): Short description of the role or how this person is perceived and related to the "owner" user. Example: 'friend', 'mentor', 'colleague'.
+            - "user_ids" (list of objects): Optional. Identifiers for the person, with type labels. Example: '''[{"id_type":"personal email","id_value":"user@example.com"}]'''.
+            - "relations" (list of objects): Optional. Connections to other people in the table. Example: '''[{"related_person_id":"per_abc123","relation_type":"son"}]'''.
 
 
     Returns:
         dict: The result of the upsert operation.
 
-    Example (update):
-        records = [
-            {
-                "relations": {'per_2025_10_12_elksjdf':'friend'},
-                "user_ids": {"personal email":"user@homeserver.com"},
-                "last_name": "Jovanovich"
-            }
-        ]
+    Example for 'updates' parameter:
+        '''{
+            "relations": [{"related_person_id": "per_2025_10_12_elksjdf", "relation_type": "friend"}],
+            "user_ids": [{"id_type": "personal email", "id_value": "user@homeserver.com"}],
+            "last_name": "Jovanovich"
+        }'''
 
     """
     namespace = "people"
+    try:
+        updates_dict = json.loads(updates)
+    except json.JSONDecodeError:
+        return {"status": "error", "message": "Invalid JSON string for `updates`."}
+
     allowed_fields = (
         "first_name",
         "last_name",
@@ -457,12 +470,12 @@ def update_people(
         "user_ids",
         "relations",
     )
-    if not isinstance(updates, dict) or not updates:
+    if not isinstance(updates_dict, dict) or not updates_dict:
         return {
             "status": "error",
             "message": f"`updates` must be a dict with at least one of the allowed values: {allowed_fields}",
         }
-    if any(key not in allowed_fields for key in updates.keys()):
+    if any(key not in allowed_fields for key in updates_dict.keys()):
         return {"status": "error", "message": "forbidden keys in the `updates` dict"}
 
     try:
@@ -471,7 +484,7 @@ def update_people(
         if not person_to_update.vectors:
             return {
                 "status": "error",
-                "message": f"Person {person_to_update} not found in namespace {namespace}",
+                "message": f"Person {person_id} not found in namespace {namespace}",
             }
 
         # Get the user's confirmation decision from the tool_context
@@ -507,37 +520,28 @@ def update_people(
         # if confirmed:
         if True:
             # --- User has approved, so proceed with the update ---
-            records = {key: value for key, value in updates.items()}
+            records = {key: value for key, value in updates_dict.items()}
             records["updated_at"] = int(datetime.now().timestamp())
+            if "relations" in updates_dict:
+                records["relations"] = json.dumps(updates_dict["relations"])
             existing_records = person_to_update.vectors[person_id].to_dict()
             if existing_records:
                 metadata = existing_records.get("metadata", {})
-                existing_user_ids = [
-                    x["id_value"] for x in json.loads(metadata["user_ids"])
-                ]
-
-                if "user_ids" in updates:
-                    new_user_ids = [x["id_value"] for x in updates["user_ids"]]
-                    existing_user_ids.extend(new_user_ids)
-                    updated_user_ids_str = ", ".join(existing_user_ids)
+                if "user_ids" in updates_dict:
+                    new_user_ids = [x["id_value"] for x in updates_dict["user_ids"]]
+                    records["user_ids"] = json.dumps(updates_dict["user_ids"])
+                    updated_user_ids_str = ", ".join(new_user_ids)
                     records["text"] = (
                         f"{metadata['first_name']} {metadata['last_name']} IDs {updated_user_ids_str}"
                     )
 
             _ = index.update(id=person_id, namespace=namespace, set_metadata=records)
 
-            # Verifying that memory was updated/created
-            check = index.fetch(ids=[x["id"] for x in records], namespace=namespace)
-            if check and check.vectors:
-                return {
-                    "status": "success",
-                    "response": f"id {records[0].get('id')} successfully updated in {namespace} namespace",
-                }
-            else:
-                return {
-                    "status": "failed",
-                    "response": f"id {records[0].get('id')} not inserted to {namespace}",
-                }
+            return {
+                "status": "success",
+                "message": f"Make sure to verify the updates to person {person_id}",
+            }
+
         # else:
         #     tool_context.actions.escalate
         #     return {
@@ -586,7 +590,13 @@ def get_records_by_id(
         index = pc.Index(index_name)
         vectors = index.fetch(ids=record_ids, namespace=namespace)
         records_data = {key: value.metadata for key, value in vectors.vectors.items()}
-        return {"status": "success", "memories": records_data}
+        if records_data:
+            return {"status": "success", "memories": records_data}
+        else:
+            return {
+                "status": "failed",
+                "memories": f"no records with id {record_ids} found",
+            }
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
@@ -611,7 +621,13 @@ def delete_memory(tool_context: ToolContext, namespace: str, record_id: str):
     try:
         index = pc.Index(index_name)
         _ = index.delete(ids=[record_id], namespace=namespace)
-        check = index.fetch([record_id], namespace=namespace)
+
+        attempts = 0
+        check = FetchResponse(namespace=namespace, vectors={"test": "test"}, usage=0)
+        while attempts < 10 and check.vectors:  # type: ignore
+            check = index.fetch([record_id], namespace=namespace)
+            time.sleep(1.5)
+
         if check and check.vectors:
             return {
                 "status": "failed",

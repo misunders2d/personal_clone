@@ -34,7 +34,7 @@ def create_memory_agent_instruction():
     <SPECIAL INSTRUCTIONS FOR UPDATING MEMORIES>
         - ALWAYS ask for the user's explicit confirmation BEFORE updating any memory.
         - IMPORTANT! When updating memories you MUST make sure you are not overwriting the memory completely, and are only applying the agreed update to the memory.
-        - ALWAYS announce the changes you've made to the user - including the embeddings regeneration.
+        - ALWAYS announce the changes you've made to the user.
         - Make sure NOT to delete the record completely, just modify the relevant information.
     
     After updating the memory you MUST verify the result by fetching this memory by ID.
@@ -47,7 +47,7 @@ def create_memory_agent_instruction():
         4. Call the functions from your toolset:
             - For search tasks, retrieve the relevant memories and present them to the user. Use the query that user provided, do not come up with keywords. Pinecone toolset is designed to accept natural language queries.
             - For creating records, add new memories to the table. Make sure to provide all the required arguments in the required form.
-            - For UPDATE tasks, modify existing memories as per the user's request. Do not overwrite the memory completely.
+            - For UPDATE tasks, modify existing memories as per the user's request. DO NOT overwrite the memory completely.
             - For DELETE tasks, remove memories that are no longer needed. Confirm the user's intent before deletion.
         EXTREMELY IMPORTANT: Always get the user's EXPLICIT confirmation before performing any DELETE or UPDATE operations to avoid accidental data loss.
     </MEMORY MANAGEMENT WORKFLOW>
