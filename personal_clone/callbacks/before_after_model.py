@@ -4,7 +4,7 @@ from google.adk.models.llm_response import LlmResponse
 from typing import Optional
 
 
-def google_search_grounding(
+async def google_search_grounding(
     callback_context: CallbackContext, llm_response: LlmResponse
 ) -> Optional[LlmResponse]:
     """Saves detailed grounding metadata from Google Search tool calls into the state."""

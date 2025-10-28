@@ -1,7 +1,7 @@
 from google.adk.agents import Agent, SequentialAgent  # , ParallelAgent
 
-# from google.adk.apps import App
-# from google.adk.apps import ResumabilityConfig
+from google.adk.apps import App
+from google.adk.apps import ResumabilityConfig
 from google.adk.tools.load_memory_tool import load_memory_tool
 from google.adk.tools.preload_memory_tool import preload_memory_tool
 
@@ -246,10 +246,10 @@ root_agent = SequentialAgent(
 )
 
 
-# app = App(
-#     name="personal_clone",
-#     root_agent=root_agent,
-#     resumability_config=ResumabilityConfig(
-#         is_resumable=True,
-#     ),
-# )
+app = App(
+    name="personal_clone",
+    root_agent=root_agent,
+    resumability_config=ResumabilityConfig(
+        is_resumable=False,
+    ),
+)

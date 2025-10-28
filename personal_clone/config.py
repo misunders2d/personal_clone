@@ -21,6 +21,8 @@ MELL_GCP_SERVICE_ACCOUNT_INFO = os.environ["MELL_GCP_SERVICE_ACCOUNT_INFO"]
 
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 GROK_API_KEY = os.environ["GROK_API_KEY"]
+MINIMAX_API_KEY = os.environ["MINIMAX_API_KEY"]
+
 
 NEO4J_DATABASE = os.environ.get("NEO4J_DATABASE", "neo4j")
 NEO4J_URI = os.environ.get("NEO4J_URI", "")
@@ -95,12 +97,17 @@ OPENAI_LITE_MODEL = LiteLlm(
     model="openai/gpt-5-nano", api_key=OPENAI_API_KEY
 )  # 0.05 / 0.40
 
+# MINIMAX MODELS
+MINIMAX_PRO_MODEL = LiteLlm(model="openai/MiniMax-M2", api_key=MINIMAX_API_KEY)
+MINIMAX_FLASH_MODEL = LiteLlm(model="openai/MiniMax-M2", api_key=MINIMAX_API_KEY)
+MINIMAX_LITE_MODEL = LiteLlm(model="openai/MiniMax-M2", api_key=MINIMAX_API_KEY)
+
 # GOOGLE MODLES
 GOOGLE_PRO_MODEL = "gemini-2.5-pro"
 GOOGLE_FLASH_MODEL = "gemini-2.5-flash"
 GOOGLE_LITE_MODEL = "gemini-2.5-flash-lite"
 
-GLOBAL_MODEL_PROVIDER: Literal["Google", "OpenAI", "Grok"] = "Google"
+GLOBAL_MODEL_PROVIDER: Literal["Google", "OpenAI", "Grok", "Minimax"] = "Grok"
 GLOBAL_PLANNER = create_planner("built-in")
 
 if GLOBAL_MODEL_PROVIDER == "Google":
@@ -115,6 +122,10 @@ elif GLOBAL_MODEL_PROVIDER == "Grok":
     PRO_MODEL = GROK_PRO_MODEL
     FLASH_MODEL = GROK_FLASH_MODEL
     LITE_MODEL = GROK_LITE_MODEL
+elif GLOBAL_MODEL_PROVIDER == "Minimax":
+    PRO_MODEL = MINIMAX_PRO_MODEL
+    FLASH_MODEL = MINIMAX_FLASH_MODEL
+    LITE_MODEL = MINIMAX_LITE_MODEL
 
 # AGENT-SPECIFIC MODELS
 ANSER_VALIDATOR_AGENT_MODEL = GOOGLE_LITE_MODEL

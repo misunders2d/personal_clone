@@ -2,13 +2,6 @@ from google.adk.agents.callback_context import CallbackContext
 from google.adk.tools import ToolContext
 from typing import Optional
 from google.genai import types
-from concurrent.futures import ThreadPoolExecutor
-
-
-# from ..tools.search_tools import (
-#     search_bq,
-#     search_people,
-# )
 
 from ..tools.pinecone_tools import search_memories
 from ..tools.datetime_tools import get_current_datetime
@@ -16,7 +9,7 @@ from ..tools.datetime_tools import get_current_datetime
 from .. import config
 
 
-def state_setter(
+async def state_setter(
     callback_context: CallbackContext,
 ) -> Optional[types.Content]:
     """sets initial state"""
@@ -48,7 +41,7 @@ def state_setter(
     callback_context.state["current_datetime"] = get_current_datetime()
 
 
-def check_if_agent_should_run(
+async def check_if_agent_should_run(
     callback_context: CallbackContext,
 ) -> Optional[types.Content]:
     """
@@ -70,7 +63,7 @@ def check_if_agent_should_run(
         return None
 
 
-def professional_agents_checker(
+async def professional_agents_checker(
     callback_context: CallbackContext,
 ) -> Optional[types.Content]:
     """checks if the user is in superusers and prevents agent run with personal memories access"""
@@ -90,7 +83,7 @@ def professional_agents_checker(
         )
 
 
-def personal_agents_checker(
+async def personal_agents_checker(
     callback_context: CallbackContext,
 ) -> Optional[types.Content]:
     """checks if the user is in superusers and prevents agent run with personal memories access"""
@@ -103,7 +96,9 @@ def personal_agents_checker(
         )
 
 
-def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Content]:
+async def prefetch_memories(
+    callback_context: CallbackContext,
+) -> Optional[types.Content]:
     """
     Used to prefetch personal and professional memories based on the user query.
     Injects records from memories into session state
@@ -128,35 +123,31 @@ def prefetch_memories(callback_context: CallbackContext) -> Optional[types.Conte
         ):
             return
 
-        with ThreadPoolExecutor() as pool:
-
-            if user_id in config.SUPERUSERS and callback_context.state.get(
-                "answer_validation", {}
-            ).get("recall"):
-                personal_future = pool.submit(
-                    search_memories, tool_context, "personal", last_user_message, 1
-                )
-            else:
-                personal_future = None
-            if (
-                user_id.lower().endswith(config.TEAM_DOMAIN)
-                or user_id in config.SUPERUSERS
-            ) and callback_context.state.get("answer_validation", {}).get("recall"):
-                professional_future = pool.submit(
-                    search_memories, tool_context, "professional", last_user_message, 1
-                )
-            else:
-                professional_future = None
-
-            people_future = pool.submit(
-                search_memories, tool_context, "people", user_id, 1
+        if user_id in config.SUPERUSERS and callback_context.state.get(
+            "answer_validation", {}
+        ).get("recall"):
+            personal_future = search_memories(
+                tool_context, "personal", last_user_message, 1
             )
+        else:
+            personal_future = None
 
-            memory_recall = personal_future.result() if personal_future else None
-            memory_recall_professional = (
-                professional_future.result() if professional_future else None
+        if (
+            user_id.lower().endswith(config.TEAM_DOMAIN) or user_id in config.SUPERUSERS
+        ) and callback_context.state.get("answer_validation", {}).get("recall"):
+            professional_future = search_memories(
+                tool_context, "professional", last_user_message, 1
             )
-            people_recall = people_future.result()
+        else:
+            professional_future = None
+
+        people_future = search_memories(tool_context, "people", user_id, 1)
+
+        memory_recall = await personal_future if personal_future else None
+        memory_recall_professional = (
+            await professional_future if professional_future else None
+        )
+        people_recall = await people_future
 
         callback_context.state["memory_context_professional"] = (
             memory_recall_professional.get("search_results")

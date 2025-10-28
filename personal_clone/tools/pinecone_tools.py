@@ -1,4 +1,4 @@
-from pinecone import Pinecone, SearchQuery, FetchResponse
+from pinecone import PineconeAsyncio, SearchQuery, FetchResponse, IndexModel
 import uuid
 from datetime import datetime
 import json
@@ -10,11 +10,11 @@ from google.adk.tools.tool_context import ToolContext
 
 from .. import config
 
-pc = Pinecone(api_key=config.PINECONE_API_KEY)
+pc = PineconeAsyncio(api_key=config.PINECONE_API_KEY)
 index_name = config.PINECONE_INDEX_NAME
 
 
-def list_indexes() -> dict:
+async def list_indexes() -> dict:
     """
     Lists all available indexes in Pinecone
 
@@ -23,13 +23,14 @@ def list_indexes() -> dict:
 
     """
     try:
-        index_names = pc.list_indexes().names()
+        index_names_future = await pc.list_indexes()
+        index_names = index_names_future.names()
         return {"status": "success", "index_names": index_names}
     except Exception as e:
         return {"status": "error", "error": str(e)}
 
 
-def get_records_by_id(
+async def get_records_by_id(
     tool_context: ToolContext, record_ids: list[str], namespace: str
 ) -> dict:
     """
@@ -37,7 +38,7 @@ def get_records_by_id(
 
     Args:
         tool_context (ToolContext): a ToolContext object.
-        record_ids (list[str]): Required. A list of memory_id strings.
+        record_ids (list[str]): Required. A list of memory_id strings - accepts multipe records.
         namespace (str): Required. The name of the Pinecone index namespace ("personal" for personal memories or "professional" for professional experience).
 
     Returns:
@@ -64,21 +65,24 @@ def get_records_by_id(
                 "status": "error",
                 "message": "`record_ids` MUST be a list of memory id strings, namespace must be provided",
             }
-        index = pc.Index(index_name)
-        vectors = index.fetch(ids=record_ids, namespace=namespace)
-        records_data = {key: value.metadata for key, value in vectors.vectors.items()}
-        if records_data:
-            return {"status": "success", "memories": records_data}
-        else:
-            return {
-                "status": "failed",
-                "memories": f"no records with id {record_ids} found",
+        index_descr = await pc.describe_index(index_name)
+        async with pc.IndexAsyncio(index_descr.host) as index:
+            vectors = await index.fetch(ids=record_ids, namespace=namespace)
+            records_data = {
+                key: value.metadata for key, value in vectors.vectors.items()
             }
+            if records_data:
+                return {"status": "success", "memories": records_data}
+            else:
+                return {
+                    "status": "failed",
+                    "memories": f"no records with id {record_ids} found",
+                }
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
 
-def create_memory(
+async def create_memory(
     tool_context: ToolContext,
     namespace: str,
     text: str,
@@ -154,8 +158,6 @@ def create_memory(
         related_people = related_people or []
         related_memories_list = json.loads(related_memories) if related_memories else []
 
-        index = pc.Index(index_name)
-
         date_value = datetime.now()
         memory_id = f"mem_{date_value.strftime("%Y_%m_%d")}_{uuid.uuid4().hex}"
 
@@ -176,29 +178,35 @@ def create_memory(
             single_record["related_memories"] = json.dumps(related_memories_list)
 
         records = [single_record]
-        _ = index.upsert_records(namespace=namespace, records=records)
 
-        # verifying that memory was updated/created
-        attempts = 0
-        check = FetchResponse(namespace=namespace, vectors={}, usage=0)
-        while attempts < 10 and not check.vectors:  # type: ignore
-            check = index.fetch(ids=[x["id"] for x in records], namespace=namespace)
-            time.sleep(1.5)
+        index_descr: IndexModel = await pc.describe_index(index_name)
+        async with pc.IndexAsyncio(index_descr.host) as index:
+            await index.upsert_records(namespace=namespace, records=records)
+
+            # verifying that memory was updated/created
+            attempts = 0
+            check = FetchResponse(namespace=namespace, vectors={}, usage=0)
+            while attempts < 10 and not check.vectors:  # type: ignore
+                check = await index.fetch(
+                    ids=[x["id"] for x in records], namespace=namespace
+                )
+                time.sleep(1.5)
+
         if check and check.vectors:
             return {
                 "status": "success",
-                "response": f"id {records[0].get('id')} successfully updated in {namespace} namespace",
+                "response": f"id {records[0].get('id')} successfully created in {namespace} namespace",
             }
         else:
             return {
                 "status": "failed",
-                "response": f"id {records[0].get('id')} not inserted to {namespace}",
+                "response": f"id {records[0].get('id')} not created in {namespace}",
             }
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
 
-def create_people(
+async def create_people(
     tool_context: ToolContext,
     first_name: str,
     last_name: str,
@@ -241,8 +249,6 @@ def create_people(
                 "error": f"Missing required parameters: {', '.join(missing)}",
             }
 
-        index = pc.Index(index_name)
-
         date_value = datetime.now()
         person_id = f"per_{date_value.strftime("%Y_%m_%d")}_{uuid.uuid4().hex}"
 
@@ -264,14 +270,19 @@ def create_people(
             single_record["relations"] = json.dumps(relations_list)
 
         records = [single_record]
-        _ = index.upsert_records(namespace=namespace, records=records)
 
-        # verifying that memory was updated/created
-        attempts = 0
-        check = FetchResponse(namespace=namespace, vectors={}, usage=0)
-        while attempts < 10 and not check.vectors:  # type: ignore
-            check = index.fetch(ids=[x["id"] for x in records], namespace=namespace)
-            time.sleep(1.5)
+        index_descr: IndexModel = await pc.describe_index(index_name)
+        async with pc.IndexAsyncio(index_descr.host) as index:
+            await index.upsert_records(namespace=namespace, records=records)
+            # verifying that memory was updated/created
+            attempts = 0
+            check = FetchResponse(namespace=namespace, vectors={}, usage=0)
+            while attempts < 10 and not check.vectors:  # type: ignore
+                check = await index.fetch(
+                    ids=[x["id"] for x in records], namespace=namespace
+                )
+                time.sleep(1.5)
+
         if check and check.vectors:
             return {
                 "status": "success",
@@ -286,7 +297,7 @@ def create_people(
         return {"status": "failed", "error": str(e)}
 
 
-def update_memory(
+async def update_memory(
     tool_context: ToolContext, namespace: str, memory_id: str, updates: str = "{}"
 ) -> dict:
     """
@@ -312,6 +323,7 @@ def update_memory(
         updates = '''{"short_description": "Call with Bernard about promotion (updated)","text": "Updated notes: Bernard suggested a raise...","tags": ["career", "raise", "promotion"]}'''
 
     """
+
     try:
         updates_dict = json.loads(updates)
     except json.JSONDecodeError as e:
@@ -337,22 +349,44 @@ def update_memory(
         return {"status": "error", "message": "forbidden keys in the `updates` dict"}
 
     try:
-        index = pc.Index(index_name)
-        memory_to_update = index.fetch(ids=[memory_id], namespace=namespace)
-        if not memory_to_update.vectors:
-            return {
-                "status": "error",
-                "message": f"Memory {memory_id} not found in namespace {namespace}",
-            }
-
         records = {key: value for key, value in updates_dict.items()}
         records["updated_at"] = int(datetime.now().timestamp())
         if "related_memories" in updates_dict:
             records["related_memories"] = json.dumps(updates_dict["related_memories"])
 
-        _ = index.update(id=memory_id, namespace=namespace, set_metadata=records)
+        index_descr: IndexModel = await pc.describe_index(index_name)
+        async with pc.IndexAsyncio(index_descr.host) as index:
+            memory_to_update = await index.fetch(ids=[memory_id], namespace=namespace)
+            if not memory_to_update.vectors:
+                return {
+                    "status": "error",
+                    "message": f"Memory {memory_id} not found in namespace {namespace}",
+                }
+
+            current_user_ids_str = (
+                tool_context.state.get("user_related_context", [{}])[0]
+                .get("fields", {})
+                .get("user_ids")
+            )
+            current_user_ids = [x["id_value"] for x in json.loads(current_user_ids_str)]
+            memory_creator = (
+                memory_to_update.vectors[memory_id]
+                .to_dict()
+                .get("metadata", {})
+                .get("user_id")
+            )
+
+            if memory_creator not in current_user_ids and not any(
+                [user_id in config.SUPERUSERS for user_id in current_user_ids]
+            ):
+                return {
+                    "status": "forbidden",
+                    "message": f"Memory {memory_id} was created by {memory_creator} and can only be modified by this user",
+                }
+
+            await index.update(id=memory_id, namespace=namespace, set_metadata=records)
         time.sleep(1.5)
-        result = get_records_by_id(
+        result = await get_records_by_id(
             tool_context=tool_context, record_ids=[memory_id], namespace=namespace
         )
 
@@ -365,7 +399,7 @@ def update_memory(
         return {"status": "failed", "error": str(e)}
 
 
-def update_people(
+async def update_people(
     tool_context: ToolContext, person_id: str, updates: str = "{}"
 ) -> dict:
     """
@@ -418,32 +452,48 @@ def update_people(
         return {"status": "error", "message": "forbidden keys in the `updates` dict"}
 
     try:
-        index = pc.Index(index_name)
-        person_to_update = index.fetch(ids=[person_id], namespace=namespace)
-        if not person_to_update.vectors:
-            return {
-                "status": "error",
-                "message": f"Person {person_id} not found in namespace {namespace}",
-            }
         records = {key: value for key, value in updates_dict.items()}
         records["updated_at"] = int(datetime.now().timestamp())
         if "relations" in updates_dict:
             records["relations"] = json.dumps(updates_dict["relations"])
-        existing_records = person_to_update.vectors[person_id].to_dict()
-        if existing_records:
-            metadata = existing_records.get("metadata", {})
-            if "user_ids" in updates_dict:
-                new_user_ids = [x["id_value"] for x in updates_dict["user_ids"]]
-                records["user_ids"] = json.dumps(updates_dict["user_ids"])
-                updated_user_ids_str = ", ".join(new_user_ids)
-                records["text"] = (
-                    f"{metadata['first_name']} {metadata['last_name']} IDs {updated_user_ids_str}"
-                )
 
-        _ = index.update(id=person_id, namespace=namespace, set_metadata=records)
+        index_descr: IndexModel = await pc.describe_index(index_name)
+        async with pc.IndexAsyncio(index_descr.host) as index:
+            person_to_update = await index.fetch(ids=[person_id], namespace=namespace)
+            if not person_to_update.vectors:
+                return {
+                    "status": "error",
+                    "message": f"Person {person_id} not found in namespace {namespace}",
+                }
+
+            current_user_ids_str = (
+                tool_context.state.get("user_related_context", [{}])[0]
+                .get("fields", {})
+                .get("user_ids")
+            )
+            current_user_ids = [x["id_value"] for x in json.loads(current_user_ids_str)]
+            person_ids_dict = (
+                person_to_update.vectors[person_id]
+                .to_dict()
+                .get("metadata", {})
+                .get("user_ids", {})
+            )
+            person_ids = [x["id_value"] for x in json.loads(person_ids_dict)]
+
+            if not any(
+                [user_id in person_ids for user_id in current_user_ids]
+            ) and not any(
+                [user_id in config.SUPERUSERS for user_id in current_user_ids]
+            ):
+                return {
+                    "status": "forbidden",
+                    "message": f"Person {person_id}  can only be modified by this user or superusers",
+                }
+
+            await index.update(id=person_id, namespace=namespace, set_metadata=records)
 
         time.sleep(1.5)
-        result = get_records_by_id(
+        result = await get_records_by_id(
             tool_context=tool_context, record_ids=[person_id], namespace=namespace
         )
 
@@ -456,7 +506,9 @@ def update_people(
         return {"status": "failed", "error": str(e)}
 
 
-def delete_memory(tool_context: ToolContext, namespace: str, record_id: str) -> dict:
+async def delete_memory(
+    tool_context: ToolContext, namespace: str, record_id: str
+) -> dict:
     """
     Deletes a specific record from  a specific Pinecone index.
 
@@ -474,14 +526,17 @@ def delete_memory(tool_context: ToolContext, namespace: str, record_id: str) -> 
             "message": "sorry, only master user can perform delete operations right now",
         }
     try:
-        index = pc.Index(index_name)
-        _ = index.delete(ids=[record_id], namespace=namespace)
+        index_descr: IndexModel = await pc.describe_index(index_name)
+        async with pc.IndexAsyncio(index_descr.host) as index:
+            await index.delete(ids=[record_id], namespace=namespace)
 
-        attempts = 0
-        check = FetchResponse(namespace=namespace, vectors={"test": "test"}, usage=0)
-        while attempts < 10 and check.vectors:  # type: ignore
-            check = index.fetch([record_id], namespace=namespace)
-            time.sleep(1.5)
+            attempts = 0
+            check = FetchResponse(
+                namespace=namespace, vectors={"test": "test"}, usage=0
+            )
+            while attempts < 10 and check.vectors:  # type: ignore
+                check = await index.fetch([record_id], namespace=namespace)
+                time.sleep(1.5)
 
         if check and check.vectors:
             return {
@@ -496,7 +551,7 @@ def delete_memory(tool_context: ToolContext, namespace: str, record_id: str) -> 
         return {"status": "failed", "error": str(e)}
 
 
-def search_memories(
+async def search_memories(
     tool_context: ToolContext, namespace: str, search_query: str, top_k: int
 ) -> dict:
     """
@@ -528,12 +583,13 @@ def search_memories(
     try:
         query = SearchQuery(inputs={"text": search_query}, top_k=top_k)
 
-        index = pc.Index(index_name)
-        results = index.search(namespace=namespace, query=query)
-        if results:
-            summary = results.to_dict().get("result", {}).get("hits")
-            return {"status": "success", "search_results": summary}
-        return {"status": "failed", "search_results": "nothing found"}
+        index_descr: IndexModel = await pc.describe_index(index_name)
+        async with pc.IndexAsyncio(index_descr.host) as index:
+            results = await index.search_records(namespace=namespace, query=query)
+            if results:
+                summary = results.to_dict().get("result", {}).get("hits")
+                return {"status": "success", "search_results": summary}
+            return {"status": "failed", "search_results": "nothing found"}
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
