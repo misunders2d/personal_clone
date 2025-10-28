@@ -175,62 +175,25 @@ def create_memory(
         if related_memories_list:
             single_record["related_memories"] = json.dumps(related_memories_list)
 
-        # tool_confirmation = tool_context.tool_confirmation
-        # if not tool_confirmation:
-        #     print("[REQUESTING TOOL CONFIRMATION]", end="\n\n\n")
-        #     tool_context.request_confirmation(
-        #         hint="Please confirm the creation of new memory"
-        #     )
-        #     print(
-        #         {"status": "pending", "message": "waiting for user confirmation"},
-        #         end="\n\n\n",
-        #     )
-        #     return {"status": "pending", "message": "waiting for user confirmation"}
+        records = [single_record]
+        _ = index.upsert_records(namespace=namespace, records=records)
 
-        # if tool_context.tool_confirmation and tool_context.tool_confirmation.confirmed:
-        if True:
-
-            # print("[TOOL CONFIRMATION RECEIVED]", end="\n\n\n")
-
-            records = [single_record]
-            _ = index.upsert_records(namespace=namespace, records=records)
-
-            # verifying that memory was updated/created
-            attempts = 0
-            check = FetchResponse(namespace=namespace, vectors={}, usage=0)
-            while attempts < 10 and not check.vectors:  # type: ignore
-                check = index.fetch(ids=[x["id"] for x in records], namespace=namespace)
-                time.sleep(1.5)
-            if check and check.vectors:
-                # print(
-                #     {
-                #         "status": "success",
-                #         "response": f"id {records[0].get('id')} successfully updated in {namespace} namespace",
-                #     },
-                #     end="\n\n\n",
-                # )
-                return {
-                    "status": "success",
-                    "response": f"id {records[0].get('id')} successfully updated in {namespace} namespace",
-                }
-            else:
-                # print(
-                #     {
-                #         "status": "failed",
-                #         "response": f"id {records[0].get('id')} not inserted to {namespace}",
-                #     },
-                #     end="\n\n\n",
-                # )
-                return {
-                    "status": "failed",
-                    "response": f"id {records[0].get('id')} not inserted to {namespace}",
-                }
-        # else:
-        #     print("[TOOL CONFIRMATION REJECTED]", end="\n\n\n")
-        #     return {
-        #         "status": "not confirmed",
-        #         "message": "the function call was never confirmed by the user",
-        #     }
+        # verifying that memory was updated/created
+        attempts = 0
+        check = FetchResponse(namespace=namespace, vectors={}, usage=0)
+        while attempts < 10 and not check.vectors:  # type: ignore
+            check = index.fetch(ids=[x["id"] for x in records], namespace=namespace)
+            time.sleep(1.5)
+        if check and check.vectors:
+            return {
+                "status": "success",
+                "response": f"id {records[0].get('id')} successfully updated in {namespace} namespace",
+            }
+        else:
+            return {
+                "status": "failed",
+                "response": f"id {records[0].get('id')} not inserted to {namespace}",
+            }
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
@@ -300,62 +263,25 @@ def create_people(
         if relations_list:
             single_record["relations"] = json.dumps(relations_list)
 
-        # tool_confirmation = tool_context.tool_confirmation
-        # if not tool_confirmation:
-        #     print("[REQUESTING TOOL CONFIRMATION]", end="\n\n\n")
-        #     tool_context.request_confirmation(
-        #         hint="Please confirm the creation of new memory"
-        #     )
-        #     print(
-        #         {"status": "pending", "message": "waiting for user confirmation"},
-        #         end="\n\n\n",
-        #     )
-        #     return {"status": "pending", "message": "waiting for user confirmation"}
+        records = [single_record]
+        _ = index.upsert_records(namespace=namespace, records=records)
 
-        # if tool_context.tool_confirmation and tool_context.tool_confirmation.confirmed:
-        if True:
-
-            # print("[TOOL CONFIRMATION RECEIVED]", end="\n\n\n")
-
-            records = [single_record]
-            _ = index.upsert_records(namespace=namespace, records=records)
-
-            # verifying that memory was updated/created
-            attempts = 0
-            check = FetchResponse(namespace=namespace, vectors={}, usage=0)
-            while attempts < 10 and not check.vectors:  # type: ignore
-                check = index.fetch(ids=[x["id"] for x in records], namespace=namespace)
-                time.sleep(1.5)
-            if check and check.vectors:
-                # print(
-                #     {
-                #         "status": "success",
-                #         "response": f"id {records[0].get('id')} successfully updated in {namespace} namespace",
-                #     },
-                #     end="\n\n\n",
-                # )
-                return {
-                    "status": "success",
-                    "response": f"person {records[0].get('id')} ({first_name} {last_name}) successfully updated in {namespace} namespace",
-                }
-            else:
-                # print(
-                #     {
-                #         "status": "failed",
-                #         "response": f"id {records[0].get('id')} not inserted to {namespace}",
-                #     },
-                #     end="\n\n\n",
-                # )
-                return {
-                    "status": "failed",
-                    "response": f"person {records[0].get('id')} ({first_name} {last_name}) not inserted to {namespace}",
-                }
-        # else:
-        #     print("[TOOL CONFIRMATION REJECTED]", end="\n\n\n")
-        #     return {
-        #         "status": "not confirmed",
-        #         "message": "the function call was never confirmed by the user",
-        #     }
+        # verifying that memory was updated/created
+        attempts = 0
+        check = FetchResponse(namespace=namespace, vectors={}, usage=0)
+        while attempts < 10 and not check.vectors:  # type: ignore
+            check = index.fetch(ids=[x["id"] for x in records], namespace=namespace)
+            time.sleep(1.5)
+        if check and check.vectors:
+            return {
+                "status": "success",
+                "response": f"person {records[0].get('id')} ({first_name} {last_name}) successfully updated in {namespace} namespace",
+            }
+        else:
+            return {
+                "status": "failed",
+                "response": f"person {records[0].get('id')} ({first_name} {last_name}) not inserted to {namespace}",
+            }
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
@@ -389,7 +315,10 @@ def update_memory(
     try:
         updates_dict = json.loads(updates)
     except json.JSONDecodeError as e:
-        return {"status": "error", "message": f"Invalid JSON string for `updates`: {str(e)}"}
+        return {
+            "status": "error",
+            "message": f"Invalid JSON string for `updates`: {str(e)}",
+        }
 
     allowed_fields = (
         "text",
@@ -416,48 +345,16 @@ def update_memory(
                 "message": f"Memory {memory_id} not found in namespace {namespace}",
             }
 
-        # Get the user's confirmation decision from the tool_context
-        # tool_confirmation = tool_context.tool_confirmation
-
-        # # If a confirmation decision has not been made, request one from the user.
-        # if not tool_confirmation:
-
-        #     mem_data = memory_to_update.vectors[memory_id].to_dict()
-
-        #     # This will pause the tool's execution and prompt the user for confirmation.
-        #     # The tool will be executed again with the user's decision.
-        #     tool_context.request_confirmation(
-        #         hint=f"You are about to update memory '{memory_id}'. Current content: {mem_data.get('metadata')}. Do you approve?",
-        #         payload={"confirmed": False},
-        #     )
-        #     # Return a pending status to indicate that the tool is waiting for user input.
-        #     return {"status": "pending", "message": "Waiting for user confirmation."}
-
-        # # If a confirmation decision has been made, check the payload.
-        # if not tool_confirmation.confirmed:
-        #     return {
-        #         "status": "cancelled",
-        #         "message": "User cancelled the memory update.",
-        #     }
-
-        # confirmed = tool_confirmation.confirmed
-
-        # print(f"[CONFIRMED]: {confirmed}", end="\n\n\n")
-        # print(f"[TOOL CONFIRMATION]: {tool_confirmation}", end="\n\n\n")
-        # print(f"[TOOL CONTEXT]: {tool_context}", end="\n\n\n")
-
-        # if confirmed:
-            # --- User has approved, so proceed with the update ---
         records = {key: value for key, value in updates_dict.items()}
         records["updated_at"] = int(datetime.now().timestamp())
         if "related_memories" in updates_dict:
-            records["related_memories"] = json.dumps(
-                updates_dict["related_memories"]
-            )
+            records["related_memories"] = json.dumps(updates_dict["related_memories"])
 
         _ = index.update(id=memory_id, namespace=namespace, set_metadata=records)
         time.sleep(1.5)
-        result = get_records_by_id(tool_context=tool_context, record_ids=[memory_id], namespace=namespace)
+        result = get_records_by_id(
+            tool_context=tool_context, record_ids=[memory_id], namespace=namespace
+        )
 
         return {
             "status": "needs verification",
@@ -499,8 +396,11 @@ def update_people(
     namespace = "people"
     try:
         updates_dict = json.loads(updates)
-    except json.JSONDecodeError:
-        return {"status": "error", "message": "Invalid JSON string for `updates`."}
+    except json.JSONDecodeError as e:
+        return {
+            "status": "error",
+            "message": f"Invalid JSON string for `updates`: {str(e)}",
+        }
 
     allowed_fields = (
         "first_name",
@@ -525,39 +425,6 @@ def update_people(
                 "status": "error",
                 "message": f"Person {person_id} not found in namespace {namespace}",
             }
-
-        # Get the user's confirmation decision from the tool_context
-        # tool_confirmation = tool_context.tool_confirmation
-
-        # # If a confirmation decision has not been made, request one from the user.
-        # if not tool_confirmation:
-
-        #     person_data = person_to_update.vectors[person_id].to_dict()
-
-        #     # This will pause the tool's execution and prompt the user for confirmation.
-        #     # The tool will be executed again with the user's decision.
-        #     tool_context.request_confirmation(
-        #         hint=f"You are about to update memory '{person_id}'. Current content: {person_data.get('metadata')}. Do you approve?",
-        #         payload={"confirmed": False},
-        #     )
-        #     # Return a pending status to indicate that the tool is waiting for user input.
-        #     return {"status": "pending", "message": "Waiting for user confirmation."}
-
-        # # If a confirmation decision has been made, check the payload.
-        # if not tool_confirmation.confirmed:
-        #     return {
-        #         "status": "cancelled",
-        #         "message": "User cancelled the memory update.",
-        #     }
-
-        # confirmed = tool_confirmation.confirmed
-
-        # print(f"[CONFIRMED]: {confirmed}", end="\n\n\n")
-        # print(f"[TOOL CONFIRMATION]: {tool_confirmation}", end="\n\n\n")
-        # print(f"[TOOL CONTEXT]: {tool_context}", end="\n\n\n")
-
-        # if confirmed:
-            # --- User has approved, so proceed with the update ---
         records = {key: value for key, value in updates_dict.items()}
         records["updated_at"] = int(datetime.now().timestamp())
         if "relations" in updates_dict:
@@ -576,24 +443,20 @@ def update_people(
         _ = index.update(id=person_id, namespace=namespace, set_metadata=records)
 
         time.sleep(1.5)
-        result = get_records_by_id(tool_context=tool_context, record_ids=[person_id], namespace=namespace)
+        result = get_records_by_id(
+            tool_context=tool_context, record_ids=[person_id], namespace=namespace
+        )
 
         return {
             "status": "needs verification",
             "message": f"Verify that required updates are implemented: {result['memories']}",
         }
 
-        # else:
-        #     tool_context.actions.escalate
-        #     return {
-        #         "status": "cancelled",
-        #         "message": "User cancelled the memory update.",
-        #     }
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
 
-def delete_memory(tool_context: ToolContext, namespace: str, record_id: str):
+def delete_memory(tool_context: ToolContext, namespace: str, record_id: str) -> dict:
     """
     Deletes a specific record from  a specific Pinecone index.
 
@@ -635,7 +498,7 @@ def delete_memory(tool_context: ToolContext, namespace: str, record_id: str):
 
 def search_memories(
     tool_context: ToolContext, namespace: str, search_query: str, top_k: int
-):
+) -> dict:
     """
     Searches for memories/records in Pinecone using a search query.
 
@@ -670,7 +533,7 @@ def search_memories(
         if results:
             summary = results.to_dict().get("result", {}).get("hits")
             return {"status": "success", "search_results": summary}
-        return {"status": "failed", "search_results": results.result}
+        return {"status": "failed", "search_results": "nothing found"}
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
