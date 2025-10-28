@@ -29,6 +29,55 @@ def list_indexes() -> dict:
         return {"status": "error", "error": str(e)}
 
 
+def get_records_by_id(
+    tool_context: ToolContext, record_ids: list[str], namespace: str
+) -> dict:
+    """
+    Fetches one or several memories or people from Pinecone using their respective memory / person IDs.
+
+    Args:
+        tool_context (ToolContext): a ToolContext object.
+        record_ids (list[str]): Required. A list of memory_id strings.
+        namespace (str): Required. The name of the Pinecone index namespace ("personal" for personal memories or "professional" for professional experience).
+
+    Returns:
+        dict: The result of the upsert operation.
+    """
+    user_id = tool_context.state.get("user_id")
+    if namespace == "personal" and user_id not in config.SUPERUSERS:
+        return {
+            "status": "restricted",
+            "search_results": "sorry, personal memories are for my master user only",
+        }
+    if namespace == "professional" and (
+        user_id not in config.SUPERUSERS
+        and not user_id.lower().endswith(config.TEAM_DOMAIN)
+    ):
+        return {
+            "status": "restricted",
+            "search_results": f"sorry, this information is only available to {config.TEAM_DOMAIN} members",
+        }
+
+    try:
+        if not namespace or not isinstance(record_ids, list):
+            return {
+                "status": "error",
+                "message": "`record_ids` MUST be a list of memory id strings, namespace must be provided",
+            }
+        index = pc.Index(index_name)
+        vectors = index.fetch(ids=record_ids, namespace=namespace)
+        records_data = {key: value.metadata for key, value in vectors.vectors.items()}
+        if records_data:
+            return {"status": "success", "memories": records_data}
+        else:
+            return {
+                "status": "failed",
+                "memories": f"no records with id {record_ids} found",
+            }
+    except Exception as e:
+        return {"status": "failed", "error": str(e)}
+
+
 def create_memory(
     tool_context: ToolContext,
     namespace: str,
@@ -334,19 +383,13 @@ def update_memory(
         dict: The result of the upsert operation.
 
     Example (update):
-        records = '''[
-            {
-                "short_description": "Call with Bernard about promotion (updated)",
-                "text": "Updated notes: Bernard suggested a raise...",
-                "tags": ["career", "raise", "promotion"]
-            }
-        ]'''
+        updates = '''{"short_description": "Call with Bernard about promotion (updated)","text": "Updated notes: Bernard suggested a raise...","tags": ["career", "raise", "promotion"]}'''
 
     """
     try:
         updates_dict = json.loads(updates)
-    except json.JSONDecodeError:
-        return {"status": "error", "message": "Invalid JSON string for `updates`."}
+    except json.JSONDecodeError as e:
+        return {"status": "error", "message": f"Invalid JSON string for `updates`: {str(e)}"}
 
     allowed_fields = (
         "text",
@@ -359,7 +402,7 @@ def update_memory(
     if not isinstance(updates_dict, dict) or not updates_dict:
         return {
             "status": "error",
-            "message": f"`updates` must be a dict with at least one of the allowed values: {allowed_fields}",
+            "message": f"`updates` must be a JSON string representing a dict with at least one of the allowed values: {allowed_fields}",
         }
     if any(key not in allowed_fields for key in updates_dict.keys()):
         return {"status": "error", "message": "forbidden keys in the `updates` dict"}
@@ -404,27 +447,23 @@ def update_memory(
         # print(f"[TOOL CONTEXT]: {tool_context}", end="\n\n\n")
 
         # if confirmed:
-        if True:
             # --- User has approved, so proceed with the update ---
-            records = {key: value for key, value in updates_dict.items()}
-            records["updated_at"] = int(datetime.now().timestamp())
-            if "related_memories" in updates_dict:
-                records["related_memories"] = json.dumps(
-                    updates_dict["related_memories"]
-                )
+        records = {key: value for key, value in updates_dict.items()}
+        records["updated_at"] = int(datetime.now().timestamp())
+        if "related_memories" in updates_dict:
+            records["related_memories"] = json.dumps(
+                updates_dict["related_memories"]
+            )
 
-            _ = index.update(id=memory_id, namespace=namespace, set_metadata=records)
+        _ = index.update(id=memory_id, namespace=namespace, set_metadata=records)
+        time.sleep(1.5)
+        result = get_records_by_id(tool_context=tool_context, record_ids=[memory_id], namespace=namespace)
 
-            return {
-                "status": "success",
-                "message": f"Make sure to verify the updates to memory {memory_id}",
-            }
-        # else:
-        #     tool_context.actions.escalate
-        #     return {
-        #         "status": "cancelled",
-        #         "message": "User cancelled the memory update.",
-        #     }
+        return {
+            "status": "needs verification",
+            "message": f"Verify that required updates are implemented: {result['memories']}",
+        }
+
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
@@ -518,29 +557,31 @@ def update_people(
         # print(f"[TOOL CONTEXT]: {tool_context}", end="\n\n\n")
 
         # if confirmed:
-        if True:
             # --- User has approved, so proceed with the update ---
-            records = {key: value for key, value in updates_dict.items()}
-            records["updated_at"] = int(datetime.now().timestamp())
-            if "relations" in updates_dict:
-                records["relations"] = json.dumps(updates_dict["relations"])
-            existing_records = person_to_update.vectors[person_id].to_dict()
-            if existing_records:
-                metadata = existing_records.get("metadata", {})
-                if "user_ids" in updates_dict:
-                    new_user_ids = [x["id_value"] for x in updates_dict["user_ids"]]
-                    records["user_ids"] = json.dumps(updates_dict["user_ids"])
-                    updated_user_ids_str = ", ".join(new_user_ids)
-                    records["text"] = (
-                        f"{metadata['first_name']} {metadata['last_name']} IDs {updated_user_ids_str}"
-                    )
+        records = {key: value for key, value in updates_dict.items()}
+        records["updated_at"] = int(datetime.now().timestamp())
+        if "relations" in updates_dict:
+            records["relations"] = json.dumps(updates_dict["relations"])
+        existing_records = person_to_update.vectors[person_id].to_dict()
+        if existing_records:
+            metadata = existing_records.get("metadata", {})
+            if "user_ids" in updates_dict:
+                new_user_ids = [x["id_value"] for x in updates_dict["user_ids"]]
+                records["user_ids"] = json.dumps(updates_dict["user_ids"])
+                updated_user_ids_str = ", ".join(new_user_ids)
+                records["text"] = (
+                    f"{metadata['first_name']} {metadata['last_name']} IDs {updated_user_ids_str}"
+                )
 
-            _ = index.update(id=person_id, namespace=namespace, set_metadata=records)
+        _ = index.update(id=person_id, namespace=namespace, set_metadata=records)
 
-            return {
-                "status": "success",
-                "message": f"Make sure to verify the updates to person {person_id}",
-            }
+        time.sleep(1.5)
+        result = get_records_by_id(tool_context=tool_context, record_ids=[person_id], namespace=namespace)
+
+        return {
+            "status": "needs verification",
+            "message": f"Verify that required updates are implemented: {result['memories']}",
+        }
 
         # else:
         #     tool_context.actions.escalate
@@ -548,55 +589,6 @@ def update_people(
         #         "status": "cancelled",
         #         "message": "User cancelled the memory update.",
         #     }
-    except Exception as e:
-        return {"status": "failed", "error": str(e)}
-
-
-def get_records_by_id(
-    tool_context: ToolContext, record_ids: list[str], namespace: str
-) -> dict:
-    """
-    Fetches one or several memories or people from Pinecone using their respective memory / person IDs.
-
-    Args:
-        tool_context (ToolContext): a ToolContext object.
-        record_ids (list[str]): Required. A list of memory_id strings.
-        namespace (str): Required. The name of the Pinecone index namespace ("personal" for personal memories or "professional" for professional experience).
-
-    Returns:
-        dict: The result of the upsert operation.
-    """
-    user_id = tool_context.state.get("user_id")
-    if namespace == "personal" and user_id not in config.SUPERUSERS:
-        return {
-            "status": "restricted",
-            "search_results": "sorry, personal memories are for my master user only",
-        }
-    if namespace == "professional" and (
-        user_id not in config.SUPERUSERS
-        and not user_id.lower().endswith(config.TEAM_DOMAIN)
-    ):
-        return {
-            "status": "restricted",
-            "search_results": f"sorry, this information is only available to {config.TEAM_DOMAIN} members",
-        }
-
-    try:
-        if not namespace or not isinstance(record_ids, list):
-            return {
-                "status": "error",
-                "message": "`record_ids` MUST be a list of memory id strings, namespace must be provided",
-            }
-        index = pc.Index(index_name)
-        vectors = index.fetch(ids=record_ids, namespace=namespace)
-        records_data = {key: value.metadata for key, value in vectors.vectors.items()}
-        if records_data:
-            return {"status": "success", "memories": records_data}
-        else:
-            return {
-                "status": "failed",
-                "memories": f"no records with id {record_ids} found",
-            }
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
@@ -683,31 +675,31 @@ def search_memories(
         return {"status": "failed", "error": str(e)}
 
 
-def run_tool_confirmation_test(tool_context: ToolContext) -> dict:
-    """
-    A test function to verify the tool confirmation flow
-    """
+# def run_tool_confirmation_test(tool_context: ToolContext) -> dict:
+#     """
+#     A test function to verify the tool confirmation flow
+#     """
 
-    tool_confirmation = tool_context.tool_confirmation
-    if not tool_confirmation:
-        print("[REQUESTING TOOL CONFIRMATION]", end="\n\n\n")
-        tool_context.request_confirmation(
-            hint=f"Please confirm the execution of {tool_context.agent_name} tool call",
-            # payload={"approve": False},
-        )
+#     tool_confirmation = tool_context.tool_confirmation
+#     if not tool_confirmation:
+#         print("[REQUESTING TOOL CONFIRMATION]", end="\n\n\n")
+#         tool_context.request_confirmation(
+#             hint=f"Please confirm the execution of {tool_context.agent_name} tool call",
+#             # payload={"approve": False},
+#         )
 
-        print(
-            {"status": "pending", "message": "waiting for user confirmation"},
-            end="\n\n\n",
-        )
-        return {"status": "pending", "message": "waiting for user confirmation"}
+#         print(
+#             {"status": "pending", "message": "waiting for user confirmation"},
+#             end="\n\n\n",
+#         )
+#         return {"status": "pending", "message": "waiting for user confirmation"}
 
-    if tool_context.tool_confirmation and tool_context.tool_confirmation.confirmed:
-        print("[CONFIRMED TOOL CONFIRMATION]", end="\n\n\n")
-        return {"status": "completed", "message": "user confirmation received"}
+#     if tool_context.tool_confirmation and tool_context.tool_confirmation.confirmed:
+#         print("[CONFIRMED TOOL CONFIRMATION]", end="\n\n\n")
+#         return {"status": "completed", "message": "user confirmation received"}
 
-    else:
-        return {"status": "incomplete", "message": "confirmation was never requested"}
+#     else:
+#         return {"status": "incomplete", "message": "confirmation was never requested"}
 
 
 def create_pinecone_toolset():
@@ -733,5 +725,5 @@ def create_pinecone_toolset():
         delete_memory,
         get_records_by_id,
         search_memories,
-        run_tool_confirmation_test
+        # FunctionTool(run_tool_confirmation_test, require_confirmation=True)
     ]  # , search_records, delete_record]
