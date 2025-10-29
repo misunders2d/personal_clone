@@ -36,6 +36,7 @@ from .callbacks.before_after_agent import (
 
 from .tools.web_search_tools import scrape_web_page
 from .tools.datetime_tools import get_current_datetime
+from .tools.session_state_tools import set_goals, delete_goals
 
 from . import config
 
@@ -223,6 +224,8 @@ def create_main_agent():
             AgentTool(create_code_executor_agent()),
             AgentTool(create_google_search_agent()),
             scrape_web_page,
+            set_goals,
+            delete_goals,
         ],
         sub_agents=[
             create_memory_agent(),
