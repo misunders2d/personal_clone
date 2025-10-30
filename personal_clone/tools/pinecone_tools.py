@@ -31,7 +31,7 @@ async def list_indexes() -> dict:
 
 
 async def get_records_by_id(
-    tool_context: ToolContext, record_ids: list[str], namespace: str
+    tool_context: ToolContext, record_ids: list[str], namespace: str, format: str
 ) -> dict:
     """
     Fetches one or several memories or people from Pinecone using their respective memory / person IDs.
@@ -40,10 +40,16 @@ async def get_records_by_id(
         tool_context (ToolContext): a ToolContext object.
         record_ids (list[str]): Required. A list of memory_id strings - accepts multipe records.
         namespace (str): Required. The name of the Pinecone index namespace ("personal" for personal memories or "professional" for professional experience).
+        format (str): Required. "full" to pull full records data (including long description), or "short" (just id, short_description and tags - for quick overview)
 
     Returns:
         dict: The result of the upsert operation.
     """
+    if format not in ("full", "short"):
+        return {
+            "status": "args error",
+            "search_results": "`format` can only be `full` or `short`",
+        }
     user_id = tool_context.state.get("user_id")
     if namespace == "personal" and user_id not in config.SUPERUSERS:
         return {
@@ -71,13 +77,77 @@ async def get_records_by_id(
             records_data = {
                 key: value.metadata for key, value in vectors.vectors.items()
             }
-            if records_data:
+            if records_data and format == "full":
                 return {"status": "success", "memories": records_data}
+            elif records_data and format == "short":
+                short_data = {
+                    key: {
+                        "category": value.get("category") if value else None,
+                        "short_description": (
+                            value.get("short_description") if value else None
+                        ),
+                        "tags": value.get("tags") if value else None,
+                    }
+                    for key, value in records_data.items()
+                }
+                return {"status": "success", "memories": short_data}
             else:
                 return {
                     "status": "failed",
                     "memories": f"no records with id {record_ids} found",
                 }
+    except Exception as e:
+        return {"status": "failed", "error": str(e)}
+
+
+async def list_records(tool_context: ToolContext, namespace: str) -> dict:
+    """
+    Fetches all memories/records from a namespace in Pinecone index.
+
+    Args:
+        namespace (str): The name of the Pinecone index namespace ("personal" for personal memories or "professional" for professional experience)..
+        top_k (int): How many results to return. Start with small numbers (3-5) and only increase this number if you want to do a broader search.
+
+    Returns:
+        dict: The result of the fetch operation along with additional metadata (if any).
+
+    """
+
+    user_id = tool_context.state.get("user_id")
+    if namespace == "personal" and user_id not in config.SUPERUSERS:
+        return {
+            "status": "restricted",
+            "search_results": "sorry, personal memories are for my master user only",
+        }
+    elif user_id not in config.SUPERUSERS and not user_id.lower().endswith(
+        config.TEAM_DOMAIN
+    ):
+        return {
+            "status": "restricted",
+            "search_results": f"sorry, this information is only available to {config.TEAM_DOMAIN} members",
+        }
+    try:
+
+        index_descr: IndexModel = await pc.describe_index(index_name)
+        full_results = []
+        async with pc.IndexAsyncio(index_descr.host) as index:
+            results = await index.list_paginated(namespace=namespace, limit=20)
+            full_results.extend(results.vectors)
+            while results.pagination:
+                results = await index.list_paginated(
+                    namespace=namespace, pagination_token=results.pagination.next
+                )
+                full_results.extend(results.vectors)
+            if full_results:
+                mem_ids = [x["id"] for x in full_results]
+                memories = await get_records_by_id(
+                    tool_context,
+                    record_ids=mem_ids,
+                    namespace=namespace,
+                    format="short",
+                )
+                return {"status": "success", "search_results": memories}
+            return {"status": "failed", "search_results": "nothing found"}
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
@@ -387,7 +457,10 @@ async def update_memory(
             await index.update(id=memory_id, namespace=namespace, set_metadata=records)
         time.sleep(1.5)
         result = await get_records_by_id(
-            tool_context=tool_context, record_ids=[memory_id], namespace=namespace
+            tool_context=tool_context,
+            record_ids=[memory_id],
+            namespace=namespace,
+            format="full",
         )
 
         return {
@@ -494,7 +567,10 @@ async def update_people(
 
         time.sleep(1.5)
         result = await get_records_by_id(
-            tool_context=tool_context, record_ids=[person_id], namespace=namespace
+            tool_context=tool_context,
+            record_ids=[person_id],
+            namespace=namespace,
+            format="full",
         )
 
         return {
@@ -644,5 +720,6 @@ def create_pinecone_toolset():
         delete_memory,
         get_records_by_id,
         search_memories,
+        list_records,
         # FunctionTool(run_tool_confirmation_test, require_confirmation=True)
     ]  # , search_records, delete_record]
