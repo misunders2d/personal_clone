@@ -103,13 +103,14 @@ async def get_records_by_id(
 async def list_records(tool_context: ToolContext, namespace: str) -> dict:
     """
     Fetches all memories/records from a namespace in Pinecone index.
+    The function specifically fetches the memory_id, category, short_description and tags.
 
     Args:
         namespace (str): The name of the Pinecone index namespace ("personal" for personal memories or "professional" for professional experience)..
         top_k (int): How many results to return. Start with small numbers (3-5) and only increase this number if you want to do a broader search.
 
     Returns:
-        dict: The result of the fetch operation along with additional metadata (if any).
+        dict: The result of the fetch operation along with memory_id, category, short_description and tags of records.
 
     """
 

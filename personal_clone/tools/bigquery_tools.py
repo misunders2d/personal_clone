@@ -9,26 +9,26 @@ import json
 from google.oauth2 import service_account
 
 
-def create_mel_bigquery_toolset():
-    # bigquery_service_account_info = json.loads(config.MELL_GCP_SERVICE_ACCOUNT_INFO)
+def create_bigquery_toolset():
+    # bigquery_service_account_info = json.loads(config.BQ_GCP_SERVICE_ACCOUNT_INFO)
 
     # set google application credentials to use BigQuery tools
-    mel_credentials = None
-    if "mel_credentials" not in globals():
+    bq_credentials = None
+    if "bq_credentials" not in globals():
         with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_json:
-            temp_json.write(config.MELL_GCP_SERVICE_ACCOUNT_INFO)
+            temp_json.write(config.BQ_GCP_SERVICE_ACCOUNT_INFO)
             temp_json.flush()
-            MELL_GCP_SERVICE_ACCOUNT_INFO = json.load(open(temp_json.name))
+            BQ_GCP_SERVICE_ACCOUNT_INFO = json.load(open(temp_json.name))
 
-        mel_credentials = service_account.Credentials.from_service_account_info(
-            MELL_GCP_SERVICE_ACCOUNT_INFO
+        bq_credentials = service_account.Credentials.from_service_account_info(
+            BQ_GCP_SERVICE_ACCOUNT_INFO
         )
-    mel_credentials_config = BigQueryCredentialsConfig(credentials=mel_credentials)
+    bq_credentials_config = BigQueryCredentialsConfig(credentials=bq_credentials)
     mel_tool_config = BigQueryToolConfig(
         write_mode=WriteMode.BLOCKED, max_query_result_rows=10000
     )
 
     mel_bigquery_toolset = BigQueryToolset(
-        credentials_config=mel_credentials_config, bigquery_tool_config=mel_tool_config
+        credentials_config=bq_credentials_config, bigquery_tool_config=mel_tool_config
     )
     return mel_bigquery_toolset

@@ -11,17 +11,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-GOOGLE_CLOUD_PROJECT = os.environ["GOOGLE_CLOUD_PROJECT"]
-GOOGLE_CLOUD_LOCATION = os.environ["GOOGLE_CLOUD_LOCATION"]
-GOOGLE_CLOUD_STORAGE_BUCKET = os.environ["GOOGLE_CLOUD_STORAGE_BUCKET"]
-VERTEX_DATASTORE_ID = os.environ["VERTEX_DATASTORE_ID"]
+GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT","")
+GOOGLE_CLOUD_LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION","")
+GOOGLE_CLOUD_STORAGE_BUCKET = os.environ.get("GOOGLE_CLOUD_STORAGE_BUCKET","")
+VERTEX_DATASTORE_ID = os.environ.get("VERTEX_DATASTORE_ID","")
 DATASTORE_ID = f"projects/{GOOGLE_CLOUD_PROJECT}/locations/us/collections/default_collection/dataStores/{VERTEX_DATASTORE_ID}"
-GCP_SERVICE_ACCOUNT_INFO = os.environ["GCP_SERVICE_ACCOUNT_INFO"]
-MELL_GCP_SERVICE_ACCOUNT_INFO = os.environ["MELL_GCP_SERVICE_ACCOUNT_INFO"]
+GCP_SERVICE_ACCOUNT_INFO = os.environ.get("GCP_SERVICE_ACCOUNT_INFO","")
+BQ_GCP_SERVICE_ACCOUNT_INFO = os.environ.get("BQ_GCP_SERVICE_ACCOUNT_INFO","")
 
-OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
-GROK_API_KEY = os.environ["GROK_API_KEY"]
-MINIMAX_API_KEY = os.environ["MINIMAX_API_KEY"]
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY","")
+GROK_API_KEY = os.environ.get("GROK_API_KEY","")
+MINIMAX_API_KEY = os.environ.get("MINIMAX_API_KEY","")
 
 
 NEO4J_DATABASE = os.environ.get("NEO4J_DATABASE", "neo4j")
@@ -41,10 +41,7 @@ PINECONE_INDEX_NAME = os.environ.get("PINECONE_INDEX_NAME", "")
 PINECONE_PERSONAL_NAMESPACE = "personal"
 PINECONE_PROFESSIONAL_NAMESPACE = "professional"
 
-DATASET_PATH = os.environ["MEMORY_DATASET_ID"]
-MEMORY_TABLE = f"{DATASET_PATH}.memories_personal"
-MEMORY_TABLE_PROFESSIONAL = f"{DATASET_PATH}.memories_professional"
-PEOPLE_TABLE = f"{DATASET_PATH}.people"
+DATASET_PATH = os.environ.get("MEMORY_DATASET_ID","")
 MEMORY_CATEGORIES = {
     "idea": "New opportunities, proposals, brainstorms, pilots (not yet executed).",
     "memory": "Time-stamped events/decisions that record what happened (e.g., “we increased prices on X on Y”).",
@@ -59,8 +56,6 @@ MEMORY_CATEGORIES = {
     "policy": "sk — Policy issues or compliance / legal risks and guidance.",
     "operational": "Short operational updates (inventory, event-day notes) — for quick operational status.",
 }
-EMBEDDING_MODEL = f"{DATASET_PATH}.embedding_model"
-
 SUPERUSERS = os.getenv("SUPERUSERS", "").split(",")
 TEAM_DOMAIN = os.getenv("TEAM_DOMAIN", "")
 
@@ -167,7 +162,7 @@ VERTEX_SEARCH_AGENT_PLANNER = None
 # --- Auth ---
 def get_identity_token(
     account: Literal[
-        "GCP_SERVICE_ACCOUNT_INFO", "MELL_GCP_SERVICE_ACCOUNT_INFO"
+        "GCP_SERVICE_ACCOUNT_INFO", "BQ_GCP_SERVICE_ACCOUNT_INFO"
     ] = "GCP_SERVICE_ACCOUNT_INFO",
 ):
     """Get identity token from the GCP service account string."""

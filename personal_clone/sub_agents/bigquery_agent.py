@@ -14,7 +14,7 @@ from ..data import (
     table_data,
 )
 from ..sub_agents.google_search_agent import create_google_search_agent
-from ..tools.bigquery_tools import create_mel_bigquery_toolset
+from ..tools.bigquery_tools import create_bigquery_toolset
 from ..callbacks.before_after_agent import professional_agents_checker
 
 from .. import config
@@ -108,7 +108,7 @@ def create_bigquery_agent():
         ),
         instruction=create_bq_agent_instruction(),
         tools=[
-            create_mel_bigquery_toolset(),
+            create_bigquery_toolset(),
             AgentTool(
                 agent=create_google_search_agent(name="google_search_for_bq_agent")
             ),
