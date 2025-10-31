@@ -29,6 +29,32 @@ def create_github_mcp_toolset():
         return {"status": "error", "message": str(e)}
 
 
+def create_adk_docs_mcp_toolset():
+    try:
+        adk_docs_mcp_toolset = MCPToolset(
+            connection_params=StdioConnectionParams(
+                server_params=StdioServerParameters(
+                    command="uvx",
+                    args= [
+                        "--from",
+                        "mcpdoc",
+                        "mcpdoc",
+                        "--urls",
+                        "https://raw.githubusercontent.com/google/adk-docs/main/llms.txt",
+                        # "Local_ADK_Docs:/path/to/local/llms.txt"
+                        "--allowed-domains",
+                        "*",
+                        "--transport",
+                        "stdio"
+                    ]
+                ),
+            ),
+        )
+        return adk_docs_mcp_toolset
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
 def create_github_toolset():
 
     try:

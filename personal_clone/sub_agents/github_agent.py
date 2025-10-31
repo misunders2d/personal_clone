@@ -1,7 +1,7 @@
 from google.adk import Agent
 
 from ..tools.web_search_tools import scrape_web_page
-from ..tools.github_tools import return_github_toolset
+from ..tools.github_tools import create_github_toolset, create_adk_docs_mcp_toolset
 from ..sub_agents.memory_agent import create_memory_agent
 from ..callbacks.before_after_agent import personal_agents_checker
 
@@ -289,6 +289,9 @@ def create_github_agent_instruction():
                 <tool>
                     CI runner via repository (trigger and read status)
                 </tool>
+                <tool>
+                    adk docs mcp toolset (for documentation repositories, use it to pull Google ADK documentation)
+                </tool>
             </uses>
             <secrets>
                 <policy>
@@ -401,12 +404,21 @@ def create_github_agent_instruction():
 
 
 def create_github_agent():
-    github_tools = return_github_toolset()
+    github_tools = create_github_toolset()
     tools = []
     if isinstance(github_tools, list):
         tools.extend(github_tools)
+    elif isinstance(github_tools, dict):
+        pass
     elif github_tools:
         tools.append(github_tools)
+    adk_docs_tools = create_adk_docs_mcp_toolset()
+    if isinstance(adk_docs_tools, list):
+        tools.extend(adk_docs_tools)
+    elif isinstance(adk_docs_tools, dict):
+        pass
+    elif adk_docs_tools:
+        tools.append(adk_docs_tools)
 
     tools.append(scrape_web_page)
 
