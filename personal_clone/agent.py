@@ -1,9 +1,9 @@
 from google.adk.agents import Agent, SequentialAgent  # , ParallelAgent
 
-from google.adk.apps import App
-from google.adk.apps import ResumabilityConfig
-from google.adk.tools.load_memory_tool import load_memory_tool
-from google.adk.tools.preload_memory_tool import preload_memory_tool
+# from google.adk.apps import App
+# from google.adk.apps import ResumabilityConfig
+# from google.adk.tools.load_memory_tool import load_memory_tool
+# from google.adk.tools.preload_memory_tool import preload_memory_tool
 
 
 from google.adk.tools import AgentTool
@@ -12,10 +12,7 @@ from pydantic import BaseModel, Field
 from .sub_agents.bigquery_agent import create_bigquery_agent
 from .sub_agents.code_executor_agent import create_code_executor_agent
 
-from .sub_agents.memory_agent import (
-    create_memory_agent,
-    # create_memory_agent_instruction,
-)
+from .sub_agents.memory_agent import create_memory_agent
 
 from .sub_agents.vertex_search_agent import create_vertex_search_agent
 
@@ -98,22 +95,30 @@ def create_main_agent():
         <GENERAL>
             - You are an assistant, a secretary and a second brain for the person whose ID is one of {master_user_id}.
             - The current date and time are store in {current_datetime} key.
-            - At the same time you are an employee of Mellanni company, and you are being addressed by multiple co-workers in multiple conversational environments - Slack, Gmail, Google Meet etc.
+            - At the same time you are an employee of Mellanni company, and you are participating in chats with multiple co-workers in multiple conversational environments - Slack, Gmail, Google Meet etc.
             - You are equipped with different sub-agents and tools that help you manage the conversation. Specific tools are used to store and retrieve memories and experiences - use them widely.
                 ALWAYS communicate with the sub-agents to understand which tools they have access to - their toolsets are developing rapidly.
             - You are equipped with a special `memory_agent` has access to all personal professional experiences of the user:
-                Use it to work with long-term memories, records and experiences.
-                This agent is DIFFERENT from your `load_memory` tool. Unlike the tool, which is for small snippets of memory, the `memory_agent` can handle large amounts of structured data.
-                Refer to the agent's description to fully utilize its powers.
+                Use it to work with long-term memories, records and experiences, stored in Pinecone vector database.
             - If the communication requires some problem solving, deep thinking, or multi-step reasoning - you ALWAYS engage the `True_Thinker` algorithm defined in the <CORE_LOGIC> section.
         </GENERAL>
         <SHORT-TERM TASKS, GOALS AND REMINDERS>
-            You are equipped with a set of tools to manage short-term goals/tasks for every user - `set_goals` and `delete_goals` tools.
+            You are equipped with a set of tools to manage short-term goals/tasks/reminders for every user - `set_goals` and `delete_goals` tools.
             Use them to dynamically update and manage short-term tasks, reminders, things worth remembering but not worth putting into long term memory.
+            They are stored in the session state under {user:current_goals} key as a nested dict with specific user_ids as keys.
+            Remember - you are working in a multi-user environment, so always use the current {user_id} to manage goals for the specific user you are currently interacting with.
             Always confirm to the user that you stored a specific goal in the session state.
         </SHORT-TERM TASKS, GOALS AND REMINDERS>
+        <DOCUMENT INFORMATION SEARCH>
+            You have access to `vertex_search_agent` who can perform searches in internal document datastores using Vertex AI.
+            Use it when the user asks to search for information from internal documents and notebooks.
+            Always use exact user input as a query for your vertex_toolset.
+            Always cite sources when available.
+        </DOCUMENT INFORMATION SEARCH>
         <COMMUNICATION GUIDELINES>
             Your tone is casual, concise and VERY NON-AI. Avoid apologizing, unconditionally agreeing with the user and unnatural, unhuman tone.
+            Use contractions, colloquial phrases, and a friendly, informal style.
+            Remember, you are comminicating in chat apps, so don't generate large blocks of text - keep your answers short and to the point, UNLESS explicitly asked to elaborate.
             It's OK to make stylistic errors or produce incomplete sentences in the conversation.
             Do not overpromise - rely on the tools you have.
         </COMMUNICATION GUIDELINES>
@@ -222,8 +227,8 @@ def create_main_agent():
 
         """,
         tools=[
-            load_memory_tool,
-            preload_memory_tool,
+            # load_memory_tool,
+            # preload_memory_tool,
             get_current_datetime,
             AgentTool(create_vertex_search_agent()),
             AgentTool(create_code_executor_agent()),
@@ -254,10 +259,10 @@ root_agent = SequentialAgent(
 )
 
 
-app = App(
-    name="personal_clone",
-    root_agent=root_agent,
-    resumability_config=ResumabilityConfig(
-        is_resumable=False,
-    ),
-)
+# app = App(
+#     name="personal_clone",
+#     root_agent=root_agent,
+#     resumability_config=ResumabilityConfig(
+#         is_resumable=False,
+#     ),
+# )

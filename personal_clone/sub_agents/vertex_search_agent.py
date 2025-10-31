@@ -15,8 +15,7 @@ def create_vertex_search_agent(
     vertex_search_agent = Agent(
         name=name,
         model=config.VERTEX_SEARCH_AGENT_MODEL,
-        description="A Vertex AI vector search agent with access to document datastores, containing necessary information.",
-        # instruction="you are a helpful assistant. use your tools to answer user's query.",
+        description="A Vertex AI vector search agent with access to document datastores, containing necessary information. Use it when the user asks to search for information from internal documents and notebooks.",
         instruction="""
         Answer user questions and fetch relevant data based on user's input using Vertex AI Search to find information from internal documents and notebooks.
         Always use exact user input as a query for your vertex_toolset.

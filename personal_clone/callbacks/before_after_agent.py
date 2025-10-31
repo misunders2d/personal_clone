@@ -38,6 +38,8 @@ async def state_setter(
         }
     if "clickup_user_info" not in current_state:
         callback_context.state["clickup_user_info"] = {}
+    if "user:current_goals" not in current_state:
+        callback_context.state["user:current_goals"] = {}
     callback_context.state["current_datetime"] = get_current_datetime()
 
 
