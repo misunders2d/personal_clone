@@ -336,6 +336,7 @@ def create_task(
     due_date: Optional[int],
     assignees: Optional[List[str]] = None,
     due_date_time: Optional[bool] = None,
+    parent_task_id: Optional[str] = None,
 ):
     """
     Create a task in a given list.
@@ -349,6 +350,7 @@ def create_task(
         due_date_time (Optional[bool]): If True, ClickUp will treat the due_date as including a time.
             If False, it's an all-day date. If None, function auto-detects based on the epoch-ms:
             non-zero time component -> True, otherwise False.
+        parent_task_id (Optional[str]): If provided, creates the task as a subtask of the given parent task ID.
     Returns:
         Dict[str, Any]: The created task info as returned by ClickUp.
     """
@@ -374,6 +376,8 @@ def create_task(
                 payload["due_date_time"] = bool(has_time)
             else:
                 payload["due_date_time"] = bool(due_date_time)
+        if parent_task_id:
+            payload["parent"] = parent_task_id
 
         url = f"{API_BASE_URL}/list/{list_id}/task"
         resp = requests.post(url, headers=HEADERS, json=payload)
@@ -382,7 +386,6 @@ def create_task(
         return {"status": "success", "task_url": result["url"], "task_id": result["id"]}
     except Exception as e:
         return {"status": "ERROR", "error": str(e)}
-
 
 def get_task_link(task_id: str) -> str:
     """
