@@ -35,6 +35,7 @@ from .callbacks.before_after_agent import (
 from .tools.web_search_tools import scrape_web_page
 from .tools.datetime_tools import get_current_datetime
 from .tools.session_state_tools import set_goals, delete_goals
+
 # from .tools.github_tools import create_adk_docs_mcp_toolset
 
 from . import config
@@ -90,16 +91,16 @@ def create_answer_validator_agent():
 
 def create_main_agent():
     main_agent_toolset = [
-            # load_memory_tool,
-            # preload_memory_tool,
-            get_current_datetime,
-            AgentTool(create_vertex_search_agent()),
-            AgentTool(create_code_executor_agent()),
-            AgentTool(create_google_search_agent()),
-            scrape_web_page,
-            set_goals,
-            delete_goals,
-        ]
+        # load_memory_tool,
+        # preload_memory_tool,
+        get_current_datetime,
+        AgentTool(create_vertex_search_agent()),
+        AgentTool(create_code_executor_agent()),
+        AgentTool(create_google_search_agent()),
+        scrape_web_page,
+        set_goals,
+        delete_goals,
+    ]
     # adk_docs_tools = create_adk_docs_mcp_toolset()
     # if isinstance(adk_docs_tools, list):
     #     main_agent_toolset.extend(adk_docs_tools)
@@ -107,7 +108,6 @@ def create_main_agent():
     #     pass
     # elif adk_docs_tools:
     #     main_agent_toolset.append(adk_docs_tools)
-
 
     main_agent = Agent(
         model=config.AGENT_MODEL,

@@ -367,7 +367,7 @@ def create_task(
             "description": description,
         }
         if assignee_ids:
-            payload["assignees"] = assignee_ids
+            payload["assignees"] = ",".join(assignee_ids)
 
         if due_date is not None:
             payload["due_date"] = due_date
@@ -386,6 +386,7 @@ def create_task(
         return {"status": "success", "task_url": result["url"], "task_id": result["id"]}
     except Exception as e:
         return {"status": "ERROR", "error": str(e)}
+
 
 def get_task_link(task_id: str) -> str:
     """
