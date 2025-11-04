@@ -90,7 +90,7 @@
 #                 distance < 0.5
 #             ORDER BY
 #                 distance ASC
-#             LIMIT 15    
+#             LIMIT 15
 
 #     """
 #     try:

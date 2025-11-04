@@ -671,6 +671,35 @@ async def search_memories(
         return {"status": "failed", "error": str(e)}
 
 
+def get_person_from_search(search_results: list[dict], user_id: str):
+    """
+    A helper function to extract person records from search results.
+    Args:
+        search_results (dict): The search results returned by the search_memories function.
+
+    Returns:
+        dict: A dictionary containing person records.
+    """
+    try:
+        results = (
+            [
+                x
+                for x in search_results
+                if user_id in x.get("fields", {}).get("user_ids")
+            ]
+            if search_results
+            else None
+        )
+        if results:
+            person_data = results[0].copy()
+            for key, value in person_data.get("fields", {}).items():
+                if key in ("user_ids", "relations") and value:
+                    person_data["fields"][key] = json.loads(value)
+            return person_data
+    except Exception as e:
+        return {"status": "failed", "error": str(e)}
+
+
 # def run_tool_confirmation_test(tool_context: ToolContext) -> dict:
 #     """
 #     A test function to verify the tool confirmation flow

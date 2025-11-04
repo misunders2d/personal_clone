@@ -3,7 +3,7 @@ from google.adk.tools import ToolContext
 from typing import Optional
 from google.genai import types
 
-from ..tools.pinecone_tools import search_memories
+from ..tools.pinecone_tools import search_memories, get_person_from_search
 from ..tools.datetime_tools import get_current_datetime
 
 from .. import config
@@ -143,13 +143,16 @@ async def prefetch_memories(
         else:
             professional_future = None
 
-        people_future = search_memories(tool_context, "people", user_id, 1)
+        people_future = search_memories(tool_context, "people", user_id, 3)
 
         memory_recall = await personal_future if personal_future else None
         memory_recall_professional = (
             await professional_future if professional_future else None
         )
-        people_recall = await people_future
+        people_recall_results = await people_future
+        people_recall = (
+            people_recall_results.get("search_results") if people_recall_results else []
+        )
 
         callback_context.state["memory_context_professional"] = (
             memory_recall_professional.get("search_results")
@@ -161,6 +164,6 @@ async def prefetch_memories(
             memory_recall.get("search_results") if memory_recall else None
         )
         callback_context.state["user_related_context"] = (
-            people_recall.get("search_results") if people_recall else None
+            get_person_from_search(people_recall, user_id) if people_recall else None
         )
         callback_context.state["vertex_context"] = ""  # TODO add vertex search here
