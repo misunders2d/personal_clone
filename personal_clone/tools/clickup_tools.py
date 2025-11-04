@@ -339,7 +339,7 @@ def create_task(
     parent_task_id: Optional[str] = None,
 ):
     """
-    Create a task in a given list.
+    Create a task in a given list. If `parent_task_id` is provided, creates a subtask of a given parent task.
 
     Args:
         list_id (str): The ID of the list where the task should be created.

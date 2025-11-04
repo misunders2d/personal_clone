@@ -1,6 +1,6 @@
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
-from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-from mcp import StdioServerParameters
+# from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+# from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+# from mcp import StdioServerParameters
 
 from google.adk.tools import ToolContext
 
@@ -10,49 +10,49 @@ from github import Github, Repository
 from github.GithubException import GithubException
 
 
-def create_github_mcp_toolset():
-    try:
-        github_toolset = MCPToolset(
-            connection_params=StdioConnectionParams(
-                server_params=StdioServerParameters(
-                    command="npx",
-                    args=[
-                        "-y",
-                        "@modelcontextprotocol/server-github",
-                    ],
-                    env={"GITHUB_PERSONAL_ACCESS_TOKEN": config.GITHUB_TOKEN},
-                ),
-            ),
-        )
-        return github_toolset
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
+# def create_github_mcp_toolset():
+#     try:
+#         github_toolset = MCPToolset(
+#             connection_params=StdioConnectionParams(
+#                 server_params=StdioServerParameters(
+#                     command="npx",
+#                     args=[
+#                         "-y",
+#                         "@modelcontextprotocol/server-github",
+#                     ],
+#                     env={"GITHUB_PERSONAL_ACCESS_TOKEN": config.GITHUB_TOKEN},
+#                 ),
+#             ),
+#         )
+#         return github_toolset
+#     except Exception as e:
+#         return {"status": "error", "message": str(e)}
 
 
-def create_adk_docs_mcp_toolset():
-    try:
-        adk_docs_mcp_toolset = MCPToolset(
-            connection_params=StdioConnectionParams(
-                server_params=StdioServerParameters(
-                    command="uvx",
-                    args= [
-                        "--from",
-                        "mcpdoc",
-                        "mcpdoc",
-                        "--urls",
-                        "https://raw.githubusercontent.com/google/adk-docs/main/llms.txt",
-                        # "Local_ADK_Docs:/path/to/local/llms.txt"
-                        "--allowed-domains",
-                        "*",
-                        "--transport",
-                        "stdio"
-                    ]
-                ),
-            ),
-        )
-        return adk_docs_mcp_toolset
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
+# def create_adk_docs_mcp_toolset():
+#     try:
+#         adk_docs_mcp_toolset = MCPToolset(
+#             connection_params=StdioConnectionParams(
+#                 server_params=StdioServerParameters(
+#                     command="uvx",
+#                     args= [
+#                         "--from",
+#                         "mcpdoc",
+#                         "mcpdoc",
+#                         "--urls",
+#                         "https://raw.githubusercontent.com/google/adk-docs/main/llms.txt",
+#                         # "Local_ADK_Docs:/path/to/local/llms.txt"
+#                         "--allowed-domains",
+#                         "*",
+#                         "--transport",
+#                         "stdio"
+#                     ]
+#                 ),
+#             ),
+#         )
+#         return adk_docs_mcp_toolset
+#     except Exception as e:
+#         return {"status": "error", "message": str(e)}
 
 
 def create_github_toolset():
