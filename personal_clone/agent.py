@@ -35,7 +35,7 @@ from .callbacks.before_after_agent import (
 from .tools.web_search_tools import scrape_web_page
 from .tools.datetime_tools import get_current_datetime
 from .tools.session_state_tools import set_goals, delete_goals
-from .tools.github_tools import create_adk_docs_mcp_toolset
+# from .tools.github_tools import create_adk_docs_mcp_toolset
 
 from . import config
 
@@ -100,13 +100,13 @@ def create_main_agent():
             set_goals,
             delete_goals,
         ]
-    adk_docs_tools = create_adk_docs_mcp_toolset()
-    if isinstance(adk_docs_tools, list):
-        main_agent_toolset.extend(adk_docs_tools)
-    elif isinstance(adk_docs_tools, dict):
-        pass
-    elif adk_docs_tools:
-        main_agent_toolset.append(adk_docs_tools)
+    # adk_docs_tools = create_adk_docs_mcp_toolset()
+    # if isinstance(adk_docs_tools, list):
+    #     main_agent_toolset.extend(adk_docs_tools)
+    # elif isinstance(adk_docs_tools, dict):
+    #     pass
+    # elif adk_docs_tools:
+    #     main_agent_toolset.append(adk_docs_tools)
 
 
     main_agent = Agent(
