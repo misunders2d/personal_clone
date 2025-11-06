@@ -10,6 +10,8 @@ from google.adk.tools.tool_context import ToolContext
 
 from .. import config
 
+from ..tools.session_state_tools import extract_user_ids_from_tool_context
+
 pc = PineconeAsyncio(api_key=config.PINECONE_API_KEY)
 index_name = config.PINECONE_INDEX_NAME
 
@@ -402,6 +404,8 @@ async def update_memory(
             "status": "error",
             "message": f"Invalid JSON string for `updates`: {str(e)}",
         }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
     allowed_fields = (
         "text",
@@ -419,6 +423,13 @@ async def update_memory(
     if any(key not in allowed_fields for key in updates_dict.keys()):
         return {"status": "error", "message": "forbidden keys in the `updates` dict"}
 
+    current_user_ids_dict = extract_user_ids_from_tool_context(tool_context)
+
+    if current_user_ids_dict.get("status") == "suceess":
+        current_user_ids = current_user_ids_dict["user_ids"]
+    else:
+        return {"status": "error", "message": current_user_ids_dict.get("message")}
+
     try:
         records = {key: value for key, value in updates_dict.items()}
         records["updated_at"] = int(datetime.now().timestamp())
@@ -434,12 +445,6 @@ async def update_memory(
                     "message": f"Memory {memory_id} not found in namespace {namespace}",
                 }
 
-            current_user_ids_str = (
-                tool_context.state.get("user_related_context", [{}])[0]
-                .get("fields", {})
-                .get("user_ids")
-            )
-            current_user_ids = [x["id_value"] for x in json.loads(current_user_ids_str)]
             memory_creator = (
                 memory_to_update.vectors[memory_id]
                 .to_dict()
@@ -525,6 +530,13 @@ async def update_people(
     if any(key not in allowed_fields for key in updates_dict.keys()):
         return {"status": "error", "message": "forbidden keys in the `updates` dict"}
 
+    current_user_ids_dict = extract_user_ids_from_tool_context(tool_context)
+
+    if current_user_ids_dict.get("status") == "suceess":
+        current_user_ids = current_user_ids_dict["user_ids"]
+    else:
+        return {"status": "error", "message": current_user_ids_dict.get("message")}
+
     try:
         records = {key: value for key, value in updates_dict.items()}
         records["updated_at"] = int(datetime.now().timestamp())
@@ -540,12 +552,6 @@ async def update_people(
                     "message": f"Person {person_id} not found in namespace {namespace}",
                 }
 
-            current_user_ids_str = (
-                tool_context.state.get("user_related_context", [{}])[0]
-                .get("fields", {})
-                .get("user_ids")
-            )
-            current_user_ids = [x["id_value"] for x in json.loads(current_user_ids_str)]
             person_ids_dict = (
                 person_to_update.vectors[person_id]
                 .to_dict()

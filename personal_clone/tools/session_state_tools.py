@@ -108,3 +108,28 @@ def delete_goals(tool_context: ToolContext, goals: list[str]) -> dict:
             "status": "failed",
             "error": str(e),
         }
+
+
+def extract_user_ids_from_tool_context(tool_context: ToolContext) -> dict:
+    """
+    A helper function to extract user IDs from the tool context.
+
+    Args:
+        tool_context (ToolContext): The tool context containing user-related information.
+
+    Returns:
+        list[str]: A list of user IDs extracted from the tool context.
+    """
+    try:
+        current_user_ids_list = (
+            tool_context.state.get("user_related_context", [{}])
+            .get("fields", {})
+            .get("user_ids")
+        )
+        current_user_ids = [x["id_value"] for x in current_user_ids_list]
+        return {"status": "suceess", "user_ids": current_user_ids}
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Could not extract current user ids from tool context: {str(e)}",
+        }
