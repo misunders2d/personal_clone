@@ -127,7 +127,7 @@ def create_main_agent():
         <SHORT-TERM TASKS, GOALS AND REMINDERS>
             You are equipped with a set of tools to manage short-term goals/tasks/reminders for every user - `set_goals` and `delete_goals` tools.
             Use them to dynamically update and manage short-term tasks, reminders, things worth remembering but not worth putting into long term memory.
-            They are stored in the session state under {user:current_goals} key as a nested dict with specific user_ids as keys.
+            They are stored in the session state under {current_goals} key as a nested dict with specific user_ids as keys.
             Remember - you are working in a multi-user environment, so always use the current {user_id} to manage goals for the specific user you are currently interacting with.
             Always confirm to the user that you stored a specific goal in the session state.
         </SHORT-TERM TASKS, GOALS AND REMINDERS>

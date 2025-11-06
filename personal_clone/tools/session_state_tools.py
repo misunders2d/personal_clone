@@ -18,18 +18,18 @@ def set_goals(tool_context: ToolContext, goals: dict[str, str]) -> dict:
     try:
         user_id = tool_context.state["user_id"]
 
-        if "user:current_goals" not in tool_context.state:
-            tool_context.state["user:current_goals"] = {}
-        if user_id not in tool_context.state["user:current_goals"]:
-            tool_context.state["user:current_goals"][user_id] = {}
+        if "current_goals" not in tool_context.state:
+            tool_context.state["current_goals"] = {}
+        if user_id not in tool_context.state["current_goals"]:
+            tool_context.state["current_goals"][user_id] = {}
             for goal, description in goals.items():
-                tool_context.state["user:current_goals"][user_id][goal] = description
+                tool_context.state["current_goals"][user_id][goal] = description
             return {
                 "status": "success",
-                "message": f"goals created in the {{user:current_goals}} session key for user {user_id}",
+                "message": f"goals created in the {{current_goals}} session key for user {user_id}",
             }
         else:
-            current_goals_copy = tool_context.state["user:current_goals"].copy()
+            current_goals_copy = tool_context.state["current_goals"].copy()
             user_goals = current_goals_copy.get(user_id, {})
 
             new_goals = {
@@ -45,11 +45,11 @@ def set_goals(tool_context: ToolContext, goals: dict[str, str]) -> dict:
 
             user_goals.update(new_goals)
             current_goals_copy[user_id] = user_goals
-            tool_context.state["user:current_goals"] = current_goals_copy
+            tool_context.state["current_goals"] = current_goals_copy
 
             return {
                 "status": "success",
-                "message": f"goals updated in the {{user:current_goals}} session key for user {user_id}",
+                "message": f"goals updated in the {{current_goals}} session key for user {user_id}",
             }
     except Exception as e:
         return {
@@ -81,8 +81,8 @@ def delete_goals(tool_context: ToolContext, goals: list[str]) -> dict:
                 "message": "Can't identify the user from the session state",
             }
         if (
-            "user:current_goals" not in current_state
-            or user_id not in current_state["user:current_goals"]
+            "current_goals" not in current_state
+            or user_id not in current_state["current_goals"]
         ):
             return {
                 "status": "missing",
@@ -90,14 +90,14 @@ def delete_goals(tool_context: ToolContext, goals: list[str]) -> dict:
             }
 
         else:
-            current_goals_copy = current_state["user:current_goals"].copy()
+            current_goals_copy = current_state["current_goals"].copy()
             user_goals = current_goals_copy.get(user_id, {})
 
             for goal in goals:
                 user_goals.pop(goal, None)  # Safely remove the goal
 
             current_goals_copy[user_id] = user_goals
-            current_state["user:current_goals"] = current_goals_copy
+            current_state["current_goals"] = current_goals_copy
 
         return {
             "status": "success",
