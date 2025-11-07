@@ -13,38 +13,38 @@ vertexai.init(
 )
 
 resource_name = (
-    "projects/131221610297/locations/us-east4/reasoningEngines/3013365547548016640"
+    "projects/1047411111083/locations/us-central1/reasoningEngines/3538549475578478592"
 )
 requirements = "requirements.txt"
 display_name = "personal_clone"
-gcs_dir_name = "gs://personalclone"
-extra_packages = ["personal_clone/", "installation_scripts/install.sh"]
+gcs_dir_name = "gs://personal-clone-experiences"
+extra_packages = ["personal_clone/"]  # , "installation_scripts/install.sh"]
 env_vars: Dict = dotenv_values("personal_clone/.env")
 env_vars.pop("GOOGLE_CLOUD_PROJECT")
 env_vars.pop("GOOGLE_CLOUD_LOCATION")
-build_options: Dict = {"installation_scripts": ["installation_scripts/install.sh"]}
+# build_options: Dict = {"installation_scripts": ["installation_scripts/install.sh"]}
 
 
-# create
-remote_agent = agent_engines.create(
-    agent_engine=agent.root_agent,
+# # create
+# remote_agent = agent_engines.create(
+#     agent_engine=agent.root_agent,
+#     requirements=requirements,
+#     display_name=display_name,
+#     gcs_dir_name=gcs_dir_name,
+#     extra_packages=extra_packages,
+#     env_vars=env_vars,
+#     # build_options=build_options,
+# )
+
+
+# update
+remote_agent = agent_engines.update(
+    resource_name=resource_name,
+    # agent_engine=agent.root_agent,
     requirements=requirements,
-    display_name=display_name,
+    # display_name=display_name,
     gcs_dir_name=gcs_dir_name,
     extra_packages=extra_packages,
     env_vars=env_vars,
-    build_options=build_options,
+    # build_options=build_options,
 )
-
-
-# #update
-# remote_agent = agent_engines.update(
-#     resource_name=resource_name,
-#     agent_engine=agent.root_agent,
-#     requirements=requirements,
-#     # display_name=display_name,
-#     # gcs_dir_name=gcs_dir_name,
-#     # extra_packages=extra_packages,
-#     # env_vars=env_vars,
-#     build_options=build_options,
-# )

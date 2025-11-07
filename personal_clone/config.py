@@ -18,6 +18,7 @@ VERTEX_DATASTORE_ID = os.environ.get("VERTEX_DATASTORE_ID", "")
 DATASTORE_ID = f"projects/{GOOGLE_CLOUD_PROJECT}/locations/us/collections/default_collection/dataStores/{VERTEX_DATASTORE_ID}"
 GCP_SERVICE_ACCOUNT_INFO = os.environ.get("GCP_SERVICE_ACCOUNT_INFO", "")
 BQ_GCP_SERVICE_ACCOUNT_INFO = os.environ.get("BQ_GCP_SERVICE_ACCOUNT_INFO", "")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 GROK_API_KEY = os.environ.get("GROK_API_KEY", "")
@@ -102,7 +103,7 @@ GOOGLE_PRO_MODEL = "gemini-2.5-pro"
 GOOGLE_FLASH_MODEL = "gemini-2.5-flash"
 GOOGLE_LITE_MODEL = "gemini-2.5-flash-lite"
 
-GLOBAL_MODEL_PROVIDER: Literal["Google", "OpenAI", "Grok", "Minimax"] = "Grok"
+GLOBAL_MODEL_PROVIDER: Literal["Google", "OpenAI", "Grok", "Minimax"] = "OpenAI"
 GLOBAL_PLANNER = create_planner("built-in")
 
 if GLOBAL_MODEL_PROVIDER == "Google":

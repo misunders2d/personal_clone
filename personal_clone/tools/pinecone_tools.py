@@ -155,6 +155,20 @@ async def list_records(tool_context: ToolContext, namespace: str) -> dict:
         return {"status": "failed", "error": str(e)}
 
 
+def confirmed(tool_context: ToolContext):
+
+    if (
+        tool_context.user_content
+        and tool_context.user_content.parts
+        and tool_context.user_content.parts[0]
+        and tool_context.user_content.parts[0].text
+    ):
+        last_user_message = tool_context.user_content.parts[0].text
+        if "YES" in last_user_message:
+            return True
+    return False
+
+
 async def create_memory(
     tool_context: ToolContext,
     namespace: str,
@@ -194,6 +208,13 @@ async def create_memory(
             }
         ]'''
     """
+
+    if not confirmed(tool_context):
+        return {
+            "status": "aborted",
+            "message": "Memory creation not confirmed by user. The user mus explicitly confirm by replying with `YES`.",
+        }
+
     try:
 
         user_id = tool_context.state.get("user_id", "unknown_user")
@@ -302,6 +323,13 @@ async def create_people(
         dict: The result of the upsert operation.
 
     """
+
+    if not confirmed(tool_context):
+        return {
+            "status": "aborted",
+            "message": "Memory creation not confirmed by user. The user mus explicitly confirm by replying with `YES`.",
+        }
+
     try:
         namespace = "people"
         # user_id = tool_context.state.get("user_id", "unknown_user")
@@ -373,6 +401,13 @@ async def create_people(
 async def update_memory(
     tool_context: ToolContext, namespace: str, memory_id: str, updates: str = "{}"
 ) -> dict:
+
+    if not confirmed(tool_context):
+        return {
+            "status": "aborted",
+            "message": "Memory creation not confirmed by user. The user mus explicitly confirm by replying with `YES`.",
+        }
+
     """
     Modifies/updates a specific record in a specific Pinecone namespace.
 
@@ -481,6 +516,13 @@ async def update_memory(
 async def update_people(
     tool_context: ToolContext, person_id: str, updates: str = "{}"
 ) -> dict:
+
+    if not confirmed(tool_context):
+        return {
+            "status": "aborted",
+            "message": "Memory creation not confirmed by user. The user mus explicitly confirm by replying with `YES`.",
+        }
+
     """
     Modifies/updates a specific person in "people" Pinecone namespace.
 
@@ -592,6 +634,13 @@ async def update_people(
 async def delete_memory(
     tool_context: ToolContext, namespace: str, record_id: str
 ) -> dict:
+
+    if not confirmed(tool_context):
+        return {
+            "status": "aborted",
+            "message": "Memory creation not confirmed by user. The user mus explicitly confirm by replying with `YES`.",
+        }
+
     """
     Deletes a specific record from  a specific Pinecone index.
 
