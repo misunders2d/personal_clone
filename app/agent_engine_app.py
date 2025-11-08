@@ -62,8 +62,8 @@ class AgentEngineApp(AdkApp):
 
 _, project_id = google.auth.default()
 artifacts_bucket_name = os.environ.get("ARTIFACTS_BUCKET_NAME")
-artifact_service_builder = (
-    lambda: GcsArtifactService(bucket_name=artifacts_bucket_name)
+artifact_service_builder = lambda: (
+    GcsArtifactService(bucket_name=artifacts_bucket_name)
     if artifacts_bucket_name
     else None
 )
