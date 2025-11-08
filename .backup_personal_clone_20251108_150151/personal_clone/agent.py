@@ -278,7 +278,3 @@ root_agent = SequentialAgent(
 #         is_resumable=False,
 #     ),
 # )
-
-from google.adk.apps.app import App
-
-app = App(root_agent=root_agent, name="app")
