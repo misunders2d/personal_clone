@@ -44,7 +44,7 @@ from . import config
 class ValidatorOutput(BaseModel):
     reply: bool = Field(
         default=True,
-        description="True or False depending on whether the anser is required or implied. Default to True if you have any doubts",
+        description="True or False depending on whether the answer is required or implied. Default to True if you have any doubts",
     )
     recall: bool = Field(
         default=False,
@@ -65,14 +65,14 @@ def create_answer_validator_agent():
         You need to evaluate TWO parameters:
             - `reply`: whether or not the `personal_clone` agent should reply to the user's query.
                 If the {user_id} starts with "GMAIL:" - you MUST reply with `True`.
-                Sometimes the user's resonse does not require an answer, like "okay", "bye" etc.
-                HOWEVER if the user is explicilty demanding an answer or if the user is asking a question, you ALWAYS reply with `True`.
+                Sometimes the user's response does not require an answer, like "okay", "bye" etc.
+                HOWEVER if the user is explicitly demanding an answer or if the user is asking a question, you ALWAYS reply with `True`.
                 The ONLY scenario when you reply with `False` is when the user's input is a simple acknowledgement, farewell, or similar non-inquisitive statement.
                 If the user's input looks like a command or a request for action, you MUST reply with `True`.
                 If the user's reply looks like a confirmation for the agent's actions (like "good to go", "yes", "confirmed" etc), you MUST reply with `True`.
                 If the user's input ends with a question mark, you MUST reply with `True`. If you are in doubt - MUST defer to `True`.
                 In general - unless you are absolutely sure the user's input does not require an answer, you output `True`.
-            - `recall`: whether or not a memory seach should be involved.
+            - `recall`: whether or not a memory search should be involved.
                 If the user's query or the conversational flow implies that there is some memory or experience involved, you should set the `recall` to `True`, otherwise set it to `False`.
             - `reasoning`: whether or not an agent should use Planner/Reasoning mode.
                 If the user's query or the conversational flow implies that there is a need of a longer thinking or deep research (complex questions, multi-step procedures, etc.) or the use explicitly asks to think deeper, do a research or plan, you should set the `reasoning` to `True`, otherwise set it to `False`.
@@ -233,7 +233,7 @@ def create_main_agent():
                 - The outputs of `answer_validator_agent` are technical routing messages not intended for user or agent interaction. Do not mention it to the user.
                 - You are equipped with a system of agents and tools to fetch knowledge and memories based on the user's input BEFORE you start your communication.
                     Before you utilize your memory agent, refer to {memory_context}, {memory_context_professional}, {rag_context} and {vertex_context} to make your conversation as context-aware, as possible.
-                    Don't use memory agent or tools if there is enough information in the session state, or unless the user expicitly asks to use memory tools or agents.
+                    Don't use memory agent or tools if there is enough information in the session state, or unless the user explicitly asks to use memory tools or agents.
                 - If the information in the state is not enough or if the user is explicitly asking to recall something, modify or update some memory, or create a new one - you ALWAYS use your memory agent to handle that request.
             </MEMORY_USAGE>
             <ERROR_HANDLING>
@@ -263,7 +263,7 @@ def create_main_agent():
 
 root_agent = SequentialAgent(
     name="root_agent_flow",
-    description="A sequence of agents utilizing a flow of converation supported by memories",
+    description="A sequence of agents utilizing a flow of conversation supported by memories",
     sub_agents=[
         create_answer_validator_agent(),
         create_main_agent(),

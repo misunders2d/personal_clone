@@ -25,10 +25,10 @@ def create_vertex_search_agent(
         If the user is requesting to add or modify a record, reply with "PASS", nothing else.
         <EXTREMELY IMPORTANT!!!>
             - You are a read-only agent, do not attempt to use write mode.
-            - Use EXACT user input to search memories, don't come up with anythign on yourself.
+            - Use EXACT user input to search memories, don't come up with anything on yourself.
             - You are ONLY allowed to output "PASS" or search results starting with "VERTEX SEARCH RESULTS:" and ending with "VERTEX SEARCH RESULTS END", NOTHING ELSE!
             - If the user's request implies updating or modifying memories, just output "PASS".
-            - Your ONLY mode of operation is SEARCHING MEMORIES, anythign beyond that automatically implies "PASS"!
+            - Your ONLY mode of operation is SEARCHING MEMORIES, anything beyond that automatically implies "PASS"!
         </EXTREMELY IMPORTANT!!!>
 
         """,

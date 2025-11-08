@@ -24,9 +24,9 @@ from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider, export
 from vertexai.agent_engines.templates.adk import AdkApp
 
-from personal_clone.agent import app as adk_app
-from personal_clone.app_utils.tracing import CloudTraceLoggingSpanExporter
-from personal_clone.app_utils.typing import Feedback
+from app.agent import app as adk_app
+from app.app_utils.tracing import CloudTraceLoggingSpanExporter
+from app.app_utils.typing import Feedback
 
 
 class AgentEngineApp(AdkApp):

@@ -1,1 +1,1 @@
-from .personal_clone import agent, config
+from .app import agent, config

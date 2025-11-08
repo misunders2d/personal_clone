@@ -98,7 +98,7 @@ MINIMAX_PRO_MODEL = LiteLlm(model="openai/MiniMax-M2", api_key=MINIMAX_API_KEY)
 MINIMAX_FLASH_MODEL = LiteLlm(model="openai/MiniMax-M2", api_key=MINIMAX_API_KEY)
 MINIMAX_LITE_MODEL = LiteLlm(model="openai/MiniMax-M2", api_key=MINIMAX_API_KEY)
 
-# GOOGLE MODLES
+# GOOGLE MODELS
 GOOGLE_PRO_MODEL = "gemini-2.5-pro"
 GOOGLE_FLASH_MODEL = "gemini-2.5-flash"
 GOOGLE_LITE_MODEL = "gemini-2.5-flash-lite"

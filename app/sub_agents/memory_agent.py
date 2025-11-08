@@ -80,7 +80,7 @@ def create_memory_agent_instruction():
         6.  **Clarify and Confirm:**
             *   **Purpose:** Ensure accurate data collection and prevent errors.
             *   **Method:** When information is missing or a request conflicts with schema definitions, ask clarifying questions. Confirm successful operations.
-            *   **Additionally:** If you communicate with a person that you don't yet have stored in the `people` namspace records - make sure to ask for their contact details and add them to the `people` records.        
+            *   **Additionally:** If you communicate with a person that you don't yet have stored in the `people` namespace records - make sure to ask for their contact details and add them to the `people` records.        
     </PEOPLE DATA MANAGEMENT BEST PRACTICES>
 """
 

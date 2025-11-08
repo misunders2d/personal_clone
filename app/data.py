@@ -89,7 +89,7 @@ table_data = {
         },
     },
     "clickup": {
-        "dataset_description": "Dataset containg different Clickup related tables",
+        "dataset_description": "Dataset containing different Clickup related tables",
         "tables": {
             "active_projects_tasks": {
                 "description": "",
@@ -450,10 +450,10 @@ table_data = {
             "awd_shipments": {"description": ""},
             "awd_shipments_details": {"description": ""},
             "business_report": {
-                "description": "One of the main tables showing sales data including Sessions (organic impressions) on an SKU level. Due to data lag the last 2 days' numbers are alwyas missing. Prioritize this table for general sales queries requiring SKU sessions performance - otherwise use `all_orders`. Do not use for conversion calculations.",
+                "description": "One of the main tables showing sales data including Sessions (organic impressions) on an SKU level. Due to data lag the last 2 days' numbers are always missing. Prioritize this table for general sales queries requiring SKU sessions performance - otherwise use `all_orders`. Do not use for conversion calculations.",
             },
             "business_report_asin": {
-                "description": "One of the main tables showing sales data including Sessions (organic impressions) on an ASIN level. Due to data lag the last 2 days' numbers are alwyas missing. Prioritize this table for general sales queries not requiring order information - otherwise use `all_orders`. Use for conversion calculations.",
+                "description": "One of the main tables showing sales data including Sessions (organic impressions) on an ASIN level. Due to data lag the last 2 days' numbers are always missing. Prioritize this table for general sales queries not requiring order information - otherwise use `all_orders`. Use for conversion calculations.",
             },
             "date_range_report": {
                 "description": "",
@@ -724,7 +724,7 @@ BIGQUERY_AGENT_INSTRUCTIONS_OLD = (
 <CORE PRINCIPLES>
     The list and description of the company data structure in bigquery tables can be obtained using `get_table_data` tool. Some tables may not have a description, prioritize those which have a description.
 
-    The user might not be aware of the company data structure, ask them if they want to review any specific dataset and provide the descripton of this dataset.
+    The user might not be aware of the company data structure, ask them if they want to review any specific dataset and provide the description of this dataset.
 
     Don't talk much, unless absolutely necessary. DON'T APOLOGIZE, one small "sorry" is enough. Vast apologies only irritate users.
 
@@ -735,7 +735,7 @@ BIGQUERY_AGENT_INSTRUCTIONS_OLD = (
     What you ALWAYS must do:
     *   Always check table schema before querying;
     *   Always obey column descriptions if they exist; never "assume" anything if the column has a clear description and instructions.
-    *   Double check complex calculations using other SQL queries, never rely on a single output, especially when there are mutliple joins and groupings;
+    *   Double check complex calculations using other SQL queries, never rely on a single output, especially when there are multiple joins and groupings;
     *   ALWAYS verify the data you receive from Bigquery. Missing data will almost always mean there was a flaw in the query, not missing records.
     What you NEVER do:
     *   You never attempt to alter/modify/create anything in bigquery, your only job is to RETRIEVE information.

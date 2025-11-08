@@ -40,7 +40,7 @@ async def get_records_by_id(
 
     Args:
         tool_context (ToolContext): a ToolContext object.
-        record_ids (list[str]): Required. A list of memory_id strings - accepts multipe records.
+        record_ids (list[str]): Required. A list of memory_id strings - accepts multiple records.
         namespace (str): Required. The name of the Pinecone index namespace ("personal" for personal memories or "professional" for professional experience).
         format (str): Required. "full" to pull full records data (including long description), or "short" (just id, short_description and tags - for quick overview)
 
@@ -460,7 +460,7 @@ async def update_memory(
 
     current_user_ids_dict = extract_user_ids_from_tool_context(tool_context)
 
-    if current_user_ids_dict.get("status") == "suceess":
+    if current_user_ids_dict.get("status") == "success":
         current_user_ids = current_user_ids_dict["user_ids"]
     else:
         return {"status": "error", "message": current_user_ids_dict.get("message")}
@@ -574,7 +574,7 @@ async def update_people(
 
     current_user_ids_dict = extract_user_ids_from_tool_context(tool_context)
 
-    if current_user_ids_dict.get("status") == "suceess":
+    if current_user_ids_dict.get("status") == "success":
         current_user_ids = current_user_ids_dict["user_ids"]
     else:
         return {"status": "error", "message": current_user_ids_dict.get("message")}

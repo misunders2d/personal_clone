@@ -40,7 +40,7 @@ def set_goals(tool_context: ToolContext, goals: dict[str, str]) -> dict:
             if not new_goals:
                 return {
                     "status": "duplicates",
-                    "message": "This set of goals aready exists in the user daily goals",
+                    "message": "This set of goals already exists in the user daily goals",
                 }
 
             user_goals.update(new_goals)
@@ -127,7 +127,7 @@ def extract_user_ids_from_tool_context(tool_context: ToolContext) -> dict:
             .get("user_ids")
         )
         current_user_ids = [x["id_value"] for x in current_user_ids_list]
-        return {"status": "suceess", "user_ids": current_user_ids}
+        return {"status": "success", "user_ids": current_user_ids}
     except Exception as e:
         return {
             "status": "error",

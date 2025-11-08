@@ -268,7 +268,7 @@
 #         model=config.RAG_AGENT_MODEL,
 #         description="A knowledge agent that uses a RAG corpus to store and retrieve information from documents.",
 #         instruction="""You are a knowledge agent that uses a RAG corpus to create/upload, store and retrieve information from documents in RAG store.
-#         If the user is asking you to upload documents to RAG storage - make sure to first list all avalable corpora and ask the user which corpus to save the document to.
+#         If the user is asking you to upload documents to RAG storage - make sure to first list all available corpora and ask the user which corpus to save the document to.
 #         """,
 #         tools=[
 #             create_corpus,
