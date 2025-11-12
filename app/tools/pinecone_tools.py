@@ -155,7 +155,7 @@ async def list_records(tool_context: ToolContext, namespace: str) -> dict:
         return {"status": "failed", "error": str(e)}
 
 
-def confirmed(tool_context: ToolContext):
+async def confirmed(tool_context: ToolContext):
 
     if (
         tool_context.user_content
@@ -209,10 +209,10 @@ async def create_memory(
         ]'''
     """
 
-    if not confirmed(tool_context):
+    if not await confirmed(tool_context):
         return {
             "status": "aborted",
-            "message": "Memory creation not confirmed by user. The user mus explicitly confirm by replying with `YES`.",
+            "message": "Memory creation not confirmed by user. The user must explicitly confirm by replying with `YES`.",
         }
 
     try:
@@ -324,10 +324,10 @@ async def create_people(
 
     """
 
-    if not confirmed(tool_context):
+    if not await confirmed(tool_context):
         return {
             "status": "aborted",
-            "message": "Memory creation not confirmed by user. The user mus explicitly confirm by replying with `YES`.",
+            "message": "Memory creation not confirmed by user. The user must explicitly confirm by replying with `YES`.",
         }
 
     try:
@@ -402,10 +402,10 @@ async def update_memory(
     tool_context: ToolContext, namespace: str, memory_id: str, updates: str = "{}"
 ) -> dict:
 
-    if not confirmed(tool_context):
+    if not await confirmed(tool_context):
         return {
             "status": "aborted",
-            "message": "Memory creation not confirmed by user. The user mus explicitly confirm by replying with `YES`.",
+            "message": "Memory creation not confirmed by user. The user must explicitly confirm by replying with `YES`.",
         }
 
     """
@@ -517,10 +517,10 @@ async def update_people(
     tool_context: ToolContext, person_id: str, updates: str = "{}"
 ) -> dict:
 
-    if not confirmed(tool_context):
+    if not await confirmed(tool_context):
         return {
             "status": "aborted",
-            "message": "Memory creation not confirmed by user. The user mus explicitly confirm by replying with `YES`.",
+            "message": "Memory creation not confirmed by user. The user must explicitly confirm by replying with `YES`.",
         }
 
     """
@@ -635,10 +635,10 @@ async def delete_memory(
     tool_context: ToolContext, namespace: str, record_id: str
 ) -> dict:
 
-    if not confirmed(tool_context):
+    if not await confirmed(tool_context):
         return {
             "status": "aborted",
-            "message": "Memory creation not confirmed by user. The user mus explicitly confirm by replying with `YES`.",
+            "message": "Memory creation not confirmed by user. The user must explicitly confirm by replying with `YES`.",
         }
 
     """
