@@ -109,15 +109,16 @@ async def prefetch_memories(
     user_id = callback_context.state.get("user_id")
 
     tool_context = ToolContext(invocation_context=callback_context._invocation_context)
+    last_user_message = None
 
-    # if (
-    #     callback_context.user_content
-    #     and callback_context.user_content.parts
-    #     and callback_context.user_content.parts[0]
-    #     and callback_context.user_content.parts[0].text
-    # ):
-    #     last_user_message = callback_context.user_content.parts[0].text
-    if callback_context.state.get("answer_validation", {}).get("reply"):
+    if (
+        callback_context.user_content
+        and callback_context.user_content.parts
+        and callback_context.user_content.parts[0]
+        and callback_context.user_content.parts[0].text
+    ):
+        last_user_message = callback_context.user_content.parts[0].text
+    if callback_context.state.get("answer_validation", {}).get("reply") and last_user_message:
 
         if (
             not user_id.lower().endswith(config.TEAM_DOMAIN)
@@ -125,44 +126,44 @@ async def prefetch_memories(
         ):
             return
 
-        # if user_id in config.SUPERUSERS and callback_context.state.get(
-        #     "answer_validation", {}
-        # ).get("recall"):
-        #     personal_future = search_memories(
-        #         tool_context, "personal", last_user_message, 1
-        #     )
-        # else:
-        #     personal_future = None
+        if user_id in config.SUPERUSERS and callback_context.state.get(
+            "answer_validation", {}
+        ).get("recall"):
+            personal_future = search_memories(
+                tool_context, "personal", last_user_message, 1
+            )
+        else:
+            personal_future = None
 
-        # if (
-        #     user_id.lower().endswith(config.TEAM_DOMAIN) or user_id in config.SUPERUSERS
-        # ) and callback_context.state.get("answer_validation", {}).get("recall"):
-        #     professional_future = search_memories(
-        #         tool_context, "professional", last_user_message, 1
-        #     )
-        # else:
-        #     professional_future = None
+        if (
+            user_id.lower().endswith(config.TEAM_DOMAIN) or user_id in config.SUPERUSERS
+        ) and callback_context.state.get("answer_validation", {}).get("recall"):
+            professional_future = search_memories(
+                tool_context, "professional", last_user_message, 1
+            )
+        else:
+            professional_future = None
 
         people_future = search_memories(tool_context, "people", user_id, 3)
 
-        # memory_recall = await personal_future if personal_future else None
-        # memory_recall_professional = (
-        #     await professional_future if professional_future else None
-        # )
+        memory_recall = await personal_future if personal_future else None
+        memory_recall_professional = (
+            await professional_future if professional_future else None
+        )
         people_recall_results = await people_future
         people_recall = (
             people_recall_results.get("search_results") if people_recall_results else []
         )
 
-        # callback_context.state["memory_context_professional"] = (
-        #     memory_recall_professional.get("search_results")
-        #     if memory_recall_professional
-        #     else None
-        # )
+        callback_context.state["memory_context_professional"] = (
+            memory_recall_professional.get("search_results")
+            if memory_recall_professional
+            else None
+        )
 
-        # callback_context.state["memory_context"] = (
-        #     memory_recall.get("search_results") if memory_recall else None
-        # )
+        callback_context.state["memory_context"] = (
+            memory_recall.get("search_results") if memory_recall else None
+        )
         callback_context.state["user_related_context"] = (
             get_person_from_search(people_recall, user_id) if people_recall else None
         )

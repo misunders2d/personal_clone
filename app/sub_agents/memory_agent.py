@@ -88,7 +88,7 @@ def create_memory_agent_instruction():
 def create_memory_agent(
     name: str = "memory_agent",
     instruction: str = create_memory_agent_instruction(),
-    output_key: str = "memory_search",
+    # output_key: str = "memory_search",
 ) -> Agent:
 
     pinecone_tools = create_pinecone_toolset()
@@ -109,6 +109,6 @@ def create_memory_agent(
         model=config.MEMORY_AGENT_MODEL,
         planner=config.MEMORY_AGENT_PLANNER,
         tools=tools,
-        output_key=output_key,
+        # output_key=output_key,
     )
     return memory_agent
