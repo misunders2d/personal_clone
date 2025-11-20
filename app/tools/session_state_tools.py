@@ -18,19 +18,18 @@ def set_goals(tool_context: ToolContext, goals: dict[str, str]) -> dict:
     try:
         user_id = tool_context.state["user_id"]
 
-        if "current_goals" not in tool_context.state:
-            tool_context.state["current_goals"] = {}
-        if user_id not in tool_context.state["current_goals"]:
-            tool_context.state["current_goals"][user_id] = {}
-            for goal, description in goals.items():
-                tool_context.state["current_goals"][user_id][goal] = description
+        # Always work with a copy to ensure state updates are detected upon reassignment
+        current_goals = tool_context.state.get("current_goals", {}).copy()
+
+        if user_id not in current_goals:
+            current_goals[user_id] = goals
+            tool_context.state["current_goals"] = current_goals
             return {
                 "status": "success",
                 "message": f"goals created in the {{current_goals}} session key for user {user_id}",
             }
         else:
-            current_goals_copy = tool_context.state["current_goals"].copy()
-            user_goals = current_goals_copy.get(user_id, {})
+            user_goals = current_goals.get(user_id, {}).copy()
 
             new_goals = {
                 goal: description
@@ -44,8 +43,8 @@ def set_goals(tool_context: ToolContext, goals: dict[str, str]) -> dict:
                 }
 
             user_goals.update(new_goals)
-            current_goals_copy[user_id] = user_goals
-            tool_context.state["current_goals"] = current_goals_copy
+            current_goals[user_id] = user_goals
+            tool_context.state["current_goals"] = current_goals
 
             return {
                 "status": "success",
