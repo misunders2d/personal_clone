@@ -210,9 +210,19 @@ async def create_memory(
     """
 
     if not await confirmed(tool_context):
+        arg_dict = {
+            "namespace": namespace,
+            "text": text,
+            "short_description": short_description,
+            "category": category,
+            "tags": tags,
+            "related_people": related_people,
+            "related_memories": related_memories,
+        }
         return {
-            "status": "aborted",
-            "message": "Memory creation not confirmed by user. The user must explicitly confirm by replying with `YES`.",
+            "status": "requires confirmation",
+            "message": "Memory creation must be confirmed by user. The user must explicitly confirm by replying with `YES`.",
+            "args": arg_dict
         }
 
     try:
@@ -325,9 +335,17 @@ async def create_people(
     """
 
     if not await confirmed(tool_context):
+        arg_dict = {
+            "first_name": first_name,
+            "last_name": last_name,
+            "role": role,
+            "user_ids": user_ids,
+            "relations": relations,
+        }
         return {
-            "status": "aborted",
-            "message": "Memory creation not confirmed by user. The user must explicitly confirm by replying with `YES`.",
+            "status": "requires confirmation",
+            "message": "Memory creation must be confirmed by user. The user must explicitly confirm by replying with `YES`.",
+            "args": arg_dict
         }
 
     try:
@@ -403,9 +421,15 @@ async def update_memory(
 ) -> dict:
 
     if not await confirmed(tool_context):
+        arg_dict = {
+            "namespace": namespace,
+            "memory_id": memory_id,
+            "updates": updates,
+            }
         return {
-            "status": "aborted",
-            "message": "Memory creation not confirmed by user. The user must explicitly confirm by replying with `YES`.",
+            "status": "requires confirmation",
+            "message": "Memory update must be confirmed by user. The user must explicitly confirm by replying with `YES`.",
+            "args": arg_dict
         }
 
     """
@@ -518,9 +542,14 @@ async def update_people(
 ) -> dict:
 
     if not await confirmed(tool_context):
+        arg_dict = {
+            "person_id": person_id,
+            "updates": updates
+        }
         return {
-            "status": "aborted",
-            "message": "Memory creation not confirmed by user. The user must explicitly confirm by replying with `YES`.",
+            "status": "requires confirmation",
+            "message": "Memory update must be confirmed by user. The user must explicitly confirm by replying with `YES`.",
+            "args": arg_dict
         }
 
     """
@@ -636,9 +665,14 @@ async def delete_memory(
 ) -> dict:
 
     if not await confirmed(tool_context):
+        arg_dict = {
+            "namespace": namespace,
+            "record_id": record_id
+        }
         return {
-            "status": "aborted",
-            "message": "Memory creation not confirmed by user. The user must explicitly confirm by replying with `YES`.",
+            "status": "requires confirmation",
+            "message": "Memory deletion must be confirmed by user. The user must explicitly confirm by replying with `YES`.",
+            "args": arg_dict
         }
 
     """
