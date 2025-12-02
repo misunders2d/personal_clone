@@ -118,7 +118,10 @@ async def prefetch_memories(
         and callback_context.user_content.parts[0].text
     ):
         last_user_message = callback_context.user_content.parts[0].text
-    if callback_context.state.get("answer_validation", {}).get("reply") and last_user_message:
+    if (
+        callback_context.state.get("answer_validation", {}).get("reply")
+        and last_user_message
+    ):
 
         if (
             not user_id.lower().endswith(config.TEAM_DOMAIN)
