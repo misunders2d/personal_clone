@@ -606,7 +606,8 @@ async def update_people(
         return {"status": "error", "message": current_user_ids_dict.get("message")}
 
     try:
-        records = {key: value for key, value in updates_dict.items()}
+        # records = {key: value for key, value in updates_dict.items()}
+        records = updates_dict.copy()
         records["updated_at"] = int(datetime.now().timestamp())
         if "relations" in updates_dict:
             records["relations"] = json.dumps(updates_dict["relations"])
@@ -728,6 +729,48 @@ async def search_memories(
     """
 
     user_id = tool_context.state.get("user_id")
+    if namespace == "personal" and user_id not in config.SUPERUSERS:
+        return {
+            "status": "restricted",
+            "search_results": "sorry, personal memories are for my master user only",
+        }
+    elif user_id not in config.SUPERUSERS and not user_id.lower().endswith(
+        config.TEAM_DOMAIN
+    ):
+        return {
+            "status": "restricted",
+            "search_results": f"sorry, this information is only available to {config.TEAM_DOMAIN} members",
+        }
+    try:
+        query = SearchQuery(inputs={"text": search_query}, top_k=top_k)
+
+        index_descr: IndexModel = await pc.describe_index(index_name)
+        async with pc.IndexAsyncio(index_descr.host) as index:
+            results = await index.search_records(namespace=namespace, query=query)
+            if results:
+                summary = results.to_dict().get("result", {}).get("hits")
+                return {"status": "success", "search_results": summary}
+            return {"status": "failed", "search_results": "nothing found"}
+    except Exception as e:
+        return {"status": "failed", "error": str(e)}
+
+
+async def search_memories_prefetch(
+    user_id: str, namespace: str, search_query: str, top_k: int
+) -> dict:
+    """
+    Searches for memories/records in Pinecone using a search query.
+
+    Args:
+        namespace (str): The name of the Pinecone index namespace ("personal" for personal memories or "professional" for professional experience)..
+        search_query (str): The search query to search in Pinecone records
+        top_k (int): How many results to return. Start with small numbers (3-5) and only increase this number if you want to do a broader search.
+
+    Returns:
+        dict: The result of the search operation along with additional metadata (if any).
+
+    """
+
     if namespace == "personal" and user_id not in config.SUPERUSERS:
         return {
             "status": "restricted",

@@ -1,21 +1,19 @@
 from google.adk.agents.callback_context import CallbackContext
-from google.adk.tools import ToolContext
-from typing import Optional
+from google.adk.tools.tool_context import ToolContext
 from google.genai import types
 
-from ..tools.pinecone_tools import search_memories, get_person_from_search
-from ..tools.datetime_tools import get_current_datetime
-
 from .. import config
+from ..tools.datetime_tools import get_current_datetime
+from ..tools.pinecone_tools import get_person_from_search, search_memories_prefetch
 
 
 async def state_setter(
     callback_context: CallbackContext,
-) -> Optional[types.Content]:
+) -> types.Content | None:
     """sets initial state"""
 
     current_state = callback_context.state.to_dict()
-    current_user = callback_context._invocation_context.user_id
+    current_user = callback_context.user_id
 
     if "master_user_id" not in current_state:
         callback_context.state["master_user_id"] = config.SUPERUSERS
@@ -45,7 +43,7 @@ async def state_setter(
 
 async def check_if_agent_should_run(
     callback_context: CallbackContext,
-) -> Optional[types.Content]:
+) -> types.Content | None:
     """
     Logs entry and checks 'reply' in session state.
     If True, returns Content to skip the agent's execution.
@@ -67,10 +65,11 @@ async def check_if_agent_should_run(
 
 async def professional_agents_checker(
     callback_context: CallbackContext,
-) -> Optional[types.Content]:
+) -> types.Content | None:
     """checks if the user is in superusers and prevents agent run with personal memories access"""
     current_state = callback_context.state.to_dict()
     user_id = current_state.get("user_id", "")
+    print(f"[USER ID]:\n\n\n{user_id}")
     if (
         not user_id.lower().endswith(config.TEAM_DOMAIN)
         and user_id not in config.SUPERUSERS
@@ -87,7 +86,7 @@ async def professional_agents_checker(
 
 async def personal_agents_checker(
     callback_context: CallbackContext,
-) -> Optional[types.Content]:
+) -> types.Content | None:
     """checks if the user is in superusers and prevents agent run with personal memories access"""
     current_state = callback_context.state.to_dict()
     user_id = current_state.get("user_id", "")
@@ -100,7 +99,7 @@ async def personal_agents_checker(
 
 async def prefetch_memories(
     callback_context: CallbackContext,
-) -> Optional[types.Content]:
+) -> types.Content | None:
     """
     Used to prefetch personal and professional memories based on the user query.
     Injects records from memories into session state
@@ -108,7 +107,7 @@ async def prefetch_memories(
     # last_user_message = ""
     user_id = callback_context.state.get("user_id")
 
-    tool_context = ToolContext(invocation_context=callback_context._invocation_context)
+    # tool_context = ToolContext(invocation_context=callback_context._invocation_context)
     last_user_message = None
 
     if (
@@ -132,8 +131,8 @@ async def prefetch_memories(
         if user_id in config.SUPERUSERS and callback_context.state.get(
             "answer_validation", {}
         ).get("recall"):
-            personal_future = search_memories(
-                tool_context, "personal", last_user_message, 1
+            personal_future = search_memories_prefetch(
+                user_id, "personal", last_user_message, 1
             )
         else:
             personal_future = None
@@ -141,13 +140,13 @@ async def prefetch_memories(
         if (
             user_id.lower().endswith(config.TEAM_DOMAIN) or user_id in config.SUPERUSERS
         ) and callback_context.state.get("answer_validation", {}).get("recall"):
-            professional_future = search_memories(
-                tool_context, "professional", last_user_message, 1
+            professional_future = search_memories_prefetch(
+                user_id, "professional", last_user_message, 1
             )
         else:
             professional_future = None
 
-        people_future = search_memories(tool_context, "people", user_id, 3)
+        people_future = search_memories_prefetch(user_id, "people", user_id, 3)
 
         memory_recall = await personal_future if personal_future else None
         memory_recall_professional = (

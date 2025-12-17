@@ -1,19 +1,24 @@
+import json
+import os
+from typing import Literal
+
+import google.auth
+from dotenv import load_dotenv
+from google.adk.models.lite_llm import LiteLlm
 from google.adk.planners import BuiltInPlanner, PlanReActPlanner
 from google.genai import types
-
-from google.adk.models.lite_llm import LiteLlm
 from google.oauth2 import service_account
-import google.auth
-import os
-import json
-from typing import Literal
-from dotenv import load_dotenv
 
-load_dotenv()
+current_folder = os.path.dirname(os.path.abspath(__file__))
+
+load_dotenv(os.path.join(current_folder, ".env"))
+
+APP_NAME = "personal_clone"
 
 GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
 GOOGLE_CLOUD_LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "")
 GOOGLE_CLOUD_STORAGE_BUCKET = os.environ.get("GOOGLE_CLOUD_STORAGE_BUCKET", "")
+GOOGLE_CLOUD_ARTIFACT_BUCKET = os.environ.get("GOOGLE_CLOUD_ARTIFACT_BUCKET", "")
 VERTEX_DATASTORE_ID = os.environ.get("VERTEX_DATASTORE_ID", "")
 DATASTORE_ID = f"projects/{GOOGLE_CLOUD_PROJECT}/locations/us/collections/default_collection/dataStores/{VERTEX_DATASTORE_ID}"
 GCP_SERVICE_ACCOUNT_INFO = os.environ.get("GCP_SERVICE_ACCOUNT_INFO", "")
@@ -36,6 +41,10 @@ CLICKUP_API_TOKEN = os.environ.get("CLICKUP_API_TOKEN", "")
 CLICKUP_TEAM_ID = os.environ.get("CLICKUP_TEAM_ID", "")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 DEFAULT_GITHUB_REPO = os.environ.get("DEFAULT_GITHUB_REPO", "")
+
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN", "")
+SLACK_APP_TOKEN = os.environ.get("SLACK_APP_TOKEN", "")
 
 PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY", "")
 PINECONE_INDEX_NAME = os.environ.get("PINECONE_INDEX_NAME", "")

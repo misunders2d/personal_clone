@@ -1,10 +1,5 @@
 from google.adk import Agent
 
-# from typing import Literal
-
-# from ..tools.search_tools import create_bigquery_toolset
-from ..tools.pinecone_tools import create_pinecone_toolset
-
 # from ..callbacks.before_after_tool import (
 #     before_personal_memory_callback,
 #     before_professional_memory_callback,
@@ -13,8 +8,11 @@ from ..tools.pinecone_tools import create_pinecone_toolset
 #     personal_agents_checker,
 #     professional_agents_checker,
 # )
-
 from .. import config
+
+# from typing import Literal
+# from ..tools.search_tools import create_bigquery_toolset
+from ..tools.pinecone_tools import create_pinecone_toolset
 
 
 def create_memory_agent_instruction():
@@ -36,7 +34,7 @@ def create_memory_agent_instruction():
         - IMPORTANT! When updating memories you MUST make sure you are not overwriting the memory completely, and are only applying the agreed update to the memory.
         - ALWAYS announce the changes you've made to the user.
         - Make sure NOT to delete the record completely, just modify the relevant information.
-    
+
     After updating the memory you MUST verify the result by fetching this memory by ID.
     </SPECIAL INSTRUCTIONS FOR UPDATING MEMORIES>
 
@@ -51,7 +49,7 @@ def create_memory_agent_instruction():
             - For DELETE tasks, remove memories that are no longer needed. Confirm the user's intent before deletion.
         EXTREMELY IMPORTANT: Always get the user's EXPLICIT confirmation before performing any DELETE or UPDATE operations to avoid accidental data loss.
     </MEMORY MANAGEMENT WORKFLOW>
-    
+
     <PEOPLE DATA MANAGEMENT BEST PRACTICES>
 
         1.  **Always Check for Existing Records Before Creating:**
@@ -80,7 +78,7 @@ def create_memory_agent_instruction():
         6.  **Clarify and Confirm:**
             *   **Purpose:** Ensure accurate data collection and prevent errors.
             *   **Method:** When information is missing or a request conflicts with schema definitions, ask clarifying questions. Confirm successful operations.
-            *   **Additionally:** If you communicate with a person that you don't yet have stored in the `people` namespace records - make sure to ask for their contact details and add them to the `people` records.        
+            *   **Additionally:** If you communicate with a person that you don't yet have stored in the `people` namespace records - make sure to ask for their contact details and add them to the `people` records.
     </PEOPLE DATA MANAGEMENT BEST PRACTICES>
 """
 

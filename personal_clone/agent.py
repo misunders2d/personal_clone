@@ -1,44 +1,33 @@
 from google.adk.agents import Agent, SequentialAgent  # , ParallelAgent
+from google.adk.apps import App, ResumabilityConfig
 
-# from google.adk.apps import App
-# from google.adk.apps import ResumabilityConfig
 # from google.adk.tools.load_memory_tool import load_memory_tool
 # from google.adk.tools.preload_memory_tool import preload_memory_tool
-
-
-from google.adk.tools import AgentTool
+from google.adk.tools.agent_tool import AgentTool
 from pydantic import BaseModel, Field
 
-from .sub_agents.bigquery_agent import create_bigquery_agent
-from .sub_agents.code_executor_agent import create_code_executor_agent
-
-from .sub_agents.memory_agent import create_memory_agent
-
-from .sub_agents.vertex_search_agent import create_vertex_search_agent
-
-# from .sub_agents.rag_agent import create_rag_agent
-
-
-# from .sub_agents.graph_agent import create_graph_agent
-from .sub_agents.google_search_agent import create_google_search_agent
-from .sub_agents.clickup_agent import create_clickup_agent
-from .sub_agents.github_agent import create_github_agent
+# from .tools.github_tools import create_adk_docs_mcp_toolset
+from . import config
 
 # from .sub_agents.pinecone_agent import create_pinecone_agent
-
 from .callbacks.before_after_agent import (
     check_if_agent_should_run,
-    state_setter,
     prefetch_memories,
+    state_setter,
 )
+from .sub_agents.bigquery_agent import create_bigquery_agent
+from .sub_agents.clickup_agent import create_clickup_agent
+from .sub_agents.code_executor_agent import create_code_executor_agent
+from .sub_agents.github_agent import create_github_agent
 
-from .tools.web_search_tools import scrape_web_page
+# from .sub_agents.rag_agent import create_rag_agent
+# from .sub_agents.graph_agent import create_graph_agent
+from .sub_agents.google_search_agent import create_google_search_agent
+from .sub_agents.memory_agent import create_memory_agent
+from .sub_agents.vertex_search_agent import create_vertex_search_agent
 from .tools.datetime_tools import get_current_datetime
-from .tools.session_state_tools import set_goals, delete_goals
-
-# from .tools.github_tools import create_adk_docs_mcp_toolset
-
-from . import config
+from .tools.session_state_tools import delete_goals, set_goals
+from .tools.web_search_tools import scrape_web_page
 
 
 class ValidatorOutput(BaseModel):
@@ -94,7 +83,7 @@ def create_main_agent():
         # load_memory_tool,
         # preload_memory_tool,
         get_current_datetime,
-        AgentTool(create_vertex_search_agent()),
+        # AgentTool(create_vertex_search_agent()),
         AgentTool(create_code_executor_agent()),
         AgentTool(create_google_search_agent()),
         scrape_web_page,
@@ -256,6 +245,7 @@ def create_main_agent():
             create_bigquery_agent(),
             create_clickup_agent(),
             create_github_agent(),
+            create_vertex_search_agent(),
         ],
         before_agent_callback=[check_if_agent_should_run],
         planner=config.AGENT_PLANNER,
@@ -273,14 +263,14 @@ root_agent = SequentialAgent(
 )
 
 
-# app = App(
-#     name="personal_clone",
-#     root_agent=root_agent,
-#     resumability_config=ResumabilityConfig(
-#         is_resumable=False,
-#     ),
-# )
+app = App(
+    name="personal_clone",
+    root_agent=root_agent,
+    resumability_config=ResumabilityConfig(
+        is_resumable=False,
+    ),
+)
 
-from google.adk.apps.app import App
+# from google.adk.apps.app import App
 
-app = App(root_agent=root_agent, name="app")
+# app = App(root_agent=root_agent, name="personal_clone")

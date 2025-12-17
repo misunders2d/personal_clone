@@ -1,4 +1,4 @@
-from google.adk.tools import ToolContext
+from google.adk.tools.tool_context import ToolContext
 
 
 def set_goals(tool_context: ToolContext, goals: dict[str, str]) -> dict:

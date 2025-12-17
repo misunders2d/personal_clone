@@ -1,12 +1,11 @@
 from google.adk.agents import Agent
-from google.adk.tools import VertexAiSearchTool
 
+# from google.adk.tools.vertex_ai_search_tool import VertexAiSearchTool
 from .. import config
-
 from ..callbacks.before_after_agent import professional_agents_checker
+from ..tools.vertex_tools import search_file_store
 
-
-vertex_toolset = VertexAiSearchTool(data_store_id=config.DATASTORE_ID)
+# vertex_toolset = VertexAiSearchTool(data_store_id=config.DATASTORE_ID)
 
 
 def create_vertex_search_agent(
@@ -32,7 +31,7 @@ def create_vertex_search_agent(
         </EXTREMELY IMPORTANT!!!>
 
         """,
-        tools=[vertex_toolset],
+        tools=[search_file_store],
         before_agent_callback=professional_agents_checker,
         output_key=output_key,
         planner=config.VERTEX_SEARCH_AGENT_PLANNER,

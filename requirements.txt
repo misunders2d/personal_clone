@@ -1,3 +1,4 @@
+aiosqlite
 bs4
 google-adk
 google-genai
@@ -8,3 +9,5 @@ lxml
 PyGitHub
 requests
 pinecone[asyncio]
+python-telegram-bot
+slack-bolt
