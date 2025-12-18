@@ -1,12 +1,11 @@
 from google.adk import Agent
-from ..tools.pinecone_tools import create_pinecone_toolset
 
 # from ..callbacks.before_after_agent import (
 #     professional_agents_checker,
 #     personal_agents_checker,
 # )
-
 from .. import config
+from ..tools.pinecone_tools import create_pinecone_toolset
 
 
 def create_pinecone_agent(name="pinecone_agent"):

@@ -1,7 +1,8 @@
+from urllib.parse import urljoin, urlparse
+
 import requests
 from bs4 import BeautifulSoup, Tag
 from bs4.element import NavigableString
-from urllib.parse import urljoin, urlparse
 
 
 def scrape_web_page(url: str, timeout: float = 10.0) -> dict:
@@ -67,7 +68,7 @@ def scrape_web_page(url: str, timeout: float = 10.0) -> dict:
                 sections.append(sec)
             else:
                 # Build sections
-                for idx, h in enumerate(headings):
+                for _idx, h in enumerate(headings):
                     sec = {"heading": h.get_text(strip=True), "content": []}
                     # define boundary: until next heading of same or higher level
                     next_sibs = []

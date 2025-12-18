@@ -130,5 +130,5 @@ def extract_user_ids_from_tool_context(tool_context: ToolContext) -> dict:
     except Exception as e:
         return {
             "status": "error",
-            "message": f"Could not extract current user ids from tool context: {str(e)}",
+            "message": f"Could not extract current user ids from tool context: {e}",
         }

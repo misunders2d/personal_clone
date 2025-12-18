@@ -1,15 +1,13 @@
-from pinecone import PineconeAsyncio, SearchQuery, FetchResponse, IndexModel
-import uuid
-from datetime import datetime
 import json
 import time
+import uuid
+from datetime import datetime
 
 from google.adk.tools.tool_context import ToolContext
+from pinecone import FetchResponse, IndexModel, PineconeAsyncio, SearchQuery, Vector
 
 # from google.adk.tools.function_tool import FunctionTool
-
 from .. import config
-
 from ..tools.session_state_tools import extract_user_ids_from_tool_context
 
 pc = PineconeAsyncio(api_key=config.PINECONE_API_KEY)
@@ -74,6 +72,8 @@ async def get_records_by_id(
                 "message": "`record_ids` MUST be a list of memory id strings, namespace must be provided",
             }
         index_descr = await pc.describe_index(index_name)
+        if not index_descr or not index_descr.host:
+            return {"status": "failed", "error": f"Could not get index description for {index_name}"}
         async with pc.IndexAsyncio(index_descr.host) as index:
             vectors = await index.fetch(ids=record_ids, namespace=namespace)
             records_data = {
@@ -132,6 +132,8 @@ async def list_records(tool_context: ToolContext, namespace: str) -> dict:
     try:
 
         index_descr: IndexModel = await pc.describe_index(index_name)
+        if not index_descr or not index_descr.host:
+            return {"status": "failed", "error": f"Could not get index description for {index_name}"}
         full_results = []
         async with pc.IndexAsyncio(index_descr.host) as index:
             results = await index.list_paginated(namespace=namespace, limit=20)
@@ -263,7 +265,7 @@ async def create_memory(
         related_memories_list = json.loads(related_memories) if related_memories else []
 
         date_value = datetime.now()
-        memory_id = f"mem_{date_value.strftime("%Y_%m_%d")}_{uuid.uuid4().hex}"
+        memory_id = f"mem_{date_value.strftime('%Y_%m_%d')}_{uuid.uuid4().hex}"
 
         # actual memory creation or update
 
@@ -284,12 +286,14 @@ async def create_memory(
         records = [single_record]
 
         index_descr: IndexModel = await pc.describe_index(index_name)
+        if not index_descr or not index_descr.host:
+            return {"status": "failed", "error": f"Could not get index description for {index_name}"}
         async with pc.IndexAsyncio(index_descr.host) as index:
             await index.upsert_records(namespace=namespace, records=records)
 
             # verifying that memory was updated/created
             attempts = 0
-            check = FetchResponse(namespace=namespace, vectors={}, usage=0)
+            check = FetchResponse(namespace=namespace, vectors={}, usage = None)
             while attempts < 10 and not check.vectors:  # type: ignore
                 check = await index.fetch(
                     ids=[x["id"] for x in records], namespace=namespace
@@ -369,7 +373,7 @@ async def create_people(
             }
 
         date_value = datetime.now()
-        person_id = f"per_{date_value.strftime("%Y_%m_%d")}_{uuid.uuid4().hex}"
+        person_id = f"per_{date_value.strftime('%Y_%m_%d')}_{uuid.uuid4().hex}"
 
         user_ids_list = json.loads(user_ids) if user_ids else []
         relations_list = json.loads(relations) if relations else []
@@ -391,11 +395,13 @@ async def create_people(
         records = [single_record]
 
         index_descr: IndexModel = await pc.describe_index(index_name)
+        if not index_descr or not index_descr.host:
+            return {"status": "failed", "error": f"Could not get index description for {index_name}"}
         async with pc.IndexAsyncio(index_descr.host) as index:
             await index.upsert_records(namespace=namespace, records=records)
             # verifying that memory was updated/created
             attempts = 0
-            check = FetchResponse(namespace=namespace, vectors={}, usage=0)
+            check = FetchResponse(namespace=namespace, vectors={}, usage = None)
             while attempts < 10 and not check.vectors:  # type: ignore
                 check = await index.fetch(
                     ids=[x["id"] for x in records], namespace=namespace
@@ -461,7 +467,7 @@ async def update_memory(
     except json.JSONDecodeError as e:
         return {
             "status": "error",
-            "message": f"Invalid JSON string for `updates`: {str(e)}",
+            "message": f"Invalid JSON string for `updates`: {e}",
         }
     except Exception as e:
         return {"status": "error", "message": str(e)}
@@ -490,12 +496,15 @@ async def update_memory(
         return {"status": "error", "message": current_user_ids_dict.get("message")}
 
     try:
-        records = {key: value for key, value in updates_dict.items()}
+        # records = {key: value for key, value in updates_dict.items()}
+        records = updates_dict.copy()
         records["updated_at"] = int(datetime.now().timestamp())
         if "related_memories" in updates_dict:
             records["related_memories"] = json.dumps(updates_dict["related_memories"])
 
         index_descr: IndexModel = await pc.describe_index(index_name)
+        if not index_descr or not index_descr.host:
+            return {"status": "failed", "error": f"Could not get index description for {index_name}"}
         async with pc.IndexAsyncio(index_descr.host) as index:
             memory_to_update = await index.fetch(ids=[memory_id], namespace=namespace)
             if not memory_to_update.vectors:
@@ -512,7 +521,7 @@ async def update_memory(
             )
 
             if memory_creator not in current_user_ids and not any(
-                [user_id in config.SUPERUSERS for user_id in current_user_ids]
+                user_id in config.SUPERUSERS for user_id in current_user_ids
             ):
                 return {
                     "status": "forbidden",
@@ -580,7 +589,7 @@ async def update_people(
     except json.JSONDecodeError as e:
         return {
             "status": "error",
-            "message": f"Invalid JSON string for `updates`: {str(e)}",
+            "message": f"Invalid JSON string for `updates`: {e}",
         }
 
     allowed_fields = (
@@ -613,6 +622,8 @@ async def update_people(
             records["relations"] = json.dumps(updates_dict["relations"])
 
         index_descr: IndexModel = await pc.describe_index(index_name)
+        if not index_descr or not index_descr.host:
+            return {"status": "failed", "error": f"Could not get index description for {index_name}"}
         async with pc.IndexAsyncio(index_descr.host) as index:
             person_to_update = await index.fetch(ids=[person_id], namespace=namespace)
             if not person_to_update.vectors:
@@ -630,9 +641,9 @@ async def update_people(
             person_ids = [x["id_value"] for x in json.loads(person_ids_dict)]
 
             if not any(
-                [user_id in person_ids for user_id in current_user_ids]
+                user_id in person_ids for user_id in current_user_ids
             ) and not any(
-                [user_id in config.SUPERUSERS for user_id in current_user_ids]
+                user_id in config.SUPERUSERS for user_id in current_user_ids
             ):
                 return {
                     "status": "forbidden",
@@ -688,12 +699,14 @@ async def delete_memory(
         }
     try:
         index_descr: IndexModel = await pc.describe_index(index_name)
+        if not index_descr or not index_descr.host:
+            return {"status": "failed", "error": f"Could not get index description for {index_name}"}
         async with pc.IndexAsyncio(index_descr.host) as index:
             await index.delete(ids=[record_id], namespace=namespace)
 
             attempts = 0
             check = FetchResponse(
-                namespace=namespace, vectors={"test": "test"}, usage=0
+                namespace=namespace, vectors={"test": Vector(id="1", values=[1,2,3])}, usage = None
             )
             while attempts < 10 and check.vectors:  # type: ignore
                 check = await index.fetch([record_id], namespace=namespace)
@@ -745,6 +758,8 @@ async def search_memories(
         query = SearchQuery(inputs={"text": search_query}, top_k=top_k)
 
         index_descr: IndexModel = await pc.describe_index(index_name)
+        if not index_descr or not index_descr.host:
+            return {"status": "failed", "error": f"Could not get index description for {index_name}"}
         async with pc.IndexAsyncio(index_descr.host) as index:
             results = await index.search_records(namespace=namespace, query=query)
             if results:
@@ -787,6 +802,8 @@ async def search_memories_prefetch(
         query = SearchQuery(inputs={"text": search_query}, top_k=top_k)
 
         index_descr: IndexModel = await pc.describe_index(index_name)
+        if not index_descr or not index_descr.host:
+            return {"status": "failed", "error": f"Could not get index description for {index_name}"}
         async with pc.IndexAsyncio(index_descr.host) as index:
             results = await index.search_records(namespace=namespace, query=query)
             if results:

@@ -2,13 +2,11 @@
 # from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 # from mcp import StdioServerParameters
 
-from google.adk.tools import ToolContext
-
-from .. import config
-
 from github import Github, Repository
 from github.GithubException import GithubException
+from google.adk.tools.tool_context import ToolContext
 
+from .. import config
 
 # def create_github_mcp_toolset():
 #     try:
@@ -169,7 +167,7 @@ def create_github_toolset():
             except GithubException as e:
                 return {
                     "status": "error",
-                    "error_message": f"File not found or access denied: {str(e)}",
+                    "error_message": f"File not found or access denied: {e}",
                 }
 
         def create_branch(
@@ -412,7 +410,7 @@ def create_github_toolset():
         ]
 
     except Exception as e:
-        return {"status": "error", "error_message": f"Github error: {str(e)}"}
+        return {"status": "error", "error_message": f"Github error: {e}"}
 
 
 def return_github_toolset():

@@ -5,13 +5,6 @@ from google.genai import types
 
 from .. import config
 
-# client = genai.Client(
-#     project = config.GOOGLE_CLOUD_PROJECT,
-#     location = config.GOOGLE_CLOUD_LOCATION,
-#     credentials = json.loads(config.GCP_SERVICE_ACCOUNT_INFO),
-#     vertexai=True
-#     )
-
 client = genai.Client(api_key=config.GEMINI_API_KEY, vertexai=False)
 
 
@@ -66,7 +59,7 @@ def upload_file_to_store(file_path: str, unique_file_name: str):
 #     file_search_store = get_file_search_store("rag_documents")
 
 
-def search_file_store(query: str) -> dict:
+async def search_file_store(query: str) -> dict:
     """
     Search the file search store (documents storage) for user query.
 
@@ -74,7 +67,7 @@ def search_file_store(query: str) -> dict:
         query(str): A query to search for
 
     Returns:
-        dict
+        dict: search results along with grounding data
     """
     file_search_store = get_file_search_store("rag_documents")
     if not file_search_store or not file_search_store.name:
@@ -82,7 +75,7 @@ def search_file_store(query: str) -> dict:
             "status": "error",
             "message": "File search store `rag_documents` not found.",
         }
-    response = client.models.generate_content(
+    response =  client.models.generate_content(
         model="gemini-2.5-flash",
         contents=query,
         config=types.GenerateContentConfig(
@@ -108,4 +101,5 @@ def search_file_store(query: str) -> dict:
                         grounding_dict[title] = [text]
                     else:
                         grounding_dict[title].append(text)
-    return {"search_results": response.text, "grounding_data": grounding_dict}
+        return {"search_results": response.text, "grounding_data": grounding_dict}
+    return {"search_results":"nothing found"}

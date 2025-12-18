@@ -1,28 +1,26 @@
+import re
+from typing import Any
+
 from google.adk.agents import Agent
-from google.adk.tools import AgentTool
+from google.adk.tools.agent_tool import AgentTool
 from google.adk.tools.base_tool import BaseTool
 from google.adk.tools.tool_context import ToolContext
 
-from typing import Optional, Dict, Any
-
-import re
-
+from .. import config
+from ..callbacks.before_after_agent import professional_agents_checker
 from ..data import (
+    create_bq_agent_instruction,
     get_current_datetime,
     get_table_data,
-    create_bq_agent_instruction,
     table_data,
 )
 from ..sub_agents.google_search_agent import create_google_search_agent
 from ..tools.bigquery_tools import create_bigquery_toolset
-from ..callbacks.before_after_agent import professional_agents_checker
-
-from .. import config
 
 
 def before_bq_callback(
-    tool: BaseTool, args: Dict[str, Any], tool_context: ToolContext
-) -> Optional[Dict]:
+    tool: BaseTool, args: dict[str, Any], tool_context: ToolContext
+) -> dict | None:
     """Checks if the user is authorized to see data in a specific table"""
 
     superusers = [

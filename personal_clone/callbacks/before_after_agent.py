@@ -1,10 +1,10 @@
 from google.adk.agents.callback_context import CallbackContext
-from google.adk.tools.tool_context import ToolContext
 from google.genai import types
 
 from .. import config
 from ..tools.datetime_tools import get_current_datetime
 from ..tools.pinecone_tools import get_person_from_search, search_memories_prefetch
+from ..tools.vertex_tools import search_file_store
 
 
 async def state_setter(
@@ -49,13 +49,10 @@ async def check_if_agent_should_run(
     If True, returns Content to skip the agent's execution.
     If False or not present, returns None to allow execution.
     """
-    # agent_name = callback_context.agent_name
-    # invocation_id = callback_context.invocation_id
     current_state = callback_context.state.to_dict()
 
     if not current_state.get("answer_validation", {}).get("reply"):
         return types.Content(
-            # parts=[types.Part(text="")],
             parts=None,
             role="model",  # Assign model role to the overriding response
         )
@@ -69,7 +66,7 @@ async def professional_agents_checker(
     """checks if the user is in superusers and prevents agent run with personal memories access"""
     current_state = callback_context.state.to_dict()
     user_id = current_state.get("user_id", "")
-    print(f"[USER ID]:\n\n\n{user_id}")
+
     if (
         not user_id.lower().endswith(config.TEAM_DOMAIN)
         and user_id not in config.SUPERUSERS
@@ -104,10 +101,9 @@ async def prefetch_memories(
     Used to prefetch personal and professional memories based on the user query.
     Injects records from memories into session state
     """
-    # last_user_message = ""
-    user_id = callback_context.state.get("user_id")
 
-    # tool_context = ToolContext(invocation_context=callback_context._invocation_context)
+    user_id:str = callback_context.state.get("user_id")
+
     last_user_message = None
 
     if (
@@ -143,8 +139,10 @@ async def prefetch_memories(
             professional_future = search_memories_prefetch(
                 user_id, "professional", last_user_message, 1
             )
+            vertex_future = search_file_store(query = last_user_message)
         else:
             professional_future = None
+            vertex_future = None
 
         people_future = search_memories_prefetch(user_id, "people", user_id, 3)
 
@@ -152,6 +150,7 @@ async def prefetch_memories(
         memory_recall_professional = (
             await professional_future if professional_future else None
         )
+        vertex_recall = await vertex_future if vertex_future else None
         people_recall_results = await people_future
         people_recall = (
             people_recall_results.get("search_results") if people_recall_results else []
@@ -169,4 +168,5 @@ async def prefetch_memories(
         callback_context.state["user_related_context"] = (
             get_person_from_search(people_recall, user_id) if people_recall else None
         )
-        callback_context.state["vertex_context"] = ""  # TODO add vertex search here
+        callback_context.state["vertex_context"] = vertex_recall
+

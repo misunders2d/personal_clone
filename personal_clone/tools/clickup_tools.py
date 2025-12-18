@@ -1,13 +1,12 @@
-import requests
-from google.adk.tools import ToolContext
+from datetime import datetime, timedelta, timezone
 
 # from google.adk.tools.mcp_tool.mcp_toolset import McpToolset
 # from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 # from mcp import StdioServerParameters
+from typing import Any
 
-
-from typing import Optional, List, Dict, Any
-from datetime import datetime, timedelta, timezone
+import requests
+from google.adk.tools.tool_context import ToolContext
 
 from .. import config
 
@@ -52,7 +51,7 @@ def get_clickup_user(tool_context: ToolContext):
     Use this tool as a starting point to get the user's teams and spaces.
 
     Returns:
-        Dict: A dictionary with user information and their teams and spaces.
+        dict: A dictionary with user information and their teams and spaces.
         The dictionary contains:
             - 'user_email': The email of the user.
             - 'user_teams': Information about the user and their teams.
@@ -124,7 +123,7 @@ def list_folders_and_lists(space_id: str):
         space_id (str): The ID of the space. Use `get_clickup_user` to get the full user info and find space ID.
 
     Returns:
-        Dict[List[Dict[str, Any]]]: A list of folder objects and lists objects under the space.
+        dict[List[dict[str, Any]]]: A list of folder objects and lists objects under the space.
     """
     result = {}
     folder_url = f"{API_BASE_URL}/space/{space_id}/folder"
@@ -144,28 +143,28 @@ def list_folders_and_lists(space_id: str):
 def list_tasks_for_user(
     tool_context: ToolContext,
     team_id: str,
-    list_id: Optional[str] = None,
-    folder_id: Optional[str] = None,
-    status: Optional[str] = None,
-    due: Optional[str] = None,
+    list_id: str | None = None,
+    folder_id: str | None = None,
+    status: str | None = None,
+    due: str | None = None,
 ):
     """
     List tasks assigned to a specific user, with filters for list, status, and due date.
 
     Args:
         team_id (str): The ClickUp team ID. Use `get_clickup_user` to get the full user info including team ID.
-        list_id (Optional[str]): Restrict results to a specific list ID. If None, searches across the entire team.
-        folder_id (Optional[str]): Restrict results to a specific folder ID. If None, searches across the entire team.
-        status (Optional[str]): Task status filter:
+        list_id (str | None): Restrict results to a specific list ID. If None, searches across the entire team.
+        folder_id (str | None): Restrict results to a specific folder ID. If None, searches across the entire team.
+        status (str | None): Task status filter:
             - "open" or "done" → maps to ClickUp's `include_closed` param.
-        due (Optional[str]): Due date filter:
+        due (str | None): Due date filter:
             - "today" → tasks due before midnight today.
             - "tomorrow" → tasks due tomorrow.
             - "week"/"next week" → tasks due in the next 7 days.
             - "overdue" → tasks with due date earlier than now.
 
     Returns:
-        List[Dict[str, Any]]: List of task objects.
+        List[dict[str, Any]]: List of task objects.
 
     Raises:
         ValueError: If the user or team cannot be found in ClickUp.
@@ -333,10 +332,10 @@ def create_task(
     list_id: str,
     name: str,
     description: str,
-    due_date: Optional[int],
-    assignees: Optional[List[str]] = None,
-    due_date_time: Optional[bool] = None,
-    parent_task_id: Optional[str] = None,
+    due_date: int | None,
+    assignees: list[str] | None = None,
+    due_date_time: bool | None = None,
+    parent_task_id: str | None = None,
 ):
     """
     Create a task in a given list. If `parent_task_id` is provided, creates a subtask of a given parent task.
@@ -345,14 +344,14 @@ def create_task(
         list_id (str): The ID of the list where the task should be created.
         name (str): The name/title of the task.
         description (str): The task description.
-        due_date (Optional[int]): Epoch ms (UTC). If None, no due date is set.
-        assignees (Optional[List[str]]): A list of user emails to assign the task to.
-        due_date_time (Optional[bool]): If True, ClickUp will treat the due_date as including a time.
+        due_date (int | None): Epoch ms (UTC). If None, no due date is set.
+        assignees (list[str] | None): A list of user emails to assign the task to.
+        due_date_time (bool | None): If True, ClickUp will treat the due_date as including a time.
             If False, it's an all-day date. If None, function auto-detects based on the epoch-ms:
             non-zero time component -> True, otherwise False.
-        parent_task_id (Optional[str]): If provided, creates the task as a subtask of the given parent task ID.
+        parent_task_id (str | None): If provided, creates the task as a subtask of the given parent task ID.
     Returns:
-        Dict[str, Any]: The created task info as returned by ClickUp.
+        dict[str, Any]: The created task info as returned by ClickUp.
     """
     try:
         assignee_ids = []
@@ -362,7 +361,7 @@ def create_task(
                 if user:
                     assignee_ids.append(user["id"])
 
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "name": name,
             "description": description,
         }

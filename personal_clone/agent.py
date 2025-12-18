@@ -270,7 +270,3 @@ app = App(
         is_resumable=False,
     ),
 )
-
-# from google.adk.apps.app import App
-
-# app = App(root_agent=root_agent, name="personal_clone")

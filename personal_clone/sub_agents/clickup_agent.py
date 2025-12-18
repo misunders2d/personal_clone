@@ -1,9 +1,8 @@
 from google.adk import Agent
 
-from ..tools.clickup_tools import clickup_toolset  # create_clickup_toolset
-from ..callbacks.before_after_agent import professional_agents_checker
-
 from .. import config
+from ..callbacks.before_after_agent import professional_agents_checker
+from ..tools.clickup_tools import clickup_toolset  # create_clickup_toolset
 
 
 def create_clickup_agent(name="clickup_agent"):

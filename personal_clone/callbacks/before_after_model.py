@@ -1,12 +1,10 @@
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.models.llm_response import LlmResponse
 
-from typing import Optional
-
 
 async def google_search_grounding(
     callback_context: CallbackContext, llm_response: LlmResponse
-) -> Optional[LlmResponse]:
+) -> LlmResponse | None:
     """Saves detailed grounding metadata from Google Search tool calls into the state."""
 
     grounding_data = {

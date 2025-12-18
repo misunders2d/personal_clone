@@ -1,8 +1,8 @@
 from google.adk import Agent
-from google.adk.tools import google_search
+from google.adk.tools.google_search_tool import google_search
 
-from ..callbacks.before_after_model import google_search_grounding
 from .. import config
+from ..callbacks.before_after_model import google_search_grounding
 
 
 def create_google_search_agent(name="google_search_agent"):

@@ -1,5 +1,6 @@
 from datetime import datetime
-from google.adk.tools import ToolContext
+
+from google.adk.tools.tool_context import ToolContext
 
 
 def get_current_datetime(tool_context: ToolContext | None = None):
