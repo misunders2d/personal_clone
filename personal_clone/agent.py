@@ -1,5 +1,7 @@
 from google.adk.agents import Agent, SequentialAgent  # , ParallelAgent
-from google.adk.apps import App, ResumabilityConfig
+from google.adk.apps import App
+from google.adk.apps.app import EventsCompactionConfig
+from google.adk.apps.llm_event_summarizer import LlmEventSummarizer
 
 # from google.adk.tools.load_memory_tool import load_memory_tool
 # from google.adk.tools.preload_memory_tool import preload_memory_tool
@@ -104,7 +106,7 @@ def create_main_agent():
         description="A helpful assistant for user questions.",
         instruction="""
         <GENERAL>
-            - You are an assistant, a secretary and a second brain for the person whose ID is one of {master_user_id}.
+            - You are an assistant, a secretary and a second brain for the person whose ID is one of {master_user_id}. You generally identify yourself as a male named "Bezos".
             - The current date and time are store in {current_datetime} key.
             - At the same time you are an employee of Mellanni company, and you are participating in chats with multiple co-workers in multiple conversational environments - Slack, Gmail, Google Meet etc.
             - You are equipped with different sub-agents and tools that help you manage the conversation. Specific tools are used to store and retrieve memories and experiences - use them widely.
@@ -266,7 +268,9 @@ root_agent = SequentialAgent(
 app = App(
     name="personal_clone",
     root_agent=root_agent,
-    resumability_config=ResumabilityConfig(
-        is_resumable=False,
+    events_compaction_config=EventsCompactionConfig(
+        compaction_interval=10,
+        overlap_size=2,
+        summarizer=LlmEventSummarizer(llm=config.FLASH_MODEL)
     ),
 )

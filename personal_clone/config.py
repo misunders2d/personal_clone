@@ -4,6 +4,7 @@ from typing import Literal
 
 import google.auth
 from dotenv import load_dotenv
+from google.adk.models import Gemini
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.planners import BuiltInPlanner, PlanReActPlanner
 from google.genai import types
@@ -108,9 +109,10 @@ MINIMAX_FLASH_MODEL = LiteLlm(model="openai/MiniMax-M2", api_key=MINIMAX_API_KEY
 MINIMAX_LITE_MODEL = LiteLlm(model="openai/MiniMax-M2", api_key=MINIMAX_API_KEY)
 
 # GOOGLE MODELS
-GOOGLE_PRO_MODEL = "gemini-2.5-pro"
-GOOGLE_FLASH_MODEL = "gemini-2.5-flash"
-GOOGLE_LITE_MODEL = "gemini-2.5-flash-lite"
+GOOGLE_PRO_MODEL = Gemini(model="gemini-2.5-pro")
+GOOGLE_FLASH_MODEL = Gemini(model="gemini-2.5-flash")
+# GOOGLE_FLASH_MODEL = Gemini(model="gemini-3-flash-preview")
+GOOGLE_LITE_MODEL = Gemini(model="gemini-2.5-flash-lite")
 
 GLOBAL_MODEL_PROVIDER: Literal["Google", "OpenAI", "Grok", "Minimax"] = "Google"
 GLOBAL_PLANNER = create_planner("built-in")
