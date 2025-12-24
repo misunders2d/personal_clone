@@ -99,8 +99,8 @@ MINIMAX_LITE_MODEL = LiteLlm(model="openai/MiniMax-M2", api_key=MINIMAX_API_KEY)
 
 # GOOGLE MODELS
 GOOGLE_PRO_MODEL = Gemini(model="gemini-2.5-pro")
-GOOGLE_FLASH_MODEL = Gemini(model="gemini-2.5-flash")
-# GOOGLE_FLASH_MODEL = Gemini(model="gemini-3-flash-preview")
+# GOOGLE_FLASH_MODEL = Gemini(model="gemini-2.5-flash")
+GOOGLE_FLASH_MODEL = Gemini(model="gemini-3-flash-preview")
 GOOGLE_LITE_MODEL = Gemini(model="gemini-2.5-flash-lite")
 
 GLOBAL_MODEL_PROVIDER: Literal["Google", "OpenAI", "Grok", "Minimax"] = "Google"
