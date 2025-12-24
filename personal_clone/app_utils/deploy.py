@@ -235,13 +235,15 @@ def deploy_agent_engine_app(
     if not project:
         _, project = google.auth.default()
 
-    print("""
+    print(
+        """
     ╔═══════════════════════════════════════════════════════════╗
     ║                                                           ║
     ║   🤖 DEPLOYING AGENT TO VERTEX AI AGENT ENGINE 🤖         ║
     ║                                                           ║
     ╚═══════════════════════════════════════════════════════════╝
-    """)
+    """
+    )
 
     # Log deployment parameters
     click.echo("\n📋 Deployment Parameters:")

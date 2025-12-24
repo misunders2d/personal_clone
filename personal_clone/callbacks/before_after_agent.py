@@ -102,7 +102,7 @@ async def prefetch_memories(
     Injects records from memories into session state
     """
 
-    user_id:str = callback_context.state.get("user_id")
+    user_id: str = callback_context.state.get("user_id")
 
     last_user_message = None
 
@@ -139,7 +139,7 @@ async def prefetch_memories(
             professional_future = search_memories_prefetch(
                 user_id, "professional", last_user_message, 1
             )
-            vertex_future = search_file_store(query = last_user_message)
+            vertex_future = search_file_store(query=last_user_message)
         else:
             professional_future = None
             vertex_future = None
@@ -169,4 +169,3 @@ async def prefetch_memories(
             get_person_from_search(people_recall, user_id) if people_recall else None
         )
         callback_context.state["vertex_context"] = vertex_recall
-

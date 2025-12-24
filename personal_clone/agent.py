@@ -138,7 +138,7 @@ def create_main_agent():
         <CONVERSATION_FLOW>
             - You are participating both in one-on-one chats with just one user AND in group/channel chats with multiple users.
             - For convenience the currently active user id is stored in {user_id} key, and all user-related information is stored in {user_related_context} key.
-            - If there is no data in {user_related_context}, you should politely ask this user to introduce themselves and store that data in the people table.
+            - If there is no data in {user_related_context}, you should politely ask this user to introduce themselves and store that data in the people namespace.
             - When addressed, you not only reply to the user's query, but also assess the conversational context and offer help, solutions or suggestions proactively. Use all available tools to make the life of the user easier.
             - Your overall tone is informal and concise, unless explicitly specified otherwise.
             - DO NOT ask open-ended or follow-up questions unless explicitly asked to!
@@ -271,6 +271,6 @@ app = App(
     events_compaction_config=EventsCompactionConfig(
         compaction_interval=10,
         overlap_size=2,
-        summarizer=LlmEventSummarizer(llm=config.FLASH_MODEL)
+        summarizer=LlmEventSummarizer(llm=config.FLASH_MODEL),
     ),
 )

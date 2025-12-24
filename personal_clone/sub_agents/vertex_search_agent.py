@@ -2,7 +2,7 @@ from google.adk.agents import Agent
 
 from .. import config
 from ..callbacks.before_after_agent import professional_agents_checker
-from ..tools.vertex_tools import search_file_store
+from ..tools.vertex_tools import list_documents_in_store, search_file_store
 
 
 def create_vertex_search_agent(
@@ -17,7 +17,7 @@ def create_vertex_search_agent(
         Always use exact user input as a query for your vertex_toolset.
         Be prepared to cite sources or grounding data when asked.
         """,
-        tools=[search_file_store],
+        tools=[search_file_store, list_documents_in_store],
         before_agent_callback=professional_agents_checker,
         output_key=output_key,
         planner=config.VERTEX_SEARCH_AGENT_PLANNER,
