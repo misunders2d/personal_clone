@@ -14,7 +14,7 @@ current_folder = os.path.dirname(os.path.abspath(__file__))
 
 load_dotenv(os.path.join(current_folder, ".env"))
 
-APP_NAME = "personal_clone"
+APP_NAME = os.environ.get("APP_NAME", "personal_clone")
 
 GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
 GOOGLE_CLOUD_LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "")
@@ -98,10 +98,11 @@ MINIMAX_FLASH_MODEL = LiteLlm(model="openai/MiniMax-M2", api_key=MINIMAX_API_KEY
 MINIMAX_LITE_MODEL = LiteLlm(model="openai/MiniMax-M2", api_key=MINIMAX_API_KEY)
 
 # GOOGLE MODELS
-GOOGLE_PRO_MODEL = Gemini(model="gemini-2.5-pro")
-# GOOGLE_FLASH_MODEL = Gemini(model="gemini-2.5-flash")
-GOOGLE_FLASH_MODEL = Gemini(model="gemini-3-flash-preview")
-GOOGLE_LITE_MODEL = Gemini(model="gemini-2.5-flash-lite")
+
+GOOGLE_PRO_MODEL = Gemini(model="gemini-2.5-pro", use_interactions_api=False)
+GOOGLE_FLASH_MODEL = Gemini(model="gemini-2.5-flash", use_interactions_api=False)
+# GOOGLE_FLASH_MODEL = Gemini(model="gemini-3-flash-preview", use_interactions_api=False)
+GOOGLE_LITE_MODEL = Gemini(model="gemini-2.5-flash-lite", use_interactions_api=False)
 
 GLOBAL_MODEL_PROVIDER: Literal["Google", "OpenAI", "Grok", "Minimax"] = "Google"
 GLOBAL_PLANNER = create_planner("built-in")

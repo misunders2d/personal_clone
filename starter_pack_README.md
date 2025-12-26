@@ -1,7 +1,7 @@
 # personal-clone
 
-
-Agent generated with [`googleCloudPlatform/agent-starter-pack`](https://github.com/GoogleCloudPlatform/agent-starter-pack) version `0.29.0`
+Add your description here
+Agent generated with [`googleCloudPlatform/agent-starter-pack`](https://github.com/GoogleCloudPlatform/agent-starter-pack) version `0.29.3`
 
 ## Project Structure
 
@@ -13,9 +13,6 @@ personal-clone/
 │   ├── agent.py         # Main agent logic
 │   ├── agent_engine_app.py # Agent Engine application logic
 │   └── app_utils/       # App utilities and helpers
-├── .cloudbuild/         # CI/CD pipeline configurations for Google Cloud Build
-├── deployment/          # Infrastructure and deployment scripts
-├── notebooks/           # Jupyter notebooks for prototyping and evaluation
 ├── tests/               # Unit, integration, and load tests
 ├── Makefile             # Makefile for common commands
 ├── GEMINI.md            # AI-assisted development guide
@@ -29,7 +26,6 @@ personal-clone/
 Before you begin, ensure you have:
 - **uv**: Python package manager (used for all dependency management in this project) - [Install](https://docs.astral.sh/uv/getting-started/installation/) ([add packages](https://docs.astral.sh/uv/concepts/dependencies/) with `uv add <package>`)
 - **Google Cloud SDK**: For GCP services - [Install](https://cloud.google.com/sdk/docs/install)
-- **Terraform**: For infrastructure deployment - [Install](https://developer.hashicorp.com/terraform/downloads)
 - **make**: Build automation tool - [Install](https://www.gnu.org/software/make/) (pre-installed on most Unix-based systems)
 
 
@@ -52,7 +48,6 @@ make install && make playground
 | `make register-gemini-enterprise` | Register deployed agent to Gemini Enterprise ([docs](https://googlecloudplatform.github.io/agent-starter-pack/cli/register_gemini_enterprise.html)) |
 | `make test`          | Run unit and integration tests                                                              |
 | `make lint`          | Run code quality checks (codespell, ruff, mypy)                                             |
-| `make setup-dev-env` | Set up development environment resources using Terraform                         |
 
 For full command options and usage, refer to the [Makefile](Makefile).
 
@@ -60,22 +55,16 @@ For full command options and usage, refer to the [Makefile](Makefile).
 ## Usage
 
 This template follows a "bring your own agent" approach - you focus on your business logic, and the template handles everything else (UI, infrastructure, deployment, monitoring).
-1. **Prototype:** Build your Generative AI Agent using the intro notebooks in `notebooks/` for guidance. Use Vertex AI Evaluation to assess performance.
-2. **Integrate:** Import your agent into the app by editing `personal_clone/agent.py`.
-3. **Test:** Explore your agent functionality using the local playground with `make playground`. The playground automatically reloads your agent on code changes.
-4. **Deploy:** Set up and initiate the CI/CD pipelines, customizing tests as necessary. Refer to the [deployment section](#deployment) for comprehensive instructions. For streamlined infrastructure deployment, simply run `uvx agent-starter-pack setup-cicd`. Check out the [`agent-starter-pack setup-cicd` CLI command](https://googlecloudplatform.github.io/agent-starter-pack/cli/setup_cicd.html). Currently supports GitHub with both Google Cloud Build and GitHub Actions as CI/CD runners.
-5. **Monitor:** Track performance and gather insights using BigQuery telemetry data, Cloud Logging, and Cloud Trace to iterate on your application.
+1. **Develop:** Edit your agent logic in `personal_clone/agent.py`.
+2. **Test:** Explore your agent functionality using the local playground with `make playground`. The playground automatically reloads your agent on code changes.
+3. **Enhance:** When ready for production, run `uvx agent-starter-pack enhance` to add CI/CD pipelines, Terraform infrastructure, and evaluation notebooks.
 
 The project includes a `GEMINI.md` file that provides context for AI tools like Gemini CLI when asking questions about your template.
 
 
 ## Deployment
 
-> **Note:** For a streamlined one-command deployment of the entire CI/CD pipeline and infrastructure using Terraform, you can use the [`agent-starter-pack setup-cicd` CLI command](https://googlecloudplatform.github.io/agent-starter-pack/cli/setup_cicd.html). Currently supports GitHub with both Google Cloud Build and GitHub Actions as CI/CD runners.
-
-### Dev Environment
-
-You can test deployment towards a Dev Environment using the following command:
+You can deploy your agent to a Dev Environment using the following command:
 
 ```bash
 gcloud config set project <your-dev-project-id>
@@ -83,12 +72,7 @@ make deploy
 ```
 
 
-The repository includes a Terraform configuration for the setup of the Dev Google Cloud project.
-See [deployment/README.md](deployment/README.md) for instructions.
-
-### Production Deployment
-
-The repository includes a Terraform configuration for the setup of a production Google Cloud project. Refer to [deployment/README.md](deployment/README.md) for detailed instructions on how to deploy the infrastructure and application.
+When ready for production deployment with CI/CD pipelines and Terraform infrastructure, run `uvx agent-starter-pack enhance` to add these capabilities.
 
 ## Monitoring and Observability
 
@@ -105,10 +89,7 @@ The application provides two levels of observability:
 | Environment | Prompt-Response Logging |
 |-------------|-------------------------|
 | **Local Development** (`make playground`) | ❌ Disabled by default |
-| **Deployed Environments** (via Terraform) | ✅ **Enabled by default** (privacy-preserving: metadata only, no prompts/responses) |
 
 **To enable locally:** Set `LOGS_BUCKET_NAME` and `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=NO_CONTENT`.
-
-**To disable in deployments:** Edit Terraform config to set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=false`.
 
 See the [observability guide](https://googlecloudplatform.github.io/agent-starter-pack/guide/observability.html) for detailed instructions, example queries, and visualization options.

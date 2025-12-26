@@ -6,8 +6,8 @@ google-cloud-aiplatform
 google-cloud-bigquery-storage
 litellm
 lxml
-PyGitHub
-requests
 pinecone[asyncio]
+pygithub
 python-telegram-bot
+requests
 slack-bolt

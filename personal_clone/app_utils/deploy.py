@@ -113,8 +113,8 @@ def print_deployment_success(
 )
 @click.option(
     "--location",
-    default="us-central1",
-    help="GCP region (defaults to us-central1)",
+    default="us-west1",
+    help="GCP region (defaults to us-west1)",
 )
 @click.option(
     "--display-name",
@@ -123,7 +123,7 @@ def print_deployment_success(
 )
 @click.option(
     "--description",
-    default="",
+    default="Add your description here",
     help="Description of the agent",
 )
 @click.option(

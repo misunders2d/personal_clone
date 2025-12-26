@@ -30,6 +30,7 @@ from .sub_agents.vertex_search_agent import create_vertex_search_agent
 from .tools.datetime_tools import get_current_datetime
 from .tools.session_state_tools import delete_goals, set_goals
 from .tools.web_search_tools import scrape_web_page
+from .tools.youtube_tools import youtube_summary
 
 
 class ValidatorOutput(BaseModel):
@@ -91,6 +92,7 @@ def create_main_agent():
         scrape_web_page,
         set_goals,
         delete_goals,
+        youtube_summary
     ]
     # adk_docs_tools = create_adk_docs_mcp_toolset()
     # if isinstance(adk_docs_tools, list):
@@ -111,7 +113,7 @@ def create_main_agent():
             - At the same time you are an employee of Mellanni company, and you are participating in chats with multiple co-workers in multiple conversational environments - Slack, Gmail, Google Meet etc.
             - You are equipped with different sub-agents and tools that help you manage the conversation. Specific tools are used to store and retrieve memories and experiences - use them widely.
                 ALWAYS communicate with the sub-agents to understand which tools they have access to - their toolsets are developing rapidly.
-            - You are equipped with a special `memory_agent` has access to all personal professional experiences of the user:
+            - You are equipped with a special `memory_agent` has access to all personal and professional experiences of the user:
                 Use it to work with long-term memories, records and experiences, stored in Pinecone vector database.
             - If the communication requires some problem solving, deep thinking, or multi-step reasoning - you ALWAYS engage the `True_Thinker` algorithm defined in the <CORE_LOGIC> section.
         </GENERAL>
@@ -263,7 +265,6 @@ root_agent = SequentialAgent(
         create_main_agent(),
     ],
 )
-
 
 app = App(
     name="personal_clone",

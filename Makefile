@@ -41,15 +41,6 @@ deploy:
 backend: deploy
 
 # ==============================================================================
-# Infrastructure Setup
-# ==============================================================================
-
-# Set up development environment resources using Terraform
-setup-dev-env:
-	PROJECT_ID=$$(gcloud config get-value project) && \
-	(cd deployment/terraform/dev && terraform init && terraform apply --var-file vars/env.tfvars --var dev_project_id=$$PROJECT_ID --auto-approve)
-
-# ==============================================================================
 # Testing & Code Quality
 # ==============================================================================
 
@@ -75,4 +66,4 @@ lint:
 # For non-interactive use, set env vars: ID or GEMINI_ENTERPRISE_APP_ID (full GE resource name)
 # Optional env vars: GEMINI_DISPLAY_NAME, GEMINI_DESCRIPTION, GEMINI_TOOL_DESCRIPTION, AGENT_ENGINE_ID
 register-gemini-enterprise:
-	@uvx agent-starter-pack@0.29.0 register-gemini-enterprise
+	@uvx agent-starter-pack@0.29.3 register-gemini-enterprise

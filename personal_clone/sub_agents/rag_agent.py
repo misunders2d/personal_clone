@@ -11,7 +11,7 @@
 #     project=config.GOOGLE_CLOUD_PROJECT,
 #     location=config.GOOGLE_CLOUD_LOCATION,
 #     credentials=config.get_identity_token(),
-# )  # location needs to be set to "us-east4" until there's enough quota on "us-central1"
+# )  # location needs to be set to "us-east4" until there's enough quota on "global"
 
 
 # def create_corpus(display_name: str) -> dict:

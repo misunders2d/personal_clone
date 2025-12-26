@@ -94,19 +94,19 @@ packages = ["personal_clone","frontend"]
 # Generation metadata - enables CLI commands to understand project context
 # These fields allow any generated project to work as a remote template
 name = "personal-clone"
-description = ""
+description = "Add your description here"
 base_template = "local_personal_clone"
 agent_directory = "personal_clone"
 
 # Generation context
-generated_at = "2025-12-17T19:32:14.982162+00:00"
-asp_version = "0.29.0"
+generated_at = "2025-12-24T17:27:45.981882+00:00"
+asp_version = "0.29.3"
 
 [tool.agent-starter-pack.create_params]
 # Parameters used during project creation
 deployment_target = "agent_engine"
 session_type = "none"
-cicd_runner = "google_cloud_build"
+cicd_runner = "skip"
 include_data_ingestion = false
 datastore = "none"
 frontend_type = "None"

@@ -57,21 +57,25 @@ def upload_file_to_store(file_path: str, unique_file_name: str):
 
 
 def bulk_upload_files(path_to_files: str) -> dict:
-    allowed_extensions = ('.txt','pdf')
+    allowed_extensions = (".txt", "pdf")
     file_list_raw = os.listdir(path_to_files)
-    file_list_clean = [x for x in file_list_raw if any(x.endswith(ext) for ext in allowed_extensions)]
+    file_list_clean = [
+        x for x in file_list_raw if any(x.endswith(ext) for ext in allowed_extensions)
+    ]
     successful_files = {}
     failed_files = {}
     for file in file_list_clean:
         result = upload_file_to_store(
-            file_path = os.path.join(path_to_files, file),
-            unique_file_name=file
-            )
-        if result.get('status','error') == 'success':
-            successful_files[file] = result.get('message')
+            file_path=os.path.join(path_to_files, file), unique_file_name=file
+        )
+        if result.get("status", "error") == "success":
+            successful_files[file] = result.get("message")
         else:
-            failed_files[file] = result.get('message')
-    return {"results":{"successful_files":successful_files,"failed_files":failed_files}}
+            failed_files[file] = result.get("message")
+    return {
+        "results": {"successful_files": successful_files, "failed_files": failed_files}
+    }
+
 
 def list_documents_in_store():
     """
