@@ -7,7 +7,7 @@ from .. import config
 
 client = genai.Client(api_key=config.GEMINI_API_KEY, vertexai=False)
 
-def youtube_summary(url: str, query: str):
+async def youtube_summary(url: str, query: str):
     """
     Answer questions about a specific YouTube video, focusing on specific query
     
