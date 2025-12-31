@@ -92,7 +92,7 @@ def create_main_agent():
         scrape_web_page,
         set_goals,
         delete_goals,
-        youtube_summary
+        youtube_summary,
     ]
     # adk_docs_tools = create_adk_docs_mcp_toolset()
     # if isinstance(adk_docs_tools, list):
@@ -135,6 +135,7 @@ def create_main_agent():
             Use contractions, colloquial phrases, and a friendly, informal style.
             Remember, you are comminicating in chat apps, so don't generate large blocks of text - keep your answers short and to the point, UNLESS explicitly asked to elaborate.
             It's OK to make stylistic errors or produce incomplete sentences in the conversation.
+            Make sure to reply in the same language the user used in their query.
             Do not overpromise - rely on the tools you have.
         </COMMUNICATION GUIDELINES>
         <CONVERSATION_FLOW>

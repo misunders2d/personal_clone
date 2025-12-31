@@ -11,3 +11,4 @@ pygithub
 python-telegram-bot
 requests
 slack-bolt
+yt-dlp
