@@ -1,119 +1,99 @@
-import os
-import time
-import tempfile
-import yt_dlp
+import isodate
+from urllib.parse import urlparse, parse_qs
 from google import genai
 from google.adk.models import Gemini
 from google.genai import types
-from typing import Any
+from googleapiclient.discovery import build
+from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api.formatters import TextFormatter
 
 from .. import config
 
-client = genai.Client(api_key=config.GEMINI_API_KEY, vertexai=False)
+gemini_client = genai.Client(api_key=config.GEMINI_API_KEY, vertexai=False)
+yt_client = build("youtube", "v3", developerKey=config.YOUTUBE_API_KEY)
+
+
+def get_video_id(url: str) -> str:
+    """Extracts video ID from various YouTube URL formats."""
+    parsed = urlparse(url)
+    if parsed.hostname == "youtu.be":
+        return parsed.path[1:]
+    if parsed.hostname in ("www.youtube.com", "youtube.com"):
+        if parsed.path == "/watch":
+            p = parse_qs(parsed.query)
+            return p["v"][0]
+        if parsed.path[:7] == "/embed/":
+            return parsed.path.split("/")[2]
+        if parsed.path[:3] == "/v/":
+            return parsed.path.split("/")[2]
+    return ""
 
 
 async def youtube_summary(url: str, query: str):
     """
     Answer questions about a specific YouTube video, focusing on specific query
+    Args:
+    url (str): a YouTube URL
+    query (str): a query or questions to answer about the video
     """
+
     model = (
         config.GOOGLE_FLASH_MODEL.model
         if isinstance(config.GOOGLE_FLASH_MODEL, Gemini)
         else config.GOOGLE_FLASH_MODEL
     )
 
-    upload_file = None
-    temp_path = None
+    video_id = get_video_id(url)
+    if not video_id:
+        return {"status": "failed", "message": "Invalid YouTube URL"}
 
     try:
-        with yt_dlp.YoutubeDL({"quiet": True}) as ydl:
-            info = ydl.extract_info(url, download=False)
-            duration = info.get("duration", 0)
+        request = yt_client.videos().list(part="contentDetails", id=video_id)
+        response = request.execute()
 
-        if not duration:
-            return {"status": "failed", "message": "Could not retrieve video duration."}
-        elif duration > 1800:
-            with tempfile.NamedTemporaryFile(suffix=".m4a", delete=False) as tmp:
-                temp_path = tmp.name
+        if not response["items"]:
+            return {"status": "failed", "message": "Video not found via API"}
 
-            ydl_opts: Any = {
-                "format": "bestaudio[ext=m4a]/bestaudio",
-                "outtmpl": temp_path,
-                "quiet": True,
-                "overwrites": True,
-            }
+        iso_duration = response["items"][0]["contentDetails"]["duration"]
+        duration_seconds = isodate.parse_duration(iso_duration).total_seconds()
 
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([url])
+        contents = []
 
-            upload_file = client.files.upload(file=temp_path)
+        if duration_seconds > 1800:
+            try:
+                YT_transcriber = YouTubeTranscriptApi()
+                transcript_list = YT_transcriber.list(video_id=video_id)
+                transcriptions = transcript_list.find_transcript(
+                    language_codes=["en", "en-US", "ru", "ru-RU"]
+                ).fetch()
+                formatter = TextFormatter()
+                transcript_text = formatter.format_transcript(transcriptions)
 
-            while (
-                upload_file.state
-                and upload_file.state.name
-                and upload_file.name == "PROCESSING"
-            ):
-                time.sleep(1)
-                upload_file = client.files.get(name=upload_file.name)
+                prompt = f"Video Transcript:\n{transcript_text}\n\nUser Query: {query}"
+                contents = [types.Part(text=prompt)]
 
-            if upload_file.state and upload_file.state.name == "FAILED":
+            except Exception as e:
                 return {
                     "status": "failed",
-                    "message": "File processing failed on Gemini side.",
+                    "message": f"Transcript retrieval failed: {str(e)}",
                 }
-
-
-            contents = [
-                types.Part(
-                    file_data=types.FileData(
-                        file_uri=upload_file.uri, mime_type=upload_file.mime_type
-                    )
-                ),
-                types.Part(text=query),
-            ]
-
         else:
             contents = [
                 types.Part(
-                    file_data=types.FileData(file_uri=url, mime_type="video/mp4"),
+                    file_data=types.FileData(file_uri=url, mime_type="video/mp4")
                 ),
                 types.Part(text=query),
             ]
 
-        response = client.models.generate_content(
+        response = gemini_client.models.generate_content(
             model=model,
             contents=contents,
         )
 
-
-        response_text = ""
-        if (
-            response
-            and response.candidates
-            and response.candidates[0]
-            and response.candidates[0].content
-            and response.candidates[0].content.parts
-        ):
-            parts = response.candidates[0].content.parts
-            for part in parts:
-                if part.text:
-                    response_text += part.text
-            return {"status": "success", "message": response_text}
+        if response and response.text:
+            return {"status": "success", "message": response.text}
         else:
-            return {
-                "status": "failed",
-                "message": "No response was generated by the model",
-            }
+            return {"status": "failed", "message": "No response text generated."}
 
     except Exception as e:
-        return {"status": "error", "message": e}
-
-    finally:
-        if temp_path and os.path.exists(temp_path):
-            os.remove(temp_path)
-
-        if upload_file and upload_file.name:
-            try:
-                client.files.delete(name=upload_file.name)
-            except Exception:
-                pass
+        return {"status": "error", "message": str(e)}

@@ -525,6 +525,15 @@ wheels = [
 ]
 
 [[package]]
+name = "defusedxml"
+version = "0.7.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/0f/d5/c66da9b79e5bdb124974bfe172b4daf3c984ebd9c2a06e2b8a4dc7331c72/defusedxml-0.7.1.tar.gz", hash = "sha256:1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69", size = 75520, upload-time = "2021-03-08T10:59:26.269Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/07/6c/aa3f2f849e01cb6a001cd8554a88d4c77c5c1a31c95bdf1cf9301e6d9ef4/defusedxml-0.7.1-py2.py3-none-any.whl", hash = "sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61", size = 25604, upload-time = "2021-03-08T10:59:24.45Z" },
+]
+
+[[package]]
 name = "distro"
 version = "1.9.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1531,6 +1540,15 @@ wheels = [
 ]
 
 [[package]]
+name = "isodate"
+version = "0.7.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/54/4d/e940025e2ce31a8ce1202635910747e5a87cc3a6a6bb2d00973375014749/isodate-0.7.2.tar.gz", hash = "sha256:4cd1aa0f43ca76f4a6c6c0292a85f40b35ec2e43e315b59f06e6d32171a953e6", size = 29705, upload-time = "2024-10-08T23:04:11.5Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/15/aa/0aca39a37d3c7eb941ba736ede56d689e7be91cab5d9ca846bde3999eba6/isodate-0.7.2-py3-none-any.whl", hash = "sha256:28009937d8031054830160fce6d409ed342816b543597cece116d966c6d99e15", size = 22320, upload-time = "2024-10-08T23:04:09.501Z" },
+]
+
+[[package]]
 name = "jinja2"
 version = "3.1.6"
 source = { registry = "https://pypi.org/simple" }
@@ -2336,9 +2354,11 @@ dependencies = [
     { name = "aiosqlite" },
     { name = "bs4" },
     { name = "google-adk" },
+    { name = "google-api-python-client" },
     { name = "google-cloud-aiplatform" },
     { name = "google-cloud-bigquery-storage" },
     { name = "google-genai" },
+    { name = "isodate" },
     { name = "litellm" },
     { name = "lxml" },
     { name = "pinecone", extra = ["asyncio"] },
@@ -2346,7 +2366,7 @@ dependencies = [
     { name = "python-telegram-bot" },
     { name = "requests" },
     { name = "slack-bolt" },
-    { name = "yt-dlp" },
+    { name = "youtube-transcript-api" },
 ]
 
 [package.metadata]
@@ -2355,9 +2375,11 @@ requires-dist = [
     { name = "aiosqlite", specifier = ">=0.22.1" },
     { name = "bs4", specifier = ">=0.0.2" },
     { name = "google-adk", specifier = ">=1.21.0" },
+    { name = "google-api-python-client", specifier = ">=2.187.0" },
     { name = "google-cloud-aiplatform", specifier = "<1.132.0" },
     { name = "google-cloud-bigquery-storage", specifier = ">=2.36.0" },
     { name = "google-genai", specifier = ">=1.56.0" },
+    { name = "isodate", specifier = ">=0.7.2" },
     { name = "litellm", specifier = ">=1.80.11" },
     { name = "lxml", specifier = ">=6.0.2" },
     { name = "pinecone", extras = ["asyncio"], specifier = ">=8.0.0" },
@@ -2365,7 +2387,7 @@ requires-dist = [
     { name = "python-telegram-bot", specifier = ">=22.5" },
     { name = "requests", specifier = ">=2.32.5" },
     { name = "slack-bolt", specifier = ">=1.27.0" },
-    { name = "yt-dlp", specifier = ">=2025.12.8" },
+    { name = "youtube-transcript-api", specifier = ">=1.2.3" },
 ]
 
 [[package]]
@@ -3664,12 +3686,16 @@ wheels = [
 ]
 
 [[package]]
-name = "yt-dlp"
-version = "2025.12.8"
+name = "youtube-transcript-api"
+version = "1.2.3"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/14/77/db924ebbd99d0b2b571c184cb08ed232cf4906c6f9b76eed763cd2c84170/yt_dlp-2025.12.8.tar.gz", hash = "sha256:b773c81bb6b71cb2c111cfb859f453c7a71cf2ef44eff234ff155877184c3e4f", size = 3088947, upload-time = "2025-12-08T00:16:01.649Z" }
+dependencies = [
+    { name = "defusedxml" },
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/87/03/68c69b2d3e282d45cb3c07e5836a9146ff9574cde720570ffc7eb124e56b/youtube_transcript_api-1.2.3.tar.gz", hash = "sha256:76016b71b410b124892c74df24b07b052702cf3c53afb300d0a2c547c0b71b68", size = 469757, upload-time = "2025-10-13T15:57:17.532Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6e/2f/98c3596ad923f8efd32c90dca62e241e8ad9efcebf20831173c357042ba0/yt_dlp-2025.12.8-py3-none-any.whl", hash = "sha256:36e2584342e409cfbfa0b5e61448a1c5189e345cf4564294456ee509e7d3e065", size = 3291464, upload-time = "2025-12-08T00:15:58.556Z" },
+    { url = "https://files.pythonhosted.org/packages/ef/75/a861661b73d862e323c12af96ecfb237fb4d1433e551183d4172d39d5275/youtube_transcript_api-1.2.3-py3-none-any.whl", hash = "sha256:0c1b32ea5e739f9efde8c42e3d43e67df475185af6f820109607577b83768375", size = 485140, upload-time = "2025-10-13T15:57:16.034Z" },
 ]
 
 [[package]]
