@@ -8,7 +8,10 @@ from pinecone import FetchResponse, IndexModel, PineconeAsyncio, SearchQuery, Ve
 
 # from google.adk.tools.function_tool import FunctionTool
 from .. import config
-from ..tools.session_state_tools import extract_user_ids_from_tool_context
+from ..tools.session_state_tools import (
+    extract_user_ids_from_tool_context,
+    save_memory_backup,
+)
 
 pc = PineconeAsyncio(api_key=config.PINECONE_API_KEY)
 index_name = config.PINECONE_INDEX_NAME
@@ -229,7 +232,7 @@ async def create_memory(
         }
         return {
             "status": "requires confirmation",
-            "message": "Memory creation must be confirmed by user. The user must explicitly confirm by replying with `YES`.",
+            "message": "Memory creation must be confirmed by user. The user must explicitly confirm by replying with `YES` in their LATEST message.",
             "args": arg_dict,
         }
 
@@ -357,7 +360,7 @@ async def create_people(
         }
         return {
             "status": "requires confirmation",
-            "message": "Memory creation must be confirmed by user. The user must explicitly confirm by replying with `YES`.",
+            "message": "Memory creation must be confirmed by user. The user must explicitly confirm by replying with `YES` in their LATEST message.",
             "args": arg_dict,
         }
 
@@ -446,7 +449,7 @@ async def update_memory(
         }
         return {
             "status": "requires confirmation",
-            "message": "Memory update must be confirmed by user. The user must explicitly confirm by replying with `YES`.",
+            "message": "Memory update must be confirmed by user. The user must explicitly confirm by replying with `YES` in their LATEST message.",
             "args": arg_dict,
         }
 
@@ -498,7 +501,11 @@ async def update_memory(
             "message": f"`updates` must be a JSON string representing a dict with at least one of the allowed values: {allowed_fields}",
         }
     if any(key not in allowed_fields for key in updates_dict.keys()):
-        return {"status": "error", "message": "forbidden keys in the `updates` dict"}
+        forbidden_keys = [x for x in updates_dict.keys() if x not in allowed_fields]
+        return {
+            "status": "error",
+            "message": f"forbidden keys in the `updates` dict: {', '.join(forbidden_keys)}",
+        }
 
     current_user_ids_dict = extract_user_ids_from_tool_context(tool_context)
 
@@ -542,7 +549,16 @@ async def update_memory(
                     "status": "forbidden",
                     "message": f"Memory {memory_id} was created by {memory_creator} and can only be modified by this user",
                 }
-
+            memory_dict = memory_to_update.vectors[memory_id].to_dict().get("metadata", {})
+            backup = await save_memory_backup(
+                tool_context=tool_context,
+                memory_dict=json.dumps(memory_dict),
+            )
+            if not backup:
+                return {
+                    "status": "failed",
+                    "message": f"Could not create backup of memory {memory_id} before update",
+                }
             await index.update(id=memory_id, namespace=namespace, set_metadata=records)
         time.sleep(1.5)
         result = await get_records_by_id(
@@ -554,7 +570,7 @@ async def update_memory(
 
         return {
             "status": "needs verification",
-            "message": f"Verify that required updates are implemented: {result['memories']}",
+            "message": f"Verify that required updates are implemented: {result['memories']}. The backup of the memory before the update is stored in the session state {{memory_backup}} key.",
         }
 
     except Exception as e:
@@ -569,7 +585,7 @@ async def update_people(
         arg_dict = {"person_id": person_id, "updates": updates}
         return {
             "status": "requires confirmation",
-            "message": "Memory update must be confirmed by user. The user must explicitly confirm by replying with `YES`.",
+            "message": "Memory update must be confirmed by user. The user must explicitly confirm by replying with `YES` in their LATEST message.",
             "args": arg_dict,
         }
 
@@ -665,6 +681,16 @@ async def update_people(
                     "status": "forbidden",
                     "message": f"Person {person_id}  can only be modified by this user or superusers",
                 }
+            memory_dict = person_to_update.vectors[person_id].to_dict().get("metadata", {})
+            backup = await save_memory_backup(
+                tool_context=tool_context,
+                memory_dict=json.dumps(memory_dict)
+            )
+            if not backup:
+                return {
+                    "status": "failed",
+                    "message": f"Could not create backup of person {person_id} before update",
+                }
 
             await index.update(id=person_id, namespace=namespace, set_metadata=records)
 
@@ -678,7 +704,7 @@ async def update_people(
 
         return {
             "status": "needs verification",
-            "message": f"Verify that required updates are implemented: {result['memories']}",
+            "message": f"Verify that required updates are implemented: {result['memories']}. The backup of the person record before the update is stored in the session state {{memory_backup}} key.",
         }
 
     except Exception as e:
@@ -693,7 +719,7 @@ async def delete_memory(
         arg_dict = {"namespace": namespace, "record_id": record_id}
         return {
             "status": "requires confirmation",
-            "message": "Memory deletion must be confirmed by user. The user must explicitly confirm by replying with `YES`.",
+            "message": "Memory deletion must be confirmed by user. The user must explicitly confirm by replying with `YES` in their LATEST message.",
             "args": arg_dict,
         }
 
@@ -721,6 +747,20 @@ async def delete_memory(
                 "error": f"Could not get index description for {index_name}",
             }
         async with pc.IndexAsyncio(index_descr.host) as index:
+
+            record_to_delete = await index.fetch(ids=[record_id], namespace=namespace)
+
+            memory_dict = record_to_delete.vectors[record_id].to_dict().get("metadata", {})
+            backup = await save_memory_backup(
+                tool_context=tool_context,
+                memory_dict=json.dumps(memory_dict),
+            )
+            if not backup:
+                return {
+                    "status": "failed",
+                    "message": f"Could not create backup of memory {record_id} before deleting",
+                }
+
             await index.delete(ids=[record_id], namespace=namespace)
 
             attempts = 0

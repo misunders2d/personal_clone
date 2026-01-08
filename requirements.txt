@@ -5,7 +5,6 @@ google-api-python-client
 google-genai
 google-cloud-aiplatform
 google-cloud-bigquery-storage
-isodate
 litellm
 lxml
 pinecone[asyncio]
@@ -13,4 +12,3 @@ pygithub
 python-telegram-bot
 requests
 slack-bolt
-youtube-transcript-api

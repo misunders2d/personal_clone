@@ -1,4 +1,5 @@
 from google.adk.tools.tool_context import ToolContext
+import json
 
 
 def set_goals(tool_context: ToolContext, goals: dict[str, str]) -> dict:
@@ -131,4 +132,52 @@ def extract_user_ids_from_tool_context(tool_context: ToolContext) -> dict:
         return {
             "status": "error",
             "message": f"Could not extract current user ids from tool context: {e}",
+        }
+
+
+async def save_memory_backup(tool_context: ToolContext, memory_dict: str) -> bool:
+    """
+    A helper function to save memory backup to the tool context before memory update.
+
+    Args:
+        tool_context (ToolContext): The tool context to save the memory backup.
+        memory_dict (dict): The memory backup dictionary to be saved.
+
+    Returns:
+        None
+    """
+    try:
+        tool_context.state["memory_backup"] = json.loads(memory_dict)
+        return True
+    except Exception:
+        return False
+
+
+async def query_session_state(tool_context: ToolContext, session_state_key: str) -> dict:
+    """
+    A helper function to query session state for a specific key.
+
+    Args:
+        tool_context (ToolContext): The tool context containing session state.
+        session_state_key (str): The key to query in the session state.
+
+    Returns:
+        dict: The result of the query operation.
+    """
+    try:
+        result = tool_context.state.get(session_state_key, None)
+        if result is None:
+            return {
+                "status": "not found",
+                "message": f"No data found for the key: {session_state_key}",
+            }
+
+        return {
+            "status": "success",
+            "data": result,
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Error querying session state: {e}",
         }

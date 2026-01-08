@@ -28,7 +28,7 @@ from .sub_agents.google_search_agent import create_google_search_agent
 from .sub_agents.memory_agent import create_memory_agent
 from .sub_agents.vertex_search_agent import create_vertex_search_agent
 from .tools.datetime_tools import get_current_datetime
-from .tools.session_state_tools import delete_goals, set_goals
+from .tools.session_state_tools import delete_goals, set_goals, query_session_state
 from .tools.web_search_tools import scrape_web_page
 from .tools.youtube_tools import youtube_summary
 
@@ -92,6 +92,7 @@ def create_main_agent():
         scrape_web_page,
         set_goals,
         delete_goals,
+        query_session_state,
         youtube_summary,
     ]
     # adk_docs_tools = create_adk_docs_mcp_toolset()
