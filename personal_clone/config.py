@@ -115,6 +115,7 @@ GOOGLE_PRO_MODEL = Gemini(
 )
 GOOGLE_FLASH_MODEL = Gemini(
     model="gemini-2.5-flash",  # "gemini-3-flash-preview",
+    # model = "gemini-3-flash-preview",
     use_interactions_api=False,
     retry_options=retry_options,
 )
@@ -125,7 +126,9 @@ GOOGLE_LITE_MODEL = Gemini(
 )
 
 GLOBAL_MODEL_PROVIDER: Literal["Google", "OpenAI", "Grok", "Minimax"] = "Google"
-GLOBAL_PLANNER = create_planner("built-in")
+GLOBAL_PLANNER = (
+    create_planner("built-in") if GLOBAL_MODEL_PROVIDER == "Google" else None
+)
 
 if GLOBAL_MODEL_PROVIDER == "Google":
     PRO_MODEL = GOOGLE_PRO_MODEL
@@ -145,7 +148,7 @@ elif GLOBAL_MODEL_PROVIDER == "Minimax":
     LITE_MODEL = MINIMAX_LITE_MODEL
 
 # AGENT-SPECIFIC MODELS
-ANSER_VALIDATOR_AGENT_MODEL = GOOGLE_LITE_MODEL
+ANSWER_VALIDATOR_AGENT_MODEL = GOOGLE_LITE_MODEL
 
 AGENT_MODEL = FLASH_MODEL
 AGENT_PLANNER = GLOBAL_PLANNER

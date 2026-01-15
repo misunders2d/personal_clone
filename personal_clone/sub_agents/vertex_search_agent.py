@@ -2,6 +2,9 @@ from google.adk.agents import Agent
 
 from .. import config
 from ..callbacks.before_after_agent import professional_agents_checker
+
+# from ..callbacks.before_after_model import on_model_error_callback
+# from ..callbacks.before_after_tool import on_tool_error_callback
 from ..tools.vertex_tools import (
     list_documents_in_store,
     list_available_stores,
@@ -23,6 +26,8 @@ def create_vertex_search_agent(
         """,
         tools=[search_file_store, list_available_stores, list_documents_in_store],
         before_agent_callback=professional_agents_checker,
+        # on_model_error_callback=on_model_error_callback,
+        # on_tool_error_callback=on_tool_error_callback,
         output_key=output_key,
         planner=config.VERTEX_SEARCH_AGENT_PLANNER,
     )

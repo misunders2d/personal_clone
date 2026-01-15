@@ -1,5 +1,8 @@
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.models.llm_response import LlmResponse
+from google.adk.models.llm_request import LlmRequest
+
+from google.genai import types
 
 
 async def google_search_grounding(
@@ -36,3 +39,16 @@ async def google_search_grounding(
             )
 
     callback_context.state["google_search_grounding"] = grounding_data
+
+
+async def on_model_error_callback(
+    callback_context: CallbackContext,
+    llm_request: LlmRequest,
+    error: Exception,
+) -> LlmResponse | None:
+    if error:
+        return LlmResponse(
+            content=types.Content(
+                parts=[types.Part(text=f"Sorry, the model ran into error: {error}")]
+            )
+        )

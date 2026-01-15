@@ -1,5 +1,7 @@
-# from google.adk.tools import ToolContext, BaseTool
-# from typing import Optional, Dict, Any
+from google.adk.tools.tool_context import ToolContext
+from google.adk.tools.base_tool import BaseTool
+from typing import Any
+
 # import re
 
 # from ..tools import search_tools
@@ -73,3 +75,13 @@
 #         return {
 #             "error": f"You ({user}) cannot modify the existing rag corpora. Please ask Sergey."
 #         }
+
+
+async def on_tool_error_callback(
+    tool: BaseTool,
+    tool_args: dict[str, Any],
+    tool_context: ToolContext,
+    error: Exception,
+) -> dict | None:
+    if error:
+        return {"status": "error", "message": str(error)}

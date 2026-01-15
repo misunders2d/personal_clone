@@ -91,7 +91,7 @@ def bulk_upload_files(path_to_files: str, store_name: str) -> dict:
 
 async def list_available_stores() -> list | dict:
     """
-    Lists all available file storage stores for the user.
+    Lists all available search file stores for the user.
 
     Args:
         None
@@ -112,7 +112,7 @@ def list_documents_in_store(store_name: str):
     Lists all available documents in a user's file search store.
 
     Args:
-        store_name(str): the name of the store to list documents in
+        store_name(str): the name of the store to list documents in. If you don't know the name - you can use `list_available_stores` to get the file store names.
     Returns:
         dict: success or error message, along with a list of documents and their respecitve names and update dates or error message.
     """

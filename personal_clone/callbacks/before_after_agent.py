@@ -74,7 +74,7 @@ async def professional_agents_checker(
         return types.Content(
             parts=[
                 types.Part(
-                    text=f"Sorry, this agent can run only for {config.TEAM_DOMAIN} users"
+                    text=f"Sorry, this agent can run only for {config.TEAM_DOMAIN} users. Your ID is {user_id}"
                 )
             ],
             role="model",  # Assign model role to the overriding response
