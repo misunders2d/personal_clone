@@ -11,9 +11,8 @@ client = genai.Client(api_key=config.GEMINI_API_KEY, vertexai=False)
 
 def create_file_search_store(display_name: str):
     # Create the file search store with an optional display name
-    file_search_store = client.file_search_stores.create(
-        config={"display_name": display_name}
-    )
+    config = types.CreateFileSearchStoreConfigDict(display_name=display_name)
+    file_search_store = client.file_search_stores.create(config=config)
     return file_search_store
 
 
@@ -26,38 +25,49 @@ def get_file_search_store(store_name: str):
     return None
 
 
-def upload_file_to_store(file_path: str, unique_file_name: str):
+def upload_file_to_store(
+    file_path: str, unique_file_name: str, store_name: str = "rag_documents"
+):
     # Upload and import a file into the file search store, supply a unique file name which will be visible in citations
     try:
-        file_search_store = get_file_search_store("rag_documents")
+        file_search_store = get_file_search_store(store_name)
     except Exception as e:
         return {"status": "error", "message": str(e)}
     if not file_search_store:
         return {
             "status": "error",
-            "message": "File search store `rag_documents` not found.",
+            "message": f"File search store `{store_name}` not found.",
         }
     if file_search_store.name:
-        operation = client.file_search_stores.upload_to_file_search_store(
-            file=file_path,
-            file_search_store_name=file_search_store.name,
-            config={
-                "display_name": unique_file_name,
-            },
-        )
-        # Wait until import is complete
-        while not operation.done:
-            time.sleep(5)
-            operation = client.operations.get(operation)
-        return {
-            "status": "success",
-            "message": f"File {unique_file_name} uploaded successfully.",
-        }
-    return {"status": "error", "message": "File search store name not found."}
+        try:
+            operation = client.file_search_stores.upload_to_file_search_store(
+                file=file_path,
+                file_search_store_name=file_search_store.name,
+                config={
+                    "display_name": unique_file_name,
+                },
+            )
+            # Wait until import is complete
+            while not operation.done:
+                time.sleep(5)
+                operation = client.operations.get(operation)
+            return {
+                "status": "success",
+                "message": f"File {unique_file_name} uploaded successfully.",
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "message": f"File ({file_path}) could not be uploaded: {e}.",
+            }
+    return {
+        "status": "error",
+        "message": f"File search store name ({store_name}) not found.",
+    }
 
 
-def bulk_upload_files(path_to_files: str) -> dict:
-    allowed_extensions = (".txt", "pdf")
+def bulk_upload_files(path_to_files: str, store_name: str) -> dict:
+    allowed_extensions = (".txt", "pdf", ".docx")
     file_list_raw = os.listdir(path_to_files)
     file_list_clean = [
         x for x in file_list_raw if any(x.endswith(ext) for ext in allowed_extensions)
@@ -66,7 +76,9 @@ def bulk_upload_files(path_to_files: str) -> dict:
     failed_files = {}
     for file in file_list_clean:
         result = upload_file_to_store(
-            file_path=os.path.join(path_to_files, file), unique_file_name=file
+            file_path=os.path.join(path_to_files, file),
+            unique_file_name=file,
+            store_name=store_name,
         )
         if result.get("status", "error") == "success":
             successful_files[file] = result.get("message")
@@ -77,17 +89,35 @@ def bulk_upload_files(path_to_files: str) -> dict:
     }
 
 
-def list_documents_in_store():
+async def list_available_stores() -> list | dict:
+    """
+    Lists all available file storage stores for the user.
+
+    Args:
+        None
+
+    Returns:
+        list: list of store names or dict with an error message
+    """
+    try:
+        stores = client.file_search_stores.list()
+        store_names = [x.display_name for x in stores]
+        return store_names
+    except Exception as e:
+        return {"status": "failed", "error": str(e)}
+
+
+def list_documents_in_store(store_name: str):
     """
     Lists all available documents in a user's file search store.
 
     Args:
-        None
+        store_name(str): the name of the store to list documents in
     Returns:
         dict: success or error message, along with a list of documents and their respecitve names and update dates or error message.
     """
     try:
-        file_search_store = get_file_search_store("rag_documents")
+        file_search_store = get_file_search_store(store_name)
         if not (file_search_store and file_search_store.name):
             return {"status": "error", "message": "could not access file search store"}
         store_documents = []
@@ -98,6 +128,7 @@ def list_documents_in_store():
             document_info = {
                 "display_name": file.display_name,
                 "update_time": file.update_time,
+                # "name": file.name
             }
             store_documents.append(document_info)
         return {"status": "success", "files": store_documents}
@@ -105,22 +136,33 @@ def list_documents_in_store():
         return {"status": "error", "message": str(e)}
 
 
-async def search_file_store(query: str) -> dict:
+def delete_file_search_store(display_name: str):
+    file_search_store = get_file_search_store(display_name)
+    if file_search_store and file_search_store.name:
+        _ = client.file_search_stores.delete(
+            name=file_search_store.name,
+            config=types.DeleteFileSearchStoreConfig(force=True),
+        )
+    return None
+
+
+async def search_file_store(query: str, store_name: str) -> dict:
     """
     Search the file search store (documents storage) for user query.
 
     Args:
         query(str): A query to search for
+        store_name(str): the name of the store to list documents in
 
     Returns:
         dict: search results along with grounding data
     """
     try:
-        file_search_store = get_file_search_store("rag_documents")
+        file_search_store = get_file_search_store(store_name)
         if not file_search_store or not file_search_store.name:
             return {
                 "status": "error",
-                "message": "File search store `rag_documents` not found.",
+                "message": f"File search store `{store_name}` not found.",
             }
         response = client.models.generate_content(
             model="gemini-2.5-flash",

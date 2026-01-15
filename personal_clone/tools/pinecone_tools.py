@@ -549,7 +549,9 @@ async def update_memory(
                     "status": "forbidden",
                     "message": f"Memory {memory_id} was created by {memory_creator} and can only be modified by this user",
                 }
-            memory_dict = memory_to_update.vectors[memory_id].to_dict().get("metadata", {})
+            memory_dict = (
+                memory_to_update.vectors[memory_id].to_dict().get("metadata", {})
+            )
             backup = await save_memory_backup(
                 tool_context=tool_context,
                 memory_dict=json.dumps(memory_dict),
@@ -681,10 +683,11 @@ async def update_people(
                     "status": "forbidden",
                     "message": f"Person {person_id}  can only be modified by this user or superusers",
                 }
-            memory_dict = person_to_update.vectors[person_id].to_dict().get("metadata", {})
+            memory_dict = (
+                person_to_update.vectors[person_id].to_dict().get("metadata", {})
+            )
             backup = await save_memory_backup(
-                tool_context=tool_context,
-                memory_dict=json.dumps(memory_dict)
+                tool_context=tool_context, memory_dict=json.dumps(memory_dict)
             )
             if not backup:
                 return {
@@ -750,7 +753,9 @@ async def delete_memory(
 
             record_to_delete = await index.fetch(ids=[record_id], namespace=namespace)
 
-            memory_dict = record_to_delete.vectors[record_id].to_dict().get("metadata", {})
+            memory_dict = (
+                record_to_delete.vectors[record_id].to_dict().get("metadata", {})
+            )
             backup = await save_memory_backup(
                 tool_context=tool_context,
                 memory_dict=json.dumps(memory_dict),

@@ -101,8 +101,9 @@ def create_bigquery_agent():
         model=config.BIGQUERY_AGENT_MODEL,
         name="bigquery_agent",
         description=(
-            "Agent to answer questions about the company's business performance (sales, inventory, payments etc)."
-            "Uses BigQuery data and models and executes SQL queries and creates plots."
+            "Agent to answer questions about the company's business performance (sales, inventory, payments etc). "
+            "Uses BigQuery data and models and executes SQL queries and creates plots. "
+            "If there are questions regarding ASINs, SKUs, company business, sales, company data - this agent will help. "
         ),
         instruction=create_bq_agent_instruction(),
         tools=[

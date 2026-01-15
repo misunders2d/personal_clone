@@ -153,7 +153,9 @@ async def save_memory_backup(tool_context: ToolContext, memory_dict: str) -> boo
         return False
 
 
-async def query_session_state(tool_context: ToolContext, session_state_key: str) -> dict:
+async def query_session_state(
+    tool_context: ToolContext, session_state_key: str
+) -> dict:
     """
     A helper function to query session state for a specific key.
 
