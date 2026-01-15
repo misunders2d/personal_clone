@@ -139,7 +139,9 @@ async def prefetch_memories(
             professional_future = search_memories_prefetch(
                 user_id, "professional", last_user_message, 1
             )
-            vertex_future = search_file_store(query=last_user_message, store_name='rag_documents')
+            vertex_future = search_file_store(
+                query=last_user_message, store_name="rag_documents"
+            )
         else:
             professional_future = None
             vertex_future = None

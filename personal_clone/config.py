@@ -100,10 +100,22 @@ MINIMAX_LITE_MODEL = LiteLlm(model="openai/MiniMax-M2", api_key=MINIMAX_API_KEY)
 
 # GOOGLE MODELS
 
-GOOGLE_PRO_MODEL = Gemini(model="gemini-2.5-pro", use_interactions_api=False)
-GOOGLE_FLASH_MODEL = Gemini(model="gemini-2.5-flash", use_interactions_api=False)
-# GOOGLE_FLASH_MODEL = Gemini(model="gemini-3-flash-preview", use_interactions_api=False)
-GOOGLE_LITE_MODEL = Gemini(model="gemini-2.5-flash-lite", use_interactions_api=False)
+GOOGLE_PRO_MODEL = Gemini(
+    model="gemini-2.5-pro",
+    use_interactions_api=False,
+    retry_options=types.HttpRetryOptions(attempts=10, max_delay=30, exp_base=0.2),
+)
+# GOOGLE_FLASH_MODEL = Gemini(
+#     model="gemini-2.5-flash", #"gemini-3-flash-preview",
+#     use_interactions_api=False,
+#     retry_options=types.HttpRetryOptions(attempts=10, max_delay=10, exp_base=0.2),
+# )
+GOOGLE_FLASH_MODEL = "gemini-2.5-flash"
+GOOGLE_LITE_MODEL = Gemini(
+    model="gemini-2.5-flash-lite",
+    use_interactions_api=False,
+    retry_options=types.HttpRetryOptions(attempts=10, max_delay=10, exp_base=0.2),
+)
 
 GLOBAL_MODEL_PROVIDER: Literal["Google", "OpenAI", "Grok", "Minimax"] = "Google"
 GLOBAL_PLANNER = create_planner("built-in")

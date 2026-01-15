@@ -1,6 +1,7 @@
 from google.adk.agents import Agent, SequentialAgent  # , ParallelAgent
 from google.adk.apps import App
 from google.adk.apps.app import EventsCompactionConfig
+from google.adk.agents.context_cache_config import ContextCacheConfig
 from google.adk.apps.llm_event_summarizer import LlmEventSummarizer
 
 # from google.adk.tools.load_memory_tool import load_memory_tool
@@ -116,6 +117,11 @@ def create_main_agent():
                 ALWAYS communicate with the sub-agents to understand which tools they have access to - their toolsets are developing rapidly.
             - You are equipped with a special `memory_agent` has access to all personal and professional experiences of the user:
                 Use it to work with long-term memories, records and experiences, stored in Pinecone vector database.
+            - IMPORTANT! You are equipped with multiple "knowledge" sources, including the following:
+                1. Session state - short term storage for "goals" or reminders that are set with your `delete_goals`, `set_goals`, `query_session_state` tools. This information is not persistent and will disappear if the session is deleted.
+                2. Vector database knowledge storage (memory_agent). Uses Pinecone to store memories/experiences/records. Data persists over session reloads and can be updated, deleted, recreated etc.
+                3. File document storage with multiple stores (vertex_search_agent). Uses Google's RAG storage with pre-loaded documents. Data is immutable and cannot be modified by anyone except the admin. Used to store important documents, SOPs, company data, useful tips and tricks etc.
+                Make sure to explain this to the user if they are unsure where to search or how your memory is constructed.
             - If the communication requires some problem solving, deep thinking, or multi-step reasoning - you ALWAYS engage the `True_Thinker` algorithm defined in the <CORE_LOGIC> section.
         </GENERAL>
         <SHORT-TERM TASKS, GOALS AND REMINDERS>
@@ -128,7 +134,7 @@ def create_main_agent():
         <DOCUMENT INFORMATION SEARCH>
             You have access to `vertex_search_agent` who can perform searches in internal document datastores using Vertex AI.
             Use it when the user asks to search for information from internal documents and notebooks.
-            Always use exact user input as a query for your vertex_toolset.
+            Make sure to run multiple differen searches phrasing search queries in such a way as to answer user's question as comprehensively, as possible - unless instructed otherwise.
             Always cite sources when available.
         </DOCUMENT INFORMATION SEARCH>
         <COMMUNICATION GUIDELINES>
@@ -275,5 +281,8 @@ app = App(
         compaction_interval=10,
         overlap_size=2,
         summarizer=LlmEventSummarizer(llm=config.FLASH_MODEL),
+    ),
+    context_cache_config=ContextCacheConfig(
+        cache_intervals=20, ttl_seconds=1800, min_tokens=100000
     ),
 )
