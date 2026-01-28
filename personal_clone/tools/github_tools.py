@@ -1,7 +1,7 @@
 # from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
 # from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 # from mcp import StdioServerParameters
-
+import github
 from github import Github, Repository
 from github.GithubException import GithubException
 from google.adk.tools.tool_context import ToolContext
@@ -56,7 +56,12 @@ from .. import config
 def create_github_toolset():
 
     try:
-        g = Github(config.GITHUB_TOKEN) if config.GITHUB_TOKEN else None
+        g = (
+            Github(auth=github.Auth.Token(config.GITHUB_TOKEN))
+            if config.GITHUB_TOKEN
+            else None
+        )
+
         if not g:
             return {
                 "status": "error",
