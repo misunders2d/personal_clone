@@ -24,3 +24,8 @@ dependencies = [
     "slack-bolt>=1.27.0",
     "youtube-transcript-api>=1.2.3",
 ]
+
+[dependency-groups]
+dev = [
+    "pyperclip>=1.11.0",
+]

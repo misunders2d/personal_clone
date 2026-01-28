@@ -23,7 +23,7 @@ async def youtube_summary(url: str, query: str):
     )
 
     try:
-        response = client.models.generate_content(
+        response = await client.aio.models.generate_content(
             model=model,
             contents=[
                 types.Part(

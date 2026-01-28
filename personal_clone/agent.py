@@ -1,10 +1,10 @@
 from google.adk.agents import Agent, SequentialAgent  # , ParallelAgent
 from google.adk.apps import App
-# from google.adk.apps.app import EventsCompactionConfig
+from google.adk.apps.app import EventsCompactionConfig
 from google.adk.agents.context_cache_config import ContextCacheConfig
+
 # from google.adk.apps.llm_event_summarizer import LlmEventSummarizer
 from google.adk.plugins import ReflectAndRetryToolPlugin
-
 
 # from google.adk.tools.load_memory_tool import load_memory_tool
 # from google.adk.tools.preload_memory_tool import preload_memory_tool
@@ -210,11 +210,11 @@ root_agent = SequentialAgent(
 app = App(
     name="personal_clone",
     root_agent=root_agent,
-    # events_compaction_config=EventsCompactionConfig(
-    #     compaction_interval=10,
-    #     overlap_size=2,
-    #     summarizer=LlmEventSummarizer(llm=config.FLASH_MODEL),
-    # ),
+    events_compaction_config=EventsCompactionConfig(
+        compaction_interval=10,
+        overlap_size=2,
+        # summarizer=LlmEventSummarizer(llm=config.FLASH_MODEL),
+    ),
     context_cache_config=ContextCacheConfig(
         cache_intervals=20, ttl_seconds=1800, min_tokens=32000
     ),
