@@ -168,7 +168,6 @@ async def list_records(tool_context: ToolContext, namespace: str) -> dict:
 
 def confirmed(tool_context: ToolContext):
     try:
-
         if (
             tool_context.user_content
             and tool_context.user_content.parts
@@ -236,7 +235,7 @@ async def create_memory(
         return {
             "status": "requires confirmation",
             "message": "Memory creation must be confirmed by user. The user must explicitly confirm by replying with `YES` in their LATEST message.",
-            "args": arg_dict,
+            "args": json.dumps(arg_dict),
         }
 
     try:
@@ -257,7 +256,7 @@ async def create_memory(
         if missing:
             return {
                 "status": "failed",
-                "missing": missing,
+                "missing": json.dumps(missing),
                 "error": f"Missing required parameters: {', '.join(missing)}",
             }
 
@@ -314,6 +313,7 @@ async def create_memory(
                     ids=[x["id"] for x in records], namespace=namespace
                 )
                 time.sleep(1.5)
+                attempts += 1
 
         if check and check.vectors:
             return {
@@ -364,7 +364,7 @@ async def create_people(
         return {
             "status": "requires confirmation",
             "message": "Memory creation must be confirmed by user. The user must explicitly confirm by replying with `YES` in their LATEST message.",
-            "args": arg_dict,
+            "args": json.dumps(arg_dict),
         }
 
     try:
@@ -383,7 +383,7 @@ async def create_people(
         if missing:
             return {
                 "status": "failed",
-                "missing": missing,
+                "missing": json.dumps(missing),
                 "error": f"Missing required parameters: {', '.join(missing)}",
             }
 
@@ -425,6 +425,7 @@ async def create_people(
                     ids=[x["id"] for x in records], namespace=namespace
                 )
                 time.sleep(1.5)
+                attempts += 1
 
         if check and check.vectors:
             return {
@@ -453,7 +454,7 @@ async def update_memory(
         return {
             "status": "requires confirmation",
             "message": "Memory update must be confirmed by user. The user must explicitly confirm by replying with `YES` in their LATEST message.",
-            "args": arg_dict,
+            "args": json.dumps(arg_dict),
         }
 
     """
@@ -780,6 +781,7 @@ async def delete_memory(
             while attempts < 10 and check.vectors:  # type: ignore
                 check = await index.fetch([record_id], namespace=namespace)
                 time.sleep(1.5)
+                attempts += 1
 
         if check and check.vectors:
             return {

@@ -104,7 +104,7 @@ def create_memory_agent(
 
     memory_agent = Agent(
         name=name,
-        description="""An agent that can handles personal and professional experience and memory management - creating, retrieving, updating and deleting experiences or memories, based on its toolset.
+        description="""An agent that can handle personal and professional experience and memory management - creating, retrieving, updating and deleting experiences or memories, based on its toolset.
             Use it whenever the conversation implies personal or professional experience or memory management (remembering, recalling etc.).
             Also use it to manage people data in the people table.
             Make sure to correctly identify the "scope" of memories (personal or professional) when asked to create or update them.
