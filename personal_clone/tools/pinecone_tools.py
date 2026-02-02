@@ -167,17 +167,20 @@ async def list_records(tool_context: ToolContext, namespace: str) -> dict:
 
 
 def confirmed(tool_context: ToolContext):
+    try:
 
-    if (
-        tool_context.user_content
-        and tool_context.user_content.parts
-        and tool_context.user_content.parts[0]
-        and tool_context.user_content.parts[0].text
-    ):
-        last_user_message = tool_context.user_content.parts[0].text
-        if "YES" in last_user_message:
-            return True
-    return False
+        if (
+            tool_context.user_content
+            and tool_context.user_content.parts
+            and tool_context.user_content.parts[0]
+            and tool_context.user_content.parts[0].text
+        ):
+            last_user_message = tool_context.user_content.parts[0].text
+            if "YES" in last_user_message:
+                return True
+        return False
+    except Exception:
+        return False
 
 
 async def create_memory(
@@ -350,7 +353,7 @@ async def create_people(
 
     """
 
-    if not await confirmed(tool_context):
+    if not confirmed(tool_context):
         arg_dict = {
             "first_name": first_name,
             "last_name": last_name,
@@ -441,7 +444,7 @@ async def update_memory(
     tool_context: ToolContext, namespace: str, memory_id: str, updates: str = "{}"
 ) -> dict:
 
-    if not await confirmed(tool_context):
+    if not confirmed(tool_context):
         arg_dict = {
             "namespace": namespace,
             "memory_id": memory_id,
@@ -583,7 +586,7 @@ async def update_people(
     tool_context: ToolContext, person_id: str, updates: str = "{}"
 ) -> dict:
 
-    if not await confirmed(tool_context):
+    if not confirmed(tool_context):
         arg_dict = {"person_id": person_id, "updates": updates}
         return {
             "status": "requires confirmation",
@@ -718,7 +721,7 @@ async def delete_memory(
     tool_context: ToolContext, namespace: str, record_id: str
 ) -> dict:
 
-    if not await confirmed(tool_context):
+    if not confirmed(tool_context):
         arg_dict = {"namespace": namespace, "record_id": record_id}
         return {
             "status": "requires confirmation",
