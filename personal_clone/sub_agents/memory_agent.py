@@ -35,6 +35,12 @@ def create_memory_agent_instruction():
         - ALWAYS announce the changes you've made to the user.
         - Make sure NOT to delete the record completely, just modify the relevant information.
 
+    <SPECIAL INSTRUCTIONS FOR CREATING MEMORIES>
+        - ALWAYS ask for the user's explicit confirmation BEFORE creating any memory.
+        - IMPORTANT! Make sure you FULLY understand which namespace to create the memory in. If unclear - confirm with the user.
+        - ALWAYS announce the changes you've made to the user. Make sure to suppor the memory creation by fetching the memory ID.
+    </SPECIAL INSTRUCTIONS FOR CREATING MEMORIES>
+
     After updating the memory you MUST verify the result by fetching this memory by ID.
     </SPECIAL INSTRUCTIONS FOR UPDATING MEMORIES>
 
