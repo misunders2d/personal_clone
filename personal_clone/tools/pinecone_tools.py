@@ -166,7 +166,7 @@ async def list_records(tool_context: ToolContext, namespace: str) -> dict:
         return {"status": "failed", "error": str(e)}
 
 
-async def confirmed(tool_context: ToolContext):
+def confirmed(tool_context: ToolContext):
 
     if (
         tool_context.user_content
@@ -220,7 +220,7 @@ async def create_memory(
         ]'''
     """
 
-    if not await confirmed(tool_context):
+    if not confirmed(tool_context):
         arg_dict = {
             "namespace": namespace,
             "text": text,
