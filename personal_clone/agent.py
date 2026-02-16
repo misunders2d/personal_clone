@@ -21,9 +21,6 @@ from .callbacks.before_after_agent import (
     prefetch_memories,
     state_setter,
 )
-
-# from .callbacks.before_after_tool import on_tool_error_callback
-
 from .sub_agents.bigquery_agent import create_bigquery_agent
 from .sub_agents.clickup_agent import create_clickup_agent
 from .sub_agents.code_executor_agent import create_code_executor_agent
@@ -35,9 +32,11 @@ from .sub_agents.google_search_agent import create_google_search_agent
 from .sub_agents.memory_agent import create_memory_agent
 from .sub_agents.vertex_search_agent import create_vertex_search_agent
 from .tools.datetime_tools import get_current_datetime
-from .tools.session_state_tools import delete_goals, set_goals, query_session_state
+from .tools.session_state_tools import delete_goals, query_session_state, set_goals
 from .tools.web_search_tools import scrape_web_page
 from .tools.youtube_tools import youtube_summary
+
+# from .callbacks.before_after_tool import on_tool_error_callback
 
 
 class ValidatorOutput(BaseModel):
@@ -68,13 +67,11 @@ def create_answer_validator_agent():
                 HOWEVER if the user is explicitly demanding an answer or if the user is asking a question, you ALWAYS reply with `True`.
                 The ONLY scenario when you reply with `False` is when the user's input is a simple acknowledgement, farewell, or similar non-inquisitive statement.
                 If the user's input looks like a command or a request for action, you MUST reply with `True`.
-                If the user's reply looks like a confirmation for the agent's actions (like "good to go", "yes", "confirmed" etc), you MUST reply with `True`.
+                If the user's reply looks like a confirmation for the agent's actions and contains "YES", you MUST reply with `True`.
                 If the user's input ends with a question mark, you MUST reply with `True`. If you are in doubt - MUST defer to `True`.
                 In general - unless you are absolutely sure the user's input does not require an answer, you output `True`.
             - `recall`: whether or not a memory search should be involved.
                 If the user's query or the conversational flow implies that there is some memory or experience involved, you should set the `recall` to `True`, otherwise set it to `False`.
-            - `reasoning`: whether or not an agent should use Planner/Reasoning mode.
-                If the user's query or the conversational flow implies that there is a need of a longer thinking or deep research (complex questions, multi-step procedures, etc.) or the use explicitly asks to think deeper, do a research or plan, you should set the `reasoning` to `True`, otherwise set it to `False`.
 
         You do not output anything except `True` or `False` for each of those fields.
         """,

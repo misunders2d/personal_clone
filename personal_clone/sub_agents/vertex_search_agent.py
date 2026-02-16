@@ -6,8 +6,8 @@ from ..callbacks.before_after_agent import professional_agents_checker
 # from ..callbacks.before_after_model import on_model_error_callback
 # from ..callbacks.before_after_tool import on_tool_error_callback
 from ..tools.vertex_tools import (
-    list_documents_in_store,
     list_available_stores,
+    list_documents_in_store,
     search_file_store,
 )
 
@@ -23,6 +23,7 @@ def create_vertex_search_agent(
         Answer user questions and fetch relevant data based on user's input using tools provided to find information from internal documents and notebooks.
         Be prepared to cite sources or grounding data when asked.
         If you are unsure, which store to use - fetch all available store names and confirm with the customer which one to use.
+        IMPORTANT!!! ONLY use the tools that you are equipped with, don't try to use any other undesignated tools!
         """,
         tools=[search_file_store, list_available_stores, list_documents_in_store],
         before_agent_callback=professional_agents_checker,
