@@ -7,7 +7,7 @@ from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filte
 from personal_clone import config
 from runner_modules import (
     create_runner,
-    format_messaage_content,
+    format_message_content,
     get_or_create_session,
     query_agent,
 )
@@ -225,7 +225,9 @@ async def echo_all(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 runner=await create_runner(),
                 user_id=str(update.effective_user.id),
                 session_id=session_id.id,
-                new_message=format_messaage_content(formatted_message),
+                new_message=await format_message_content(
+                    formatted_message, user_id=user_id, session_id=session_id
+                ),
             ):
                 if event.content and event.content.parts:
                     for part in event.content.parts:
@@ -240,6 +242,10 @@ async def echo_all(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except Exception as e:
         logger.error(f"Error in echo_all: {e}", exc_info=True)
+
+
+async def reply_direct(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    pass
 
 
 def run_bot():

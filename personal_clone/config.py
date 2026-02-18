@@ -73,33 +73,6 @@ def create_planner(mode: Literal["built-in", "react"] | None = None):
         return PlanReActPlanner()
 
 
-# GROK MODELS
-GROK_PRO_MODEL = LiteLlm(
-    model="xai/grok-4-fast-reasoning", api_key=GROK_API_KEY
-)  # 0.20 / 0.50
-GROK_FLASH_MODEL = LiteLlm(
-    model="xai/grok-4-fast-reasoning", api_key=GROK_API_KEY
-)  # 0.20 / 0.50
-GROK_LITE_MODEL = LiteLlm(
-    model="xai/grok-4-fast-non-reasoning-latest", api_key=GROK_API_KEY
-)  # 0.20 / 0.50
-
-# OPENAI MODELS
-OPENAI_PRO_MODEL = LiteLlm(model="openai/gpt-5", api_key=OPENAI_API_KEY)  # 1.25 / 10
-OPENAI_FLASH_MODEL = LiteLlm(
-    model="openai/gpt-5-mini", api_key=OPENAI_API_KEY
-)  # 0.25 / 2.00
-OPENAI_LITE_MODEL = LiteLlm(
-    model="openai/gpt-5-nano", api_key=OPENAI_API_KEY
-)  # 0.05 / 0.40
-
-# MINIMAX MODELS
-MINIMAX_PRO_MODEL = LiteLlm(model="openai/MiniMax-M2", api_key=MINIMAX_API_KEY)
-MINIMAX_FLASH_MODEL = LiteLlm(model="openai/MiniMax-M2", api_key=MINIMAX_API_KEY)
-MINIMAX_LITE_MODEL = LiteLlm(model="openai/MiniMax-M2", api_key=MINIMAX_API_KEY)
-
-# GOOGLE MODELS
-
 retry_options = types.HttpRetryOptions(
     attempts=10,
     max_delay=60,
@@ -108,47 +81,62 @@ retry_options = types.HttpRetryOptions(
     http_status_codes=[429, 500, 502, 503, 504],
 )
 
-GOOGLE_PRO_MODEL = Gemini(
-    model="gemini-2.5-pro",
-    use_interactions_api=False,
-    retry_options=retry_options,
-)
-GOOGLE_FLASH_MODEL = Gemini(
-    model="gemini-2.5-flash",  # "gemini-3-flash-preview",
-    # model = "gemini-3-flash-preview",
-    use_interactions_api=False,
-    retry_options=retry_options,
-)
-GOOGLE_LITE_MODEL = Gemini(
-    model="gemini-2.5-flash-lite",
-    use_interactions_api=False,
-    retry_options=retry_options,
-)
+MODEL_PROVIDERS = {
+    "Grok": {
+        "PRO_MODEL": LiteLlm(
+            model="xai/grok-4-fast-reasoning", api_key=GROK_API_KEY
+        ),  # 0.20 / 0.50
+        "FLASH_MODEL": LiteLlm(
+            model="xai/grok-4-fast-reasoning", api_key=GROK_API_KEY
+        ),  # 0.20 / 0.50
+        "LITE_MODEL": LiteLlm(
+            model="xai/grok-4-fast-non-reasoning-latest", api_key=GROK_API_KEY
+        ),
+    },  # 0.20 / 0.50
+    "OpenAI": {
+        "PRO_MODEL": LiteLlm(model="openai/gpt-5", api_key=OPENAI_API_KEY),  # 1.25 / 10
+        "FLASH_MODEL": LiteLlm(
+            model="openai/gpt-5-mini", api_key=OPENAI_API_KEY
+        ),  # 0.25 / 2.00
+        "LITE_MODEL": LiteLlm(model="openai/gpt-5-nano", api_key=OPENAI_API_KEY),
+    },  # 0.05 / 0.40
+    "Minimax": {
+        "PRO_MODEL": LiteLlm(model="openai/MiniMax-M2", api_key=MINIMAX_API_KEY),
+        "FLASH_MODEL": LiteLlm(model="openai/MiniMax-M2", api_key=MINIMAX_API_KEY),
+        "LITE_MODEL": LiteLlm(model="openai/MiniMax-M2", api_key=MINIMAX_API_KEY),
+    },
+    "Google": {
+        "PRO_MODEL": Gemini(
+            model="gemini-2.5-pro",
+            use_interactions_api=False,
+            retry_options=retry_options,
+        ),
+        "FLASH_MODEL": Gemini(
+            model="gemini-2.5-flash",
+            # model="gemini-3-flash-preview",
+            use_interactions_api=False,
+            retry_options=retry_options,
+        ),
+        "LITE_MODEL": Gemini(
+            model="gemini-2.5-flash-lite",
+            use_interactions_api=False,
+            retry_options=retry_options,
+        ),
+    },
+}
 
 GLOBAL_MODEL_PROVIDER: Literal["Google", "OpenAI", "Grok", "Minimax"] = "Google"
 GLOBAL_PLANNER = (
     create_planner("built-in") if GLOBAL_MODEL_PROVIDER == "Google" else None
 )
 
-if GLOBAL_MODEL_PROVIDER == "Google":
-    PRO_MODEL = GOOGLE_PRO_MODEL
-    FLASH_MODEL = GOOGLE_FLASH_MODEL
-    LITE_MODEL = GOOGLE_LITE_MODEL
-elif GLOBAL_MODEL_PROVIDER == "OpenAI":
-    PRO_MODEL = OPENAI_PRO_MODEL
-    FLASH_MODEL = OPENAI_FLASH_MODEL
-    LITE_MODEL = OPENAI_LITE_MODEL
-elif GLOBAL_MODEL_PROVIDER == "Grok":
-    PRO_MODEL = GROK_PRO_MODEL
-    FLASH_MODEL = GROK_FLASH_MODEL
-    LITE_MODEL = GROK_LITE_MODEL
-elif GLOBAL_MODEL_PROVIDER == "Minimax":
-    PRO_MODEL = MINIMAX_PRO_MODEL
-    FLASH_MODEL = MINIMAX_FLASH_MODEL
-    LITE_MODEL = MINIMAX_LITE_MODEL
+PRO_MODEL = MODEL_PROVIDERS.get(GLOBAL_MODEL_PROVIDER, {}).get("PRO_MODEL", "")
+FLASH_MODEL = MODEL_PROVIDERS.get(GLOBAL_MODEL_PROVIDER, {}).get("FLASH_MODEL", "")
+LITE_MODEL = MODEL_PROVIDERS.get(GLOBAL_MODEL_PROVIDER, {}).get("LITE_MODEL", "")
 
+#
 # AGENT-SPECIFIC MODELS
-ANSWER_VALIDATOR_AGENT_MODEL = GOOGLE_LITE_MODEL
+ANSWER_VALIDATOR_AGENT_MODEL = MODEL_PROVIDERS["Google"]["LITE_MODEL"]
 
 AGENT_MODEL = FLASH_MODEL
 AGENT_PLANNER = GLOBAL_PLANNER
@@ -165,7 +153,7 @@ CODE_EXECUTOR_AGENT_PLANNER = GLOBAL_PLANNER
 GITHUB_AGENT_MODEL = FLASH_MODEL
 GITHUB_AGENT_PLANNER = GLOBAL_PLANNER
 
-GOOGLE_SEARCH_AGENT_MODEL = GOOGLE_FLASH_MODEL
+GOOGLE_SEARCH_AGENT_MODEL = MODEL_PROVIDERS["Google"]["FLASH_MODEL"]
 GOOGLE_SEARCH_AGENT_PLANNER = create_planner("built-in")
 
 GRAPH_AGENT_MODEL = FLASH_MODEL
@@ -177,10 +165,10 @@ MEMORY_AGENT_PLANNER = GLOBAL_PLANNER
 PINECONE_AGENT_MODEL = FLASH_MODEL
 PINECONE_AGENT_PLANNER = GLOBAL_PLANNER
 
-RAG_AGENT_MODEL = GOOGLE_FLASH_MODEL
+RAG_AGENT_MODEL = MODEL_PROVIDERS["Google"]["FLASH_MODEL"]
 RAG_AGENT_PLANNER = create_planner("built-in")
 
-VERTEX_SEARCH_AGENT_MODEL = GOOGLE_LITE_MODEL
+VERTEX_SEARCH_AGENT_MODEL = MODEL_PROVIDERS["Google"]["LITE_MODEL"]
 VERTEX_SEARCH_AGENT_PLANNER = None
 
 
