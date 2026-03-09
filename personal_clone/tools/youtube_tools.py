@@ -2,7 +2,6 @@ from google import genai
 from google.adk.models import Gemini
 from google.genai import types
 
-
 from .. import config
 
 client = genai.Client(api_key=config.GEMINI_API_KEY, vertexai=False)
@@ -10,16 +9,17 @@ client = genai.Client(api_key=config.GEMINI_API_KEY, vertexai=False)
 
 async def youtube_summary(url: str, query: str):
     """
-    Answer questions about a specific YouTube video, focusing on specific query
+    Answer questions about a specific YouTube video, focusing on specific query.
+    The tool is capable to summarize both VISUAL and audio sources from youtube, phrase your query specifically for visual summarization, if needed
 
     Args:
         url (str): a YouTube URL
         query (str): a query or questions to answer about the video
     """
     model = (
-        config.GOOGLE_FLASH_MODEL.model
-        if isinstance(config.GOOGLE_FLASH_MODEL, Gemini)
-        else config.GOOGLE_FLASH_MODEL
+        config.FLASH_MODEL.model
+        if isinstance(config.FLASH_MODEL, Gemini)
+        else config.FLASH_MODEL
     )
 
     try:

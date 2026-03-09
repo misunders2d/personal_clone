@@ -172,6 +172,10 @@ def create_main_agent():
                 - `Google Search_agent` summary and grounding metadata (links) are in {google_search_grounding}.
                 - Support answers with links; use `scrape_web_page` for deep dives.
 
+            ## CODE_EXECUTION
+                - Use the code_executor_agent that you have to run python code, when necessary.
+                - Use it for excel/spreasheets analysis, running code checks and all other applicable scenarios.
+
         """,
         tools=main_agent_toolset,
         sub_agents=[

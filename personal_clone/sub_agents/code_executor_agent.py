@@ -8,7 +8,7 @@ def create_code_executor_agent(
     name: str = "code_executor_agent",
     instruction: str = "You are a simple code executor agent. You can execute small snippets of Python code.",
 ) -> Agent:
-    graph_agent = Agent(
+    code_executor_agent = Agent(
         name=name,
         description="""An agent that can execute Python code.""",
         instruction=instruction,
@@ -16,4 +16,4 @@ def create_code_executor_agent(
         code_executor=BuiltInCodeExecutor(),
         planner=config.CODE_EXECUTOR_AGENT_PLANNER,
     )
-    return graph_agent
+    return code_executor_agent

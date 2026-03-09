@@ -20,7 +20,6 @@ GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
 GOOGLE_CLOUD_LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "")
 GOOGLE_CLOUD_STORAGE_BUCKET = os.environ.get("GOOGLE_CLOUD_STORAGE_BUCKET", "")
 GOOGLE_CLOUD_ARTIFACT_BUCKET = os.environ.get("GOOGLE_CLOUD_ARTIFACT_BUCKET", "")
-YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
 GCP_SERVICE_ACCOUNT_INFO = os.environ.get("GCP_SERVICE_ACCOUNT_INFO", "")
 BQ_GCP_SERVICE_ACCOUNT_INFO = os.environ.get("BQ_GCP_SERVICE_ACCOUNT_INFO", "")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
@@ -124,9 +123,20 @@ MODEL_PROVIDERS = {
             retry_options=retry_options,
         ),
     },
+    "Anthropic": {
+        "PRO_MODEL": LiteLlm(model="anthropic/claude-opus-4-5", api_key=CLAUDE_API_KEY),
+        "FLASH_MODEL": LiteLlm(
+            model="anthropic/claude-sonnet-4-6", api_key=CLAUDE_API_KEY
+        ),
+        "LITE_MODEL": LiteLlm(
+            model="anthropic/claude-haiku-4-5", api_key=CLAUDE_API_KEY
+        ),
+    },
 }
 
-GLOBAL_MODEL_PROVIDER: Literal["Google", "OpenAI", "Grok", "Minimax"] = "Google"
+GLOBAL_MODEL_PROVIDER: Literal["Google", "OpenAI", "Grok", "Minimax", "Anthropic"] = (
+    "Google"
+)
 GLOBAL_PLANNER = (
     create_planner("built-in") if GLOBAL_MODEL_PROVIDER == "Google" else None
 )
