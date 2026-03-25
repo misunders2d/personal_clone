@@ -201,6 +201,9 @@ root_agent = SequentialAgent(
     ],
 )
 
+def get_app():
+    return app
+
 app = App(
     name="personal_clone",
     root_agent=root_agent,

@@ -219,7 +219,5 @@ improvements.md
 .streamlit/
 
 vertex_storage_credentials.json
-deploy.sh
 deployment_metadata.json
 *.db
-test_model.sh
