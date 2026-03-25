@@ -223,3 +223,7 @@ deploy.sh
 deployment_metadata.json
 *.db
 test_model.sh
+
+
+CLAUDE.md
+GEMINI.md
