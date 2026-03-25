@@ -1,10 +1,13 @@
 import asyncio
 import logging
 import os
+import json
 
 import httpx
 from google import genai
 from google.genai import types
+
+from .session_signals import get_pending_refresh
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +51,15 @@ async def send_message(client: httpx.AsyncClient, token: str, chat_id: int, text
         logger.exception("Failed to send Telegram message to chat %s", chat_id)
 
 
+async def delete_message(client: httpx.AsyncClient, token: str, chat_id: int, message_id: int):
+    """Delete a message from Telegram."""
+    url = TELEGRAM_API.format(token=token, method="deleteMessage")
+    try:
+        await client.post(url, json={"chat_id": chat_id, "message_id": message_id})
+    except Exception:
+        pass
+
+
 async def _summarize_session(session) -> str:
     """Use Gemini to summarize session events into a compact context string."""
     texts = []
@@ -72,18 +84,25 @@ async def _summarize_session(session) -> str:
     return response.text or ""
 
 
-async def _handle_session_reset(runner, user_id, session_id, choice: str) -> str:
-    """Process the user's session reset choice. Returns a status message."""
-    session = _pending_session_reset.pop(session_id, None)
+async def _perform_session_refresh(runner, user_id, session_id, mode: str, session=None) -> str:
+    """Core logic to wipe or summarize/reset a session."""
+    if mode == "summarize":
+        if session is None:
+            session = await runner.session_service.get_session(
+                app_name=runner.app_name, user_id=user_id, session_id=session_id
+            )
 
-    if choice.strip() == "2" and session is not None:
-        summary = await _summarize_session(session)
+        summary = ""
+        if session:
+            summary = await _summarize_session(session)
+
         await runner.session_service.delete_session(
             app_name=runner.app_name, user_id=user_id, session_id=session_id
         )
         await runner.session_service.create_session(
             app_name=runner.app_name, user_id=user_id, session_id=session_id
         )
+
         if summary:
             await extract_agent_response(
                 runner, user_id, session_id,
@@ -104,6 +123,13 @@ async def _handle_session_reset(runner, user_id, session_id, choice: str) -> str
         return "Fresh session started."
 
 
+async def _handle_session_reset(runner, user_id, session_id, choice: str) -> str:
+    """Process the user's session reset choice. Returns a status message."""
+    session = _pending_session_reset.pop(session_id, None)
+    mode = "summarize" if choice.strip() == "2" else "fresh"
+    return await _perform_session_refresh(runner, user_id, session_id, mode, session)
+
+
 async def extract_agent_response(runner, user_id: str, session_id: str, text: str) -> str:
     """Run the agent and extract the final text response."""
     try:
@@ -122,9 +148,14 @@ async def extract_agent_response(runner, user_id: str, session_id: str, text: st
             _pending_session_reset[session_id] = session
             return SESSION_LIMIT_PROMPT.format(event_count=len(session.events))
     except Exception:
-        await runner.session_service.create_session(
-            app_name=runner.app_name, user_id=user_id, session_id=session_id
-        )
+        # Check if session exists before creating to avoid AlreadyExistsError
+        try:
+            await runner.session_service.create_session(
+                app_name=runner.app_name, user_id=user_id, session_id=session_id
+            )
+        except Exception as e:
+            if "already exists" not in str(e):
+                logger.error("Failed to ensure session: %s", e)
 
     MAX_RETRIES = 2
     parts = []
@@ -148,6 +179,14 @@ async def extract_agent_response(runner, user_id: str, session_id: str, text: st
                 "Agent error (attempt %d/%d) for user %s: %s",
                 attempt + 1, 1 + MAX_RETRIES, user_id, error_msg,
             )
+
+            # Graceful error handling for rate limits and context window
+            if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg or "QuotaExceeded" in error_msg:
+                return "⚠️ **Rate Limit Exceeded**\n\nPlease wait a bit before trying again."
+            
+            if "token count exceeds" in error_msg.lower() or "400" in error_msg:
+                return "⚠️ **Context Limit Reached**\n\nPlease use **/reset** to start a fresh session."
+
             if attempt < MAX_RETRIES:
                 parts.clear()
                 message = types.Content(
@@ -163,17 +202,36 @@ async def extract_agent_response(runner, user_id: str, session_id: str, text: st
                 continue
             return f"Agent error after {1 + MAX_RETRIES} attempts. Last error: {error_msg}"
 
-    return "\n".join(parts) if parts else "I processed your request but have no response to show."
+    final_response = "\n".join(parts) if parts else "I processed your request but have no response to show."
+
+    # Check for manual session refresh signal
+    refresh_mode = get_pending_refresh(session_id)
+    if refresh_mode:
+        logger.info("Manual session refresh (%s) triggered for %s", refresh_mode, session_id)
+        refresh_msg = await _perform_session_refresh(runner, user_id, session_id, refresh_mode)
+        final_response += f"\n\n--- SESSION REFRESHED ---\n{refresh_msg}"
+
+    return final_response
 
 
-async def poll_telegram(process_init_fn):
+async def poll_telegram(get_runner_fn, process_init_fn):
     """Long-poll Telegram's getUpdates API and process messages."""
-    from .app_utils.agent_runner import get_runner
-
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
     if not token or token == "********":
         logger.info("Telegram: No valid token, poller idle.")
         return
+
+    if os.environ.get("TELEGRAM_WEBHOOK_SECRET"):
+        logger.info("Telegram: Webhook mode active (polling disabled).")
+        return
+
+    # Delete existing webhook to ensure polling works
+    async with httpx.AsyncClient(timeout=10) as setup_client:
+        url = TELEGRAM_API.format(token=token, method="deleteWebhook")
+        try:
+            await setup_client.post(url)
+        except Exception:
+            pass
 
     logger.info("Telegram: Polling mode active — listening for messages...")
     offset_file = os.path.join(os.path.abspath("./data"), ".tg_poll_offset")
@@ -210,13 +268,22 @@ async def poll_telegram(process_init_fn):
 
                     text = msg["text"]
                     chat_id = msg["chat"]["id"]
+                    message_id = msg["message_id"]
                     from_user = msg.get("from", {})
                     user_id = f"tg_{from_user.get('id', 'unknown')}"
                     session_id = f"tg_chat_{chat_id}"
 
-                    # SESSION RESET: intercept the user's choice
+                    # SECURE KEY CAPTURE
+                    from .secure_config import capture_key, check_pending
+                    if check_pending(session_id):
+                        result = capture_key(session_id, text)
+                        await delete_message(client, token, chat_id, message_id)
+                        await send_message(client, token, chat_id, result["message"])
+                        continue
+
+                    # SESSION RESET
                     if session_id in _pending_session_reset:
-                        runner = get_runner()
+                        runner = get_runner_fn()
                         if runner:
                             result = await _handle_session_reset(
                                 runner, user_id, session_id, text
@@ -224,6 +291,22 @@ async def poll_telegram(process_init_fn):
                             await send_message(client, token, chat_id, result)
                         else:
                             _pending_session_reset.pop(session_id, None)
+                        continue
+
+                    # Handle /rollback command
+                    if text.strip() == "/rollback":
+                        trigger_file = os.path.abspath("./data/.rollback_trigger")
+                        with open(trigger_file, "w") as f:
+                            json.dump({"notify": {"type": "telegram", "chat_id": chat_id}}, f)
+                        await send_message(client, token, chat_id, "🔄 **Rollback Triggered**\n\nResetting to previous commit...")
+                        continue
+
+                    # Handle /reset command
+                    if text.strip() == "/reset":
+                        runner = get_runner_fn()
+                        if runner:
+                            result = await _perform_session_refresh(runner, user_id, session_id, "fresh")
+                            await send_message(client, token, chat_id, f"🧹 **Session Reset**\n{result}")
                         continue
 
                     # Handle /init command
@@ -234,14 +317,12 @@ async def poll_telegram(process_init_fn):
 
                     # Handle /start command
                     if text.strip() == "/start":
-                        await send_message(client, token, chat_id,
-                            "Welcome! Send me a message to get started.")
+                        await send_message(client, token, chat_id, "Welcome! Send me a message to get started.")
                         continue
 
-                    runner = get_runner()
+                    runner = get_runner_fn()
                     if not runner:
-                        await send_message(client, token, chat_id,
-                            "Bot not ready. Configure at /setup.")
+                        await send_message(client, token, chat_id, "Bot not ready. Configure at /setup.")
                         continue
 
                     # Show typing indicator while the agent processes
