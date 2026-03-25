@@ -2414,6 +2414,7 @@ name = "personal-clone"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "agent-starter-pack" },
     { name = "aiosqlite" },
     { name = "bs4" },
     { name = "google-adk" },
@@ -2435,13 +2436,13 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "agent-starter-pack" },
     { name = "ipython" },
     { name = "pyperclip" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "agent-starter-pack", specifier = ">=0.29.3" },
     { name = "aiosqlite", specifier = ">=0.22.1" },
     { name = "bs4", specifier = ">=0.0.2" },
     { name = "google-adk", specifier = ">=1.21.0" },
@@ -2463,7 +2464,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "agent-starter-pack", specifier = ">=0.29.3" },
     { name = "ipython", specifier = ">=9.10.0" },
     { name = "pyperclip", specifier = ">=1.11.0" },
 ]
