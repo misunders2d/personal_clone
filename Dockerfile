@@ -8,14 +8,11 @@ RUN pip install --no-cache-dir uv==0.8.13
 WORKDIR /code
 
 # Copy dependency files
-COPY ./pyproject.toml* ./README.md ./uv.lock* ./requirements.txt* ./
+COPY ./pyproject.toml* ./uv.lock* ./
 
 # Copy application code and scripts
 COPY ./personal_clone ./personal_clone
-COPY ./interface_slack ./interface_slack
-COPY ./interface_tg ./interface_tg
 COPY ./main.py ./
-COPY ./runner_modules.py ./
 COPY ./setup.py ./
 COPY ./entrypoint.sh ./
 
@@ -41,7 +38,7 @@ RUN mkdir -p $UV_CACHE_DIR && chown -R agentuser:agentgroup /code/.cache
 USER agentuser
 
 # Install dependencies using uv AS the agentuser
-RUN if [ -f pyproject.toml ]; then uv sync --frozen; else uv pip install --user -r requirements.txt; fi
+RUN if [ -f pyproject.toml ]; then uv sync --frozen; fi
 
 RUN git config --global user.name "Personal Clone Bot" \
     && git config --global user.email "bot@personal-clone.local" \
