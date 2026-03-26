@@ -326,9 +326,9 @@ async def poll_telegram(get_runner_fn, process_init_fn):
                         continue
 
                     # Show typing indicator while the agent processes
-                    async def keep_typing():
+                    async def keep_typing(_chat_id=chat_id):
                         while True:
-                            await send_typing(client, token, chat_id)
+                            await send_typing(client, token, _chat_id)
                             await asyncio.sleep(4)
 
                     typing_task = asyncio.create_task(keep_typing())
