@@ -79,7 +79,7 @@ echo ""
 
 echo "  Waiting for the bot to start..."
 for i in $(seq 1 30); do
-    if docker exec personal-clone-agent python3 -c 'import urllib.request; urllib.request.urlopen("http://localhost:8080/health")' > /dev/null 2>&1; then
+    if docker exec personal-clone-agent python3 -c 'import urllib.request; urllib.request.urlopen("http://localhost:8081/health")' > /dev/null 2>&1; then
         break
     fi
     sleep 1
@@ -142,8 +142,8 @@ echo "=========================================="
 echo ""
 echo "  Bot:           docker logs -f personal-clone-agent"
 echo "  Deploy log:    tail -f data/deploy.log"
-echo "  Setup wizard:  http://localhost:8080/setup"
-echo "  Health check:  curl http://localhost:8080/health"
+echo "  Setup wizard:  http://localhost:8081/setup"
+echo "  Health check:  curl http://localhost:8081/health"
 echo ""
 echo "  To stop:       docker compose down"
 echo "  To update:     tell the bot \"update\" in chat"

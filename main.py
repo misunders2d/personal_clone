@@ -161,7 +161,7 @@ status = "READY" if os.environ.get("GEMINI_API_KEY") else "UNCONFIGURED"
 
 print("\n" + "=" * 60)
 print("  PERSONAL CLONE AGENT")
-print(f"  Management Portal: http://localhost:8080/setup")
+print(f"  Management Portal: http://localhost:8081/setup")
 print(f"  Status:            [{status}]")
 if _first_boot:
     print()
