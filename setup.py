@@ -1,11 +1,16 @@
 import os
-import sys
 import secrets
+import sys
 
 from dotenv import load_dotenv, set_key
+from rich.console import Console
+from rich.panel import Panel
+from rich.prompt import Prompt
 
-# Metadata for every configurable key — drives the setup wizard UI
-# (Ported from personal_clone/main.py)
+console = Console()
+
+ENV_FILE_PATH = os.environ.get("DOTENV_PATH", "./data/.env")
+
 CONFIG_FIELDS = [
     {
         "key": "GEMINI_API_KEY",
@@ -67,13 +72,13 @@ CONFIG_FIELDS = [
     },
 ]
 
-ENV_FILE_PATH = os.environ.get("DOTENV_PATH", "./data/.env")
 
 def validate_gemini_key(key: str) -> bool:
     """Checks if the Gemini API Key is valid."""
     try:
         os.environ["GEMINI_API_KEY"] = key
         from google.genai import Client
+
         client = Client(api_key=key)
         # Ping model list to verify key
         client.models.get(model="gemini-2.0-flash")
@@ -82,15 +87,21 @@ def validate_gemini_key(key: str) -> bool:
         print(f"  Invalid Key: {e}")
         return False
 
+
 def mask(val: str) -> str:
     if not val:
         return "Not set"
     return f"{val[:4]}...{val[-4:]}" if len(val) > 8 else "********"
 
+
 def run_setup():
-    print("\n" + "=" * 60)
-    print("  PERSONAL CLONE SETUP WIZARD")
-    print("=" * 60)
+    console.clear()
+    console.print(
+        Panel.fit(
+            "[bold blue] PERSONAL CLONE[/bold blue]\n[italic]Setup Wizard[/italic]",
+            border_style="blue",
+        )
+    )
 
     os.makedirs(os.path.dirname(os.path.abspath(ENV_FILE_PATH)), exist_ok=True)
     load_dotenv(ENV_FILE_PATH)
@@ -100,7 +111,7 @@ def run_setup():
         label = field["label"]
         required = field.get("required", False)
         help_text = field.get("help", "")
-        
+
         current_val = os.environ.get(key, "")
 
         while True:
@@ -115,7 +126,7 @@ def run_setup():
                 prompt += " (Enter to keep current)"
             elif not required:
                 prompt += " (Enter to skip)"
-            
+
             user_input = input(f"{prompt}: ").strip()
 
             if not user_input:
@@ -143,27 +154,37 @@ def run_setup():
     if not os.environ.get("ADMIN_PASSCODE"):
         passcode = secrets.token_hex(16).upper()
         set_key(ENV_FILE_PATH, "ADMIN_PASSCODE", passcode)
-        print(f"\n  Generated Admin Passcode: {passcode}")
-        print("  SAVE THIS PASSCODE — you need it to access the Web Setup Wizard.")
 
-    print("\n" + "=" * 60)
-    print("  Setup Complete!")
-    print(f"  Config saved to: {ENV_FILE_PATH}")
-    print("=" * 60 + "\n")
+    console.print(f"\n{'═' * 50}")
+    console.print("[bold green]  Setup Complete![/bold green]")
+    console.print(f"  Config saved to: [cyan]{ENV_FILE_PATH}[/cyan]")
+
+    # Summary
+    has_tg = bool(os.environ.get("TELEGRAM_BOT_TOKEN"))
+    has_slack = bool(os.environ.get("SLACK_BOT_TOKEN"))
+    if has_tg or has_slack:
+        platforms = []
+        if has_tg:
+            platforms.append("Telegram (polling mode — no public URL needed)")
+        if has_slack:
+            platforms.append("Slack (webhook mode — requires public URL)")
+        console.print(f"  Messaging: {', '.join(platforms)}")
+    else:
+        console.print(
+            "  [yellow]No messaging platform configured. You can add one later via /setup.[/yellow]"
+        )
+
 
 if __name__ == "__main__":
     try:
         # Check if rich is available for better UI, else use plain input
         try:
-            from rich.console import Console
-            from rich.panel import Panel
-            from rich.prompt import Prompt
-            # If rich is available, we could use a better UI, 
+            # If rich is available, we could use a better UI,
             # but for now, the plain input version is more robust inside containers.
             pass
         except ImportError:
             pass
-        
+
         run_setup()
     except KeyboardInterrupt:
         print("\nSetup cancelled.")

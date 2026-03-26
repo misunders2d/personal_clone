@@ -12,4 +12,5 @@ if [ ! -f "$ENV_FILE" ] || ! grep -q "GEMINI_API_KEY" "$ENV_FILE" 2>/dev/null; t
 fi
 
 # Start the server
-exec uv run python main.py
+exec uv run uvicorn main:fastapi_app --host 0.0.0.0 --port 8080
+
