@@ -21,7 +21,7 @@ async def start_slack(process_init_fn):
 
     if not (token and app_token) or token == "********" or app_token == "********":
         logger.info("Slack: Missing tokens, poller idle.")
-        return
+        return False
 
     try:
         app = AsyncApp(token=token)
@@ -91,7 +91,10 @@ async def run_slack_forever(process_init_fn):
     """Wrapper to keep the slack task alive."""
     while True:
         try:
-            await start_slack(process_init_fn)
+            started = await start_slack(process_init_fn)
+            if not started:
+                # Tokens not configured — don't retry in a tight loop
+                return
         except asyncio.CancelledError:
             break
         except Exception:
