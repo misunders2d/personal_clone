@@ -107,13 +107,13 @@ MODEL_PROVIDERS = {
     },
     "Google": {
         "PRO_MODEL": Gemini(
-            model="gemini-2.5-pro",
+            model="gemini-3.1-pro",
             use_interactions_api=False,
             retry_options=retry_options,
         ),
         "FLASH_MODEL": Gemini(
-            model="gemini-2.5-flash",
-            # model="gemini-3-flash-preview",
+            # model="gemini-2.5-flash",
+            model="gemini-3-flash-preview",
             use_interactions_api=False,
             retry_options=retry_options,
         ),
